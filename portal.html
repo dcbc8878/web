@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ระบบเอกสารลูกค้า - บริษัท เด็กชายบัญชี จำกัด">
+    <title>ระบบเอกสารลูกค้า | บริษัท เด็กชายบัญชี จำกัด</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#FFF2E8',
+                            DEFAULT: '#FFB88C',
+                            dark: '#E5976A',
+                            text: '#4A4A4A',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #FFB88C; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E5976A; }
+    </style>
+</head>
+<body class="text-brand-text bg-white antialiased flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="w-full bg-white/90 backdrop-blur-md z-50 border-b border-brand-light sticky top-0">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <a href="index.html" class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-brand rounded-full flex items-center justify-center text-white text-xl shadow-sm">
+                        <img src="logo.jpg" class="w-full h-full object-contain rounded-full">
+                    </div>
+                    <span class="font-bold text-2xl tracking-tight text-gray-800">เด็กชายบัญชี</span>
+                </a>
+                <a href="index.html" class="text-brand font-medium hover:underline flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Portal Main Content -->
+    <main class="flex-grow py-12 md:py-16 bg-brand-light/40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <div class="text-center mb-10">
+                <div class="inline-block p-4 bg-brand-light rounded-2xl mb-4 text-brand">
+                    <i class="fa-solid fa-folder-open text-3xl"></i>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">ระบบเอกสารลูกค้า</h1>
+                <p class="mt-3 text-base md:text-lg text-gray-600">ค้นหาเอกสาร ดาวน์โหลดแบบฟอร์ม หรือส่งไฟล์ข้อมูลเบื้องหลัง</p>
+            </div>
+
+            <!-- Search Bar Section (แถบค้นหาข้อความที่เกี่ยวข้อง) -->
+            <div class="max-w-3xl mx-auto mb-12">
+                <div class="relative shadow-sm rounded-2xl bg-white p-2 border border-gray-100 flex items-center gap-2 focus-within:ring-2 focus-within:ring-brand-light focus-within:border-brand transition-all">
+                    <div class="pl-4 text-gray-400 text-lg">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </div>
+                    <input type="text" id="document-search" onkeyup="filterDocuments()" class="w-full py-3 px-2 text-sm text-gray-700 bg-transparent outline-none placeholder-gray-400" placeholder="พิมพ์เพื่อค้นหาชื่อเอกสาร รายละเอียด หรือคำสำคัญที่เกี่ยวข้อง...">
+                    <button onclick="clearSearch()" id="clear-search-btn" class="hidden text-gray-400 hover:text-gray-600 px-3 text-sm">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Download Box (พร้อมระบบ ค้นหา/กรองข้อมูล) -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-light flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-semibold flex items-center gap-3">
+                                <i class="fa-solid fa-download text-brand"></i> ดาวน์โหลดแบบฟอร์ม
+                            </h2>
+                            <span id="doc-count" class="text-xs bg-brand-light text-brand font-medium px-3 py-1 rounded-full">
+                                แสดงทั้งหมด 4 รายการ
+                            </span>
+                        </div>
+
+                        <!-- Document Item List -->
+                        <ul id="document-list" class="space-y-4">
+                            <!-- Item 1 -->
+                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="fa-regular fa-file-pdf text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">แบบฟอร์มสรุปรายจ่ายประจำเดือน</h3>
+                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">แบบฟอร์มสำหรับรวบรวมใบเสร็จและใบสำคัญจ่ายประจำเดือน (.pdf)</p>
+                                    </div>
+                                </div>
+                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: แบบฟอร์มสรุปรายจ่ายประจำเดือน.pdf')">
+                                    <i class="fa-solid fa-arrow-down"></i> โหลด
+                                </button>
+                            </li>
+
+                            <!-- Item 2 -->
+                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="fa-regular fa-file-excel text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">Template สต็อกสินค้าเบื้องต้น</h3>
+                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">ไฟล์คุมสต็อกสินค้า รายรับ-รายจ่ายสินค้าคงเหลือ (.xlsx)</p>
+                                    </div>
+                                </div>
+                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: Template สต็อกสินค้าเบื้องต้น.xlsx')">
+                                    <i class="fa-solid fa-arrow-down"></i> โหลด
+                                </button>
+                            </li>
+
+                            <!-- Item 3 -->
+                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="fa-regular fa-file-word text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">Checklist เอกสารยื่นภาษีประจำปี</h3>
+                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">รายการเช็คลิสต์เอกสารที่ต้องจัดเตรียมส่งสำนักงานบัญชี (.docx)</p>
+                                    </div>
+                                </div>
+                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: Checklist เอกสารยื่นภาษีประจำปี.docx')">
+                                    <i class="fa-solid fa-arrow-down"></i> โหลด
+                                </button>
+                            </li>
+
+                            <!-- Item 4 -->
+                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <i class="fa-regular fa-file-pdf text-xl"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">หนังสือยินยอมเปิดเผยข้อมูลภาษี</h3>
+                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">แบบฟอร์มมอบอำนาจและยินยอมยื่นเอกสารสรรพากร (.pdf)</p>
+                                    </div>
+                                </div>
+                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: หนังสือยินยอมเปิดเผยข้อมูลภาษี.pdf')">
+                                    <i class="fa-solid fa-arrow-down"></i> โหลด
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- No Result Found Notice -->
+                        <div id="no-result" class="hidden text-center py-10">
+                            <i class="fa-solid fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                            <p class="text-gray-500 text-sm font-medium">ไม่พบเอกสารที่ตรงกับคำค้นหาของคุณ</p>
+                            <p class="text-xs text-gray-400 font-light mt-1">ลองเปลี่ยนคำค้นหา หรือกดล้างคำค้นหา</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Client Upload Box -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-light">
+                    <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-upload text-brand"></i> อัปโหลดข้อมูลเบื้องหลัง
+                    </h2>
+
+                    <form id="client-upload-form" action="https://formsubmit.co/ajax/contact@dcbc.co.th" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="_subject" value="ลูกค้าอัปโหลดเอกสารผ่านระบบเอกสารลูกค้า">
+                        <input type="hidden" name="_captcha" value="false">
+
+                        <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-brand transition-colors bg-gray-50 cursor-pointer relative" onclick="document.getElementById('file-upload').click()">
+                            <input type="file" id="file-upload" name="attachment" class="hidden" onchange="handleFileSelect(event)">
+
+                            <div id="upload-idle">
+                                <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand"></i>
+                                </div>
+                                <p class="text-gray-600 font-medium mb-1">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</p>
+                                <p class="text-sm text-gray-400">รองรับ PDF, JPG, PNG, Excel (ไม่เกิน 15MB)</p>
+                            </div>
+
+                            <div id="upload-selected" class="hidden">
+                                <i class="fa-solid fa-file-circle-check text-4xl text-green-500 mb-3"></i>
+                                <p class="text-gray-800 font-medium text-sm" id="file-name">filename.pdf</p>
+                                <p class="text-xs text-brand mt-1">คลิก "ส่งเอกสาร" เพื่อยืนยัน</p>
+                            </div>
+
+                            <div id="upload-progress" class="hidden">
+                                <i class="fa-solid fa-spinner fa-spin text-4xl text-brand mb-3"></i>
+                                <p class="text-gray-600 text-sm">กำลังอัปโหลดเอกสาร...</p>
+                            </div>
+
+                            <div id="upload-success" class="hidden">
+                                <i class="fa-solid fa-check-circle text-4xl text-green-500 mb-3"></i>
+                                <p class="text-gray-800 font-medium">ส่งเอกสารเรียบร้อยแล้ว!</p>
+                                <p class="text-xs text-gray-500 mt-1">ทีมงานจะรีบดำเนินการตรวจสอบ</p>
+                            </div>
+
+                            <div id="upload-error" class="hidden">
+                                <i class="fa-solid fa-circle-exclamation text-4xl text-red-500 mb-3"></i>
+                                <p class="text-gray-800 font-medium">ส่งเอกสารไม่สำเร็จ</p>
+                                <p class="text-xs text-gray-500 mt-1">กรุณาลองใหม่อีกครั้ง หรือติดต่อทีมงานทาง LINE</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="w-full mt-6 py-3.5 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
+                            ส่งเอกสาร
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-800">
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-8 h-8 bg-brand rounded-full flex items-center justify-center text-white text-sm">
+                            <img src="logo.jpg" class="w-full h-full object-contain rounded-full">
+                        </div>
+                        <span class="font-bold text-xl tracking-tight">บริษัท เด็กชายบัญชี จำกัด</span>
+                    </div>
+                    <p class="text-gray-400 text-sm font-light mb-2">DEKCHAIBUNCHEE CO.,LTD.</p>
+                    <p class="text-brand text-sm font-medium"><i class="fa-solid fa-id-card mr-2"></i>เลขประจำตัวผู้เสียภาษีอากร: 0555569000181</p>
+                </div>
+
+                <div class="md:text-right">
+                    <h5 class="text-white font-semibold mb-3">ที่อยู่สำนักงาน</h5>
+                    <p class="text-gray-400 text-sm font-light leading-relaxed">
+                        346 หมู่ที่ 3 ตำบลปัว อำเภอปัว<br>
+                        จังหวัดน่าน 55120
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-light">
+                <p>&copy; 2026 บริษัท เด็กชายบัญชี จำกัด. All Rights Reserved.</p>
+                <div class="flex gap-4">
+                    <a href="https://www.dcbc.co.th" target="_blank" class="hover:text-brand transition-colors"><i class="fa-solid fa-globe text-base"></i></a>
+                    <a href="https://line.me/R/ti/p/@474oimtj" target="_blank" class="hover:text-brand transition-colors"><i class="fa-brands fa-line text-base"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // --- 1. Filter / Search Documents ---
+        function filterDocuments() {
+            const input = document.getElementById('document-search').value.toLowerCase().trim();
+            const items = document.querySelectorAll('.doc-item');
+            const clearBtn = document.getElementById('clear-search-btn');
+            const noResult = document.getElementById('no-result');
+            const countLabel = document.getElementById('doc-count');
+            
+            let visibleCount = 0;
+
+            if (input.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            items.forEach(item => {
+                const title = item.querySelector('.doc-title').innerText.toLowerCase();
+                const desc = item.querySelector('.doc-desc').innerText.toLowerCase();
+
+                if (title.includes(input) || desc.includes(input)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResult.classList.remove('hidden');
+            } else {
+                noResult.classList.add('hidden');
+            }
+
+            countLabel.innerText = `พบ ${visibleCount} รายการ`;
+        }
+
+        function clearSearch() {
+            document.getElementById('document-search').value = '';
+            filterDocuments();
+        }
+
+        // --- 2. Client File Upload (ส่งเข้าอีเมลจริงผ่าน FormSubmit) ---
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('upload-idle').classList.add('hidden');
+                document.getElementById('upload-error').classList.add('hidden');
+                document.getElementById('upload-selected').classList.remove('hidden');
+                document.getElementById('file-name').innerText = file.name;
+                document.getElementById('submit-btn').disabled = false;
+                document.getElementById('upload-success').classList.add('hidden');
+            }
+        }
+
+        const clientUploadForm = document.getElementById('client-upload-form');
+        clientUploadForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = 'กำลังดำเนินการ...';
+
+            document.getElementById('upload-selected').classList.add('hidden');
+            document.getElementById('upload-progress').classList.remove('hidden');
+
+            fetch(clientUploadForm.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: new FormData(clientUploadForm)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('ส่งเอกสารไม่สำเร็จ');
+                document.getElementById('upload-progress').classList.add('hidden');
+                document.getElementById('upload-success').classList.remove('hidden');
+                btn.innerHTML = 'ส่งเอกสารสำเร็จ';
+                btn.classList.replace('bg-brand', 'bg-green-500');
+
+                setTimeout(() => {
+                    document.getElementById('upload-success').classList.add('hidden');
+                    document.getElementById('upload-idle').classList.remove('hidden');
+                    document.getElementById('file-upload').value = '';
+                    btn.innerHTML = 'ส่งเอกสาร';
+                    btn.classList.replace('bg-green-500', 'bg-brand');
+                    btn.disabled = true;
+                }, 4000);
+            })
+            .catch(() => {
+                document.getElementById('upload-progress').classList.add('hidden');
+                document.getElementById('upload-error').classList.remove('hidden');
+                btn.innerHTML = 'ส่งเอกสาร';
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,240 +1,803 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DCBC — โซลูชันธุรกิจครบวงจร</title>
-  <meta name="description" content="DCBC ให้บริการโซลูชันธุรกิจครบวงจร ที่ปรึกษา เทคโนโลยี และบริการมืออาชีพ เพื่อการเติบโตอย่างยั่งยืน" />
-  <meta name="theme-color" content="#0f4c81" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="บริษัท เด็กชายบัญชี จำกัด (DEKCHAIBUNCHEE CO.,LTD.) ให้บริการรับทำบัญชีครบวงจร วางระบบบัญชี จดทะเบียนบริษัท ที่ปรึกษาภาษีอากร พร้อมสอนผู้ประกอบการให้เข้าใจระบบบัญชี">
+    <meta name="keywords" content="เด็กชายบัญชี, รับทำบัญชี, ที่ปรึกษาธุรกิจ, วางแผนภาษี, สำนักงานบัญชี, จดทะเบียนบริษัท, dcbc">
+    <title>บริษัท เด็กชายบัญชี จำกัด | เติบโตไปพร้อมกับคุณ</title>
 
-  <!-- Open Graph -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="DCBC — โซลูชันธุรกิจครบวงจร" />
-  <meta property="og:description" content="โซลูชันธุรกิจครบวงจร ที่ปรึกษา เทคโนโลยี และบริการมืออาชีพ" />
-  <meta property="og:url" content="https://dcbc.co.th" />
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f4c81'/><text x='50' y='68' font-size='52' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'>D</text></svg>" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#FFF2E8',   /* ส้มพาสเทลอ่อนมาก (พื้นหลัง) */
+                            DEFAULT: '#FFB88C', /* ส้มพาสเทลหลัก */
+                            dark: '#E5976A',    /* ส้มเข้มสำหรับปุ่ม Hover */
+                            text: '#4A4A4A',    /* สีตัวอักษรเทาเข้มเพื่อความมินิมอล */
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Schema Markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "AccountingService",
+      "name": "บริษัท เด็กชายบัญชี จำกัด (DEKCHAIBUNCHEE CO.,LTD.)",
+      "description": "เราตั้งใจจะให้ทำให้ทุกคนเติบโต และเข้าใจในการทำธุรกิจ เด็กชายบัญชีก็เปรียบเสมือนเด็กที่อยู่ในวัยเติบโตเพื่อที่จะได้เติบโตไปพร้อมๆกับลูกค้าทุกคน",
+      "url": "https://www.dcbc.co.th",
+      "email": "contact@dcbc.co.th",
+      "vatID": "0555569000181",
+      "founder": "คุณเทพมงคล ศรีคมศักดิ์",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "346 หมู่ที่ 3",
+        "addressLocality": "ตำบลปัว อำเภอปัว",
+        "addressRegion": "จังหวัดน่าน",
+        "postalCode": "55120",
+        "addressCountry": "TH"
+      },
+      "openingHours": "Mo,Tu,We,Th,Fr 08:00-19:00"
+    }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #FFB88C; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E5976A; }
+
+        .nav-hidden { transform: translateY(-100%); }
+        .nav-visible { transform: translateY(0); }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(35px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-300 { transition-delay: 300ms; }
+
+        @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .animate-marquee {
+            display: flex;
+            width: max-content;
+            animation: marquee-scroll 35s linear infinite;
+        }
+
+        .animate-marquee:hover {
+            animation-play-state: paused;
+        }
+    </style>
 </head>
-<body>
-  <a class="skip-link" href="#main">ข้ามไปยังเนื้อหาหลัก</a>
+<body class="text-brand-text bg-white antialiased selection:bg-brand selection:text-white">
 
-  <header class="site-header" id="top">
-    <div class="container header-inner">
-      <a class="brand" href="#top" aria-label="DCBC หน้าแรก">
-        <span class="brand-mark">D</span>
-        <span class="brand-name">DCBC</span>
-      </a>
-
-      <nav class="nav" aria-label="เมนูหลัก">
-        <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" aria-label="เปิดเมนู">
-          <span></span><span></span><span></span>
-        </button>
-        <ul class="nav-menu" id="nav-menu">
-          <li><a href="#about">เกี่ยวกับเรา</a></li>
-          <li><a href="#services">บริการ</a></li>
-          <li><a href="#why">ทำไมต้องเรา</a></li>
-          <li><a href="#contact">ติดต่อ</a></li>
-          <li><a class="nav-cta" href="#contact">เริ่มต้นใช้งาน</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <main id="main">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container hero-inner">
-        <div class="hero-content">
-          <p class="eyebrow">ยินดีต้อนรับสู่ DCBC</p>
-          <h1>โซลูชันธุรกิจครบวงจร<br />เพื่อการเติบโตอย่างยั่งยืน</h1>
-          <p class="lead">
-            เราช่วยองค์กรของคุณเปลี่ยนแนวคิดให้กลายเป็นผลลัพธ์จริง
-            ด้วยบริการที่ปรึกษา เทคโนโลยี และทีมงานมืออาชีพที่พร้อมดูแลทุกขั้นตอน
-          </p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="#contact">ปรึกษาฟรี</a>
-            <a class="btn btn-ghost" href="#services">ดูบริการทั้งหมด</a>
-          </div>
-          <dl class="hero-stats">
-            <div><dt>10+</dt><dd>ปีประสบการณ์</dd></div>
-            <div><dt>200+</dt><dd>โครงการสำเร็จ</dd></div>
-            <div><dt>98%</dt><dd>ลูกค้าพึงพอใจ</dd></div>
-          </dl>
-        </div>
-        <div class="hero-visual" aria-hidden="true">
-          <div class="orb orb-1"></div>
-          <div class="orb orb-2"></div>
-          <div class="hero-card">
-            <div class="hero-card-row"><span>รายได้เติบโต</span><strong>+42%</strong></div>
-            <div class="bars">
-              <span style="height:40%"></span>
-              <span style="height:60%"></span>
-              <span style="height:50%"></span>
-              <span style="height:80%"></span>
-              <span style="height:70%"></span>
-              <span style="height:100%"></span>
+    <!-- Navigation -->
+    <nav id="main-nav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 border-b border-brand-light transition-transform duration-300 nav-visible">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <img src="logo.jpg" alt="เด็กชายบัญชี" class="h-12 w-12 object-contain rounded-full shadow-sm border border-brand/20 p-0.5 transform transition-transform hover:scale-105">
+                    <span class="font-bold text-2xl tracking-tight text-gray-800">เด็กชายบัญชี</span>
+                </div>
+                
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#services" class="hover:text-brand transition-colors font-medium">บริการของเรา</a>
+                    <a href="#reviews" class="hover:text-brand transition-colors font-medium">รีวิวจากลูกค้า</a>
+                    <a href="portal.html" class="hover:text-brand transition-colors font-medium text-brand font-semibold flex items-center gap-1.5 bg-brand-light/60 px-3.5 py-2 rounded-full border border-brand/20 shadow-sm">
+                        <i class="fa-solid fa-folder-open text-sm"></i> ระบบเอกสาร
+                    </a>
+                    <a href="#contact" class="hover:text-brand transition-colors font-medium">ติดต่อเรา</a>
+                </div>
+                <div class="md:hidden flex items-center gap-3">
+                    <a href="portal.html" class="text-xs bg-brand text-white px-3 py-1.5 rounded-full font-medium">
+                        <i class="fa-solid fa-folder-open"></i> เอกสาร
+                    </a>
+                    <button class="text-gray-600 hover:text-brand focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </section>
+    </nav>
 
-    <!-- Trusted by -->
-    <section class="logos" aria-label="ได้รับความไว้วางใจ">
-      <div class="container">
-        <p class="logos-title">ได้รับความไว้วางใจจากองค์กรชั้นนำ</p>
-        <div class="logos-row">
-          <span>ACME</span><span>NOVA</span><span>ORBIT</span><span>ZENITH</span><span>PULSE</span>
-        </div>
-      </div>
-    </section>
+    <!-- Hero Section (พร้อมมาสค็อตต้อนรับ) -->
+    <section class="pt-28 pb-16 lg:pt-36 lg:pb-24 bg-brand-light relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand opacity-20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute top-1/2 -left-24 w-72 h-72 bg-brand opacity-20 rounded-full blur-3xl animate-pulse"></div>
+        
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+                
+                <!-- Left Text Column -->
+                <div class="lg:w-3/5 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-xs font-bold text-brand mb-6 reveal">
+                        <img src="logo.jpg" class="w-5 h-5 rounded-full object-contain">
+                        DEKCHAIBUNCHEE CO.,LTD.
+                    </div>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight reveal">
+                        จัดการบัญชีให้เป็นเรื่องง่าย <br>
+                        <span class="text-brand">พร้อมเติบโตไปกับธุรกิจคุณ</span>
+                    </h1>
+                    <p class="mt-4 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto lg:mx-0 mb-8 font-light reveal delay-100">
+                        บริการรับทำบัญชี วางแผนภาษี และที่ปรึกษาธุรกิจ เรามุ่งเน้นให้คำแนะนำ และสอนผู้ประกอบการให้เข้าใจระบบบัญชีอย่างแท้จริง
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 reveal delay-200">
+                        <a href="portal.html" class="px-8 py-4 bg-brand text-white rounded-full font-medium hover:bg-brand-dark transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                            ระบบเอกสารลูกค้า <i class="fa-solid fa-folder-open"></i>
+                        </a>
+                        <a href="#services" class="px-8 py-4 bg-white text-brand border border-brand rounded-full font-medium hover:bg-brand-light transition-all text-center">
+                            ดูแพ็กเกจบริการ
+                        </a>
+                    </div>
+                </div>
 
-    <!-- About -->
-    <section class="section" id="about">
-      <div class="container grid-2">
-        <div>
-          <p class="eyebrow">เกี่ยวกับเรา</p>
-          <h2>พันธมิตรที่เข้าใจธุรกิจของคุณ</h2>
-          <p>
-            DCBC ก่อตั้งขึ้นด้วยความเชื่อว่าทุกองค์กรสมควรได้รับโซลูชันที่เหมาะกับตัวเองอย่างแท้จริง
-            เราผสานความเชี่ยวชาญด้านกลยุทธ์ เทคโนโลยี และการดำเนินงาน
-            เพื่อส่งมอบคุณค่าที่วัดผลได้จริงให้กับลูกค้าของเรา
-          </p>
-          <ul class="check-list">
-            <li>ทีมงานผู้เชี่ยวชาญเฉพาะด้าน</li>
-            <li>กระบวนการทำงานโปร่งใส ตรวจสอบได้</li>
-            <li>ดูแลต่อเนื่องหลังส่งมอบงาน</li>
-          </ul>
-        </div>
-        <div class="about-panels">
-          <div class="panel"><h3>วิสัยทัศน์</h3><p>เป็นผู้นำด้านโซลูชันธุรกิจที่ลูกค้าไว้วางใจในภูมิภาค</p></div>
-          <div class="panel"><h3>พันธกิจ</h3><p>ส่งมอบบริการคุณภาพที่สร้างผลลัพธ์และการเติบโตที่ยั่งยืน</p></div>
-        </div>
-      </div>
-    </section>
+                <!-- Right Logo Column -->
+                <div class="lg:w-2/5 flex justify-center reveal delay-100">
+                    <div class="relative w-64 sm:w-72 lg:w-80 h-64 sm:h-72 lg:h-80 flex items-center justify-center">
+                        <div class="w-64 sm:w-72 lg:w-80 h-64 sm:h-72 lg:h-80 bg-white/60 rounded-full blur-2xl absolute inset-0 m-auto -z-10"></div>
+                        <img src="logo.jpg" alt="เด็กชายบัญชี" class="w-48 sm:w-56 lg:w-64 h-48 sm:h-56 lg:h-64 object-cover rounded-full shadow-xl border-4 border-white transform hover:scale-105 transition-transform duration-300">
+                    </div>
+                </div>
 
-    <!-- Services -->
-    <section class="section section-alt" id="services">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">บริการของเรา</p>
-          <h2>สิ่งที่เราช่วยคุณได้</h2>
-          <p class="section-sub">ครอบคลุมทุกความต้องการของธุรกิจ ตั้งแต่วางแผนจนถึงลงมือทำจริง</p>
-        </div>
-        <div class="cards">
-          <article class="card">
-            <div class="card-icon">💼</div>
-            <h3>ที่ปรึกษาธุรกิจ</h3>
-            <p>วางกลยุทธ์ วิเคราะห์ตลาด และวางแผนการเติบโตที่เหมาะกับองค์กรของคุณ</p>
-          </article>
-          <article class="card">
-            <div class="card-icon">💻</div>
-            <h3>พัฒนาเทคโนโลยี</h3>
-            <p>ออกแบบและพัฒนาเว็บไซต์ ระบบ และแอปพลิเคชันที่ตอบโจทย์ธุรกิจ</p>
-          </article>
-          <article class="card">
-            <div class="card-icon">📊</div>
-            <h3>วิเคราะห์ข้อมูล</h3>
-            <p>เปลี่ยนข้อมูลให้เป็นข้อมูลเชิงลึก เพื่อการตัดสินใจที่แม่นยำยิ่งขึ้น</p>
-          </article>
-          <article class="card">
-            <div class="card-icon">🎯</div>
-            <h3>การตลาดดิจิทัล</h3>
-            <p>สร้างการรับรู้และเข้าถึงกลุ่มเป้าหมายผ่านช่องทางออนไลน์อย่างมีประสิทธิภาพ</p>
-          </article>
-          <article class="card">
-            <div class="card-icon">⚙️</div>
-            <h3>ปรับปรุงกระบวนการ</h3>
-            <p>เพิ่มประสิทธิภาพการทำงานภายในองค์กรด้วยระบบอัตโนมัติ</p>
-          </article>
-          <article class="card">
-            <div class="card-icon">🛡️</div>
-            <h3>ดูแลและสนับสนุน</h3>
-            <p>บริการดูแลระบบและให้คำปรึกษาอย่างต่อเนื่อง เพื่อความมั่นใจในระยะยาว</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Why us -->
-    <section class="section" id="why">
-      <div class="container">
-        <div class="section-head">
-          <p class="eyebrow">ทำไมต้องเรา</p>
-          <h2>จุดแข็งที่ทำให้เราแตกต่าง</h2>
-        </div>
-        <div class="features">
-          <div class="feature"><span class="num">01</span><h3>เข้าใจธุรกิจไทย</h3><p>เราเข้าใจบริบทและความต้องการเฉพาะของตลาดในประเทศไทย</p></div>
-          <div class="feature"><span class="num">02</span><h3>ผลลัพธ์วัดได้</h3><p>ทุกโครงการมีตัวชี้วัดที่ชัดเจน ให้คุณเห็นความคุ้มค่าของการลงทุน</p></div>
-          <div class="feature"><span class="num">03</span><h3>ทีมมืออาชีพ</h3><p>ทีมงานที่มีประสบการณ์และใส่ใจในทุกรายละเอียดของงาน</p></div>
-          <div class="feature"><span class="num">04</span><h3>ราคายุติธรรม</h3><p>คุณภาพระดับสากลในราคาที่เข้าถึงได้สำหรับทุกขนาดธุรกิจ</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- CTA / Contact -->
-    <section class="section section-cta" id="contact">
-      <div class="container">
-        <div class="cta-box">
-          <div class="cta-text">
-            <p class="eyebrow eyebrow-light">พร้อมเริ่มต้นแล้วหรือยัง?</p>
-            <h2>มาพูดคุยกันว่าเราจะช่วยธุรกิจคุณได้อย่างไร</h2>
-            <p>กรอกแบบฟอร์มเพื่อรับคำปรึกษาเบื้องต้นฟรี ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง</p>
-            <ul class="contact-list">
-              <li><span aria-hidden="true">✉️</span> <a href="mailto:info@dcbc.co.th">info@dcbc.co.th</a></li>
-              <li><span aria-hidden="true">📞</span> <a href="tel:+6620000000">02-000-0000</a></li>
-              <li><span aria-hidden="true">📍</span> กรุงเทพมหานคร ประเทศไทย</li>
-            </ul>
-          </div>
-          <form class="contact-form" action="https://formsubmit.co/info@dcbc.co.th" method="POST" novalidate>
-            <div class="field">
-              <label for="name">ชื่อ-นามสกุล</label>
-              <input id="name" name="name" type="text" autocomplete="name" required />
             </div>
-            <div class="field">
-              <label for="email">อีเมล</label>
-              <input id="email" name="email" type="email" autocomplete="email" required />
-            </div>
-            <div class="field">
-              <label for="phone">เบอร์โทรศัพท์</label>
-              <input id="phone" name="phone" type="tel" autocomplete="tel" />
-            </div>
-            <div class="field">
-              <label for="message">ข้อความ</label>
-              <textarea id="message" name="message" rows="4" required></textarea>
-            </div>
-            <button class="btn btn-primary btn-block" type="submit">ส่งข้อความ</button>
-            <p class="form-note">เราให้ความสำคัญกับความเป็นส่วนตัวของคุณ ข้อมูลจะไม่ถูกเปิดเผยต่อบุคคลที่สาม</p>
-          </form>
         </div>
-      </div>
     </section>
-  </main>
 
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <a class="brand" href="#top">
-          <span class="brand-mark">D</span>
-          <span class="brand-name">DCBC</span>
-        </a>
-        <p>โซลูชันธุรกิจครบวงจรเพื่อการเติบโตอย่างยั่งยืน</p>
-      </div>
-      <nav class="footer-nav" aria-label="เมนูส่วนท้าย">
-        <div><h4>บริษัท</h4><a href="#about">เกี่ยวกับเรา</a><a href="#services">บริการ</a><a href="#why">ทำไมต้องเรา</a></div>
-        <div><h4>ติดต่อ</h4><a href="mailto:info@dcbc.co.th">info@dcbc.co.th</a><a href="tel:+6620000000">02-000-0000</a></div>
-      </nav>
-    </div>
-    <div class="container footer-bottom">
-      <p>© <span id="year"></span> DCBC. สงวนลิขสิทธิ์ทุกประการ</p>
-      <p>dcbc.co.th</p>
-    </div>
-  </footer>
+    <!-- Services Section -->
+    <section id="services" class="py-20 bg-gray-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">บริการของเรา</h2>
+                <p class="mt-4 text-lg text-gray-500">ครบจบในที่เดียว เพื่อให้คุณโฟกัสกับการบริหารธุรกิจได้อย่างเต็มที่</p>
+            </div>
+            
+            <!-- 1. แพ็กเกจทำบัญชีรายเดือน (Detailed Section + Mascot 197) -->
+            <div class="bg-white rounded-3xl p-8 md:p-12 border-2 border-brand shadow-[0_8px_30px_rgb(255,184,140,0.2)] relative overflow-hidden mb-12 reveal">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-light opacity-50 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                
+                <div class="relative z-10 flex flex-col lg:flex-row gap-12">
+                    <div class="lg:w-2/3">
+                        <div class="inline-block bg-brand text-white text-sm font-bold px-4 py-1 rounded-full mb-4">แพ็กเกจหลัก</div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-6">บริการทำบัญชีรายเดือน</h3>
+                        
+                        <ul class="space-y-4 text-gray-700 font-light mb-6">
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-circle-check text-brand text-xl mt-1"></i>
+                                <span>บันทึกข้อมูลบัญชีตามเอกสาร</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-circle-check text-brand text-xl mt-1"></i>
+                                <span>ยื่นภาษี ภ.ง.ด.1, 3, 53, 54 และ ภ.พ.30, 36 พร้อมทั้งจัดทำรายงานและแจ้งยอดชำระแก่ผู้ใช้บริการ</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-circle-check text-brand text-xl mt-1"></i>
+                                <span>ตรวจสอบรายการ และกระทบยอด กับ Bank Statement</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-circle-check text-brand text-xl mt-1"></i>
+                                <span>ปิดงบการเงินรอบ 6 เดือน, 9 เดือน และ 12 เดือน</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-circle-check text-brand text-xl mt-1"></i>
+                                <span>เข้าให้คำปรึกษา แนะนำ ณ สถานประกอบการ ปีละ 2 ครั้ง</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-circle-check text-brand text-xl mt-1"></i>
+                                <span>ยื่นรายการประจำปี ภ.ง.ด.1ก, ภ.ง.ด.50, ภ.ง.ด.51 และงบการเงินประจำปี</span>
+                            </li>
+                        </ul>
+                        <div class="pt-4 border-t border-brand-light/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <span class="text-brand font-bold text-xl">เริ่มต้น 4,500 ฿ / เดือน</span>
+                            <div class="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100 text-xs text-gray-500">
+                                <i class="fa-solid fa-gauge-high text-brand"></i>
+                                <span>ดำเนินการ รวดเร็ว ถูกต้อง แม่นยำ</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:w-1/3">
+                        <div class="bg-brand-light/30 rounded-2xl p-6 h-full border border-brand-light flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-bold text-gray-900 mb-5 flex items-center gap-2 text-xl">
+                                    <i class="fa-solid fa-gift text-brand"></i> สิทธิพิเศษ ฟรี!
+                                </h4>
+                                <div class="space-y-4 mb-4">
+                                    <div class="bg-white p-5 rounded-xl shadow-sm border border-brand/20 relative">
+                                        <div class="absolute -top-3 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md transform rotate-12">FREE</div>
+                                        <h5 class="font-semibold text-gray-900 mb-2">คอร์สบัญชี ภาษี เบื้องต้น</h5>
+                                        <p class="text-sm text-gray-600 font-light">สำหรับผู้ประกอบการ (ผู้เข้าร่วมไม่เกิน 2 ท่าน) ระยะเวลา 3 ชั่วโมง</p>
+                                    </div>
+                                    <div class="bg-white p-5 rounded-xl shadow-sm border border-brand/20 relative">
+                                        <div class="absolute -top-3 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md transform rotate-12">FREE</div>
+                                        <h5 class="font-semibold text-gray-900 mb-2">วางแผนระบบบัญชี ภาษี</h5>
+                                        <p class="text-sm text-gray-600 font-light">การจัดเก็บเอกสาร เพื่อความถูกต้องและสามารถพิสูจน์ได้ตามที่กฎหมายกำหนด</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="pt-2 text-center">
+                                <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm text-brand text-2xl">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  <script src="script.js" defer></script>
+            <!-- 2. บริการจดทะเบียนบริษัท (Detailed Section) -->
+            <div class="bg-white rounded-3xl p-8 md:p-12 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden mb-16 reveal">
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-brand-light opacity-50 rounded-full blur-3xl -ml-20 -mb-20"></div>
+                
+                <div class="relative z-10 flex flex-col lg:flex-row-reverse gap-12">
+                    <div class="lg:w-3/5">
+                        <div class="inline-block bg-gray-800 text-white text-sm font-bold px-4 py-1 rounded-full mb-4">บริการจัดตั้งธุรกิจ</div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-6">บริการจดทะเบียนบริษัท</h3>
+                        
+                        <ul class="space-y-4 text-gray-700 font-light mb-6">
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-file-signature text-brand text-xl mt-1"></i>
+                                <span>ดำเนินการจดทะเบียนนิติบุคคล</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-key text-brand text-xl mt-1"></i>
+                                <span>รหัสเข้าเว็บไซต์ กรมพัฒนาธุรกิจการค้า (DBD)</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-desktop text-brand text-xl mt-1"></i>
+                                <span>รหัสเข้าเว็บไซต์ e-Filing</span>
+                            </li>
+                        </ul>
+
+                        <div class="bg-gray-50 p-5 rounded-2xl border border-gray-200 text-sm text-gray-600 font-light space-y-3">
+                            <p><span class="text-brand font-bold text-lg leading-none mr-1">*</span> <strong>ค่าบริการนี้ไม่รวมกับค่าธรรมเนียมราชการ</strong></p>
+                            <p><span class="text-brand font-bold text-lg leading-none mr-1">*</span> ตราประทับบริษัท และฤกษ์เปิดบริษัท (ถ้ามี) <u class="text-gray-800">ลูกค้าต้องเป็นผู้เตรียมด้วยตัวเอง</u></p>
+                        </div>
+                    </div>
+                    
+                    <!-- โปรโมชั่นพิเศษ -->
+                    <div class="lg:w-2/5">
+                        <div class="bg-gradient-to-br from-brand to-[#E5976A] rounded-3xl p-8 h-full text-white shadow-lg relative overflow-hidden text-center flex flex-col justify-center">
+                            <div class="absolute top-0 right-0 opacity-10 text-9xl -mt-4 -mr-4"><i class="fa-solid fa-certificate"></i></div>
+                            <div class="relative z-10">
+                                <div class="inline-block bg-white text-brand text-sm font-bold px-4 py-1 rounded-full mb-5 shadow-sm uppercase tracking-wider">Special Package</div>
+                                <h4 class="font-bold text-2xl md:text-3xl mb-3 leading-tight">จดทะเบียนบริษัท<br>+<br>ทำบัญชีรายเดือน</h4>
+                                
+                                <div class="text-3xl font-bold text-white mb-6 bg-brand-dark/30 inline-block px-6 py-2 rounded-xl border border-white/30 backdrop-blur-sm">
+                                    ราคา 3,500 บาท
+                                </div>
+                                
+                                <div class="bg-white/20 rounded-2xl p-4 backdrop-blur-md border border-white/30 text-left transform transition hover:scale-105">
+                                    <p class="font-bold flex items-center gap-2"><i class="fa-solid fa-gift text-red-200"></i> ฟรี! ตลอดการใช้บริการบัญชี</p>
+                                    <ul class="text-sm font-light text-brand-light ml-6 mt-2 space-y-1 list-disc list-inside">
+                                        <li>จดทะเบียนภาษีมูลค่าเพิ่ม (VAT)</li>
+                                        <li>ขึ้นทะเบียนประกันสังคม</li>
+                                        <li>เปลี่ยนแปลงข้อมูลบริษัท</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. บริการอื่นๆ (Grid 4 บริการ) -->
+            <div class="reveal">
+                <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center md:text-left">บริการอื่นๆ ที่พร้อมดูแลคุณ</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
+                            <i class="fa-solid fa-pen-to-square text-2xl text-brand group-hover:text-white transition-colors"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-900 mb-3">บริการงานทะเบียน</h4>
+                        <p class="text-gray-600 font-light flex-grow text-sm mb-4">บริการจดเปลี่ยนแปลง แก้ไขข้อมูลต่างๆ ของบริษัท</p>
+                        <div class="mt-auto pt-4 border-t border-gray-100">
+                            <span class="text-brand font-semibold">ครั้งละ 2,500 ฿</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
+                            <i class="fa-solid fa-user-tie text-2xl text-brand group-hover:text-white transition-colors"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-900 mb-3">ให้คำปรึกษา</h4>
+                        <p class="text-gray-600 font-light flex-grow text-sm mb-4">สำหรับบริษัทที่มีนักบัญชีอยู่แล้ว แต่ต้องการผู้ช่วยตรวจสอบข้อมูล</p>
+                        <div class="mt-auto pt-4 border-t border-gray-100">
+                            <span class="text-brand font-semibold">เริ่มต้น 4,500 ฿</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
+                            <i class="fa-solid fa-chalkboard-user text-2xl text-brand group-hover:text-white transition-colors"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-900 mb-3">คอร์สผู้ประกอบการ</h4>
+                        <p class="text-gray-600 font-light flex-grow text-sm mb-4">อบรมเบื้องต้นสำหรับผู้ประกอบการที่อยากเข้าใจระบบบัญชีและภาษี</p>
+                        <div class="mt-auto pt-4 border-t border-gray-100">
+                            <span class="text-brand font-semibold">เริ่มต้น 8,000 ฿</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
+                            <i class="fa-solid fa-building-circle-check text-2xl text-brand group-hover:text-white transition-colors"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold text-gray-900 mb-3">เสมือนบัญชีภายใน</h4>
+                        <p class="text-gray-600 font-light flex-grow text-sm mb-4">ดูแลครอบคลุมทั้งรายรับ-จ่าย ภาษี สต็อก และสรุปงบครบวงจร</p>
+                        <div class="mt-auto pt-4 border-t border-gray-100">
+                            <span class="text-brand font-semibold">เริ่มต้น 15,000 ฿</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. วางระบบบริษัททั้งระบบ (Big Block) -->
+            <div class="bg-white rounded-3xl p-8 md:p-12 border border-brand shadow-[0_8px_30px_rgb(255,184,140,0.15)] relative overflow-hidden reveal">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-brand-light opacity-50 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                
+                <div class="relative z-10 flex flex-col lg:flex-row gap-12 items-center">
+                    <div class="lg:w-2/3">
+                        <div class="inline-block bg-brand text-white text-sm font-bold px-4 py-1 rounded-full mb-4">บริการพิเศษ</div>
+                        <h3 class="text-3xl font-bold text-gray-900 mb-6">วางระบบบริษัททั้งระบบ</h3>
+                        
+                        <p class="text-gray-600 font-light mb-6">ยกระดับมาตรฐานการทำงานของธุรกิจคุณด้วยระบบที่ชัดเจน ลดความซ้ำซ้อน และตรวจสอบได้ง่ายขึ้น เราพร้อมเข้าไปดูแลจัดการตั้งแต่ต้นน้ำ</p>
+
+                        <ul class="space-y-4 text-gray-700 font-light">
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-network-wired text-brand text-xl mt-1 w-6 text-center"></i>
+                                <span><strong>เข้าวางระบบ:</strong> วิเคราะห์โครงสร้างธุรกิจเพื่อออกแบบระบบบัญชีและการทำงานที่เหมาะสมที่สุด</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-folder-tree text-brand text-xl mt-1 w-6 text-center"></i>
+                                <span><strong>จัดทำระบบภายใน:</strong> วางผังการเดินเอกสาร การจัดเก็บ และการควบคุมภายในอย่างเป็นระเบียบ</span>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <i class="fa-solid fa-sitemap text-brand text-xl mt-1 w-6 text-center"></i>
+                                <span><strong>ทำ Workflow & SOP:</strong> สร้างคู่มือและขั้นตอนการทำงานมาตรฐาน เพื่อให้ทีมงานทุกคนทำงานร่วมกันได้อย่างราบรื่นและถูกต้อง</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="lg:w-1/3 w-full">
+                        <div class="bg-brand-light/40 rounded-3xl p-8 border border-brand/20 text-center h-full flex flex-col justify-center shadow-sm">
+                            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-brand text-3xl">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </div>
+                            <h4 class="font-bold text-gray-900 mb-2 text-xl">แพ็กเกจวางระบบ</h4>
+                            <p class="text-sm text-gray-500 font-light mb-6">คุ้มค่าสำหรับการเติบโตระยะยาว<br>จบปัญหาการทำงานซ้ำซ้อน</p>
+                            <div class="text-2xl font-bold text-brand mb-6 border-t border-b border-brand/20 py-4">
+                                <span class="text-lg font-normal text-gray-600 block mb-1">เริ่มต้นที่</span>
+                                20,000 ฿
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- Reviews Section (Infinite Continuous Horizontal Scrolling Only) -->
+    <section id="reviews" class="py-20 bg-white overflow-hidden">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12 reveal">
+            <div class="inline-block p-3 bg-brand-light rounded-2xl mb-4 text-brand">
+                <i class="fa-regular fa-comments text-2xl"></i>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900">เสียงตอบรับจากลูกค้า</h2>
+            <p class="mt-4 text-lg text-gray-500">ความประทับใจส่วนหนึ่งจากผู้ประกอบการที่เติบโตไปพร้อมกับเด็กชายบัญชี</p>
+        </div>
+
+        <!-- Slider Container with Infinite Marquee -->
+        <div class="relative w-full overflow-hidden py-4">
+            <div class="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+
+            <div id="marquee-container" class="animate-marquee flex gap-6">
+                
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ทีมงานเด็กชายบัญชีให้คำแนะนำดีมากครับ ช่วยวางระบบเอกสารตั้งแต่เริ่มเปิดบริษัท ทำให้ทำงานง่ายและถูกต้องตามกฎหมาย ไร้กังวลเรื่องภาษีไปเลย"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm overflow-hidden border border-brand/20">
+                            <i class="fa-solid fa-building text-brand"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณนพดล</h5>
+                            <p class="text-xs text-gray-400">ธุรกิจขายส่งสินค้าไอที</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ประทับใจคอร์สอบรมผู้ประกอบการฟรีที่แถมมากับแพ็กเกจมากค่ะ สอนเข้าใจง่าย จากคนที่ไม่มีความรู้เรื่องภาษีเลย ตอนนี้อ่านรายงานงบการเงินเองได้แล้ว"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            คุณม
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณมีนา</h5>
+                            <p class="text-xs text-gray-400">เจ้าของแบรนด์เสื้อผ้าแฟชั่น</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ยื่นภาษีตรงเวลา มีการสรุปยอดชำระล่วงหน้าชัดเจน บริการเป็นกันเองมากครับ มีข้อสงสัยถามทาง LINE ตอบไวตลอดเวลาทำการ"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            คุณธ
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณธนกร</h5>
+                            <p class="text-xs text-gray-400">ธุรกิจบริการซอฟต์แวร์</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ให้เด็กชายบัญชีเข้าวางระบบ Workflow SOP ให้ การทำงานของพนักงานในออฟฟิศลดความซ้ำซ้อนไปได้เยอะมากๆ คุ้มค่าเกินราคาครับ"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            คุณป
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณประวิทย์</h5>
+                            <p class="text-xs text-gray-400">โรงงานผลิตอาหารแปรรูป</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Duplicate Sets -->
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ทีมงานเด็กชายบัญชีให้คำแนะนำดีมากครับ ช่วยวางระบบเอกสารตั้งแต่เริ่มเปิดบริษัท ทำให้ทำงานง่ายและถูกต้องตามกฎหมาย ไร้กังวลเรื่องภาษีไปเลย"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            <i class="fa-solid fa-building text-brand"></i>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณนพดล</h5>
+                            <p class="text-xs text-gray-400">ธุรกิจขายส่งสินค้าไอที</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ประทับใจคอร์สอบรมผู้ประกอบการฟรีที่แถมมากับแพ็กเกจมากค่ะ สอนเข้าใจง่าย จากคนที่ไม่มีความรู้เรื่องภาษีเลย ตอนนี้อ่านรายงานงบการเงินเองได้แล้ว"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            คุณม
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณมีนา</h5>
+                            <p class="text-xs text-gray-400">เจ้าของแบรนด์เสื้อผ้าแฟชั่น</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ยื่นภาษีตรงเวลา มีการสรุปยอดชำระล่วงหน้าชัดเจน บริการเป็นกันเองมากครับ มีข้อสงสัยถามทาง LINE ตอบไวตลอดเวลาทำการ"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            คุณธ
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณธนกร</h5>
+                            <p class="text-xs text-gray-400">ธุรกิจบริการซอฟต์แวร์</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">
+                            "ให้เด็กชายบัญชีเข้าวางระบบ Workflow SOP ให้ การทำงานของพนักงานในออฟฟิศลดความซ้ำซ้อนไปได้เยอะมากๆ คุ้มค่าเกินราคาครับ"
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 pt-4 border-t border-gray-200/60">
+                        <div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20">
+                            คุณป
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-gray-800 text-sm">คุณประวิทย์</h5>
+                            <p class="text-xs text-gray-400">โรงงานผลิตอาหารแปรรูป</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact & Form Section (แบ่งสัดส่วน 30:70 ซ้าย/ขวา) -->
+    <section id="contact" class="py-20 bg-white">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">ติดต่อเรา</h2>
+                <p class="mt-4 text-lg text-gray-500">สอบถามบริการ ขอคำปรึกษา หรือนัดหมายพูดคุย</p>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row gap-8 items-start">
+                
+                <!-- ข้อมูลการติดต่อ (ซ้าย 30%) -->
+                <div class="w-full lg:w-[30%] space-y-4">
+                    
+                    <!-- โทรศัพท์ -->
+                    <div class="bg-gray-50 p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                        <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand flex-shrink-0 shadow-sm">
+                            <i class="fa-solid fa-phone text-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">โทรศัพท์</h4>
+                            <p class="text-gray-600 font-light text-sm mt-0.5"><a href="tel:0888788648" class="hover:text-brand font-medium">088-878-8648</a></p>
+                        </div>
+                    </div>
+
+                    <!-- LINE Official -->
+                    <div class="bg-gray-50 p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group" onclick="window.open('https://line.me/R/ti/p/@474oimtj', '_blank')">
+                        <div class="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
+                            <i class="fa-brands fa-line text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">LINE Official</h4>
+                            <p class="text-gray-600 font-light text-sm mt-0.5">@474oimtj</p>
+                            <span class="text-green-600 text-xs font-semibold mt-1 block group-hover:underline">คลิกเพื่อเพิ่มเพื่อน <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
+                        </div>
+                    </div>
+
+                    <!-- ที่อยู่ -->
+                    <div class="bg-gray-50 p-6 rounded-3xl flex items-start gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                        <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand flex-shrink-0 shadow-sm mt-1">
+                            <i class="fa-solid fa-location-dot text-lg"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-900 text-sm">ที่ตั้งสำนักงาน</h4>
+                            <p class="text-gray-600 font-light text-xs mt-1 leading-relaxed">346 หมู่ที่ 3 ตำบลปัว<br>อำเภอปัว จังหวัดน่าน 55120</p>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <!-- ฟอร์มติดต่อกลับ (ขวา 70%) -->
+                <div class="w-full lg:w-[70%]">
+                    <div class="bg-white p-8 md:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                            <i class="fa-regular fa-paper-plane text-brand"></i> ฝากข้อมูลเพื่อติดต่อกลับ
+                        </h3>
+                        <form id="contact-form" action="https://formsubmit.co/ajax/contact@dcbc.co.th" method="POST" class="space-y-5">
+                            <input type="hidden" name="_subject" value="มีลูกค้าติดต่อผ่านเว็บไซต์เด็กชายบัญชี">
+                            <input type="hidden" name="_template" value="table">
+                            <input type="hidden" name="_captcha" value="false">
+
+                            <!-- ชื่อผู้ติดต่อ -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ติดต่อ <span class="text-red-500">*</span></label>
+                                <input type="text" name="ชื่อผู้ติดต่อ" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="กรอกชื่อของคุณ">
+                            </div>
+
+                            <!-- สถานะบริษัท -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">จดทะเบียนบริษัทแล้วหรือยัง?</label>
+                                <div class="flex gap-6">
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="radio" name="สถานะบริษัท" value="จดทะเบียนแล้ว" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 focus:ring-brand" checked>
+                                        <span class="text-sm text-gray-600 group-hover:text-gray-900">จดทะเบียนแล้ว</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer group">
+                                        <input type="radio" name="สถานะบริษัท" value="ยังไม่จดทะเบียน" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 focus:ring-brand">
+                                        <span class="text-sm text-gray-600 group-hover:text-gray-900">ยังไม่จดทะเบียน</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- ช่องทางการติดต่อ -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ช่องทางการติดต่อกลับ <span class="text-red-500">*</span></label>
+                                <input type="text" name="ช่องทางติดต่อกลับ" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เบอร์โทรศัพท์ หรือ LINE ID">
+                            </div>
+
+                            <!-- ช่วงเวลา -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-3">ช่วงเวลาที่สะดวกในการติดต่อ</label>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                    <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-brand-light/30 transition-colors">
+                                        <input type="radio" name="ช่วงเวลาที่สะดวก" value="08.00-12.00 น." class="w-4 h-4 text-brand focus:ring-brand" checked>
+                                        <span class="ml-2 text-xs font-medium text-gray-700">08.00 - 12.00 น.</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-brand-light/30 transition-colors">
+                                        <input type="radio" name="ช่วงเวลาที่สะดวก" value="12.00-13.00 น." class="w-4 h-4 text-brand focus:ring-brand">
+                                        <span class="ml-2 text-xs font-medium text-gray-700">12.00 - 13.00 น.</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-brand-light/30 transition-colors">
+                                        <input type="radio" name="ช่วงเวลาที่สะดวก" value="13.00-18.00 น." class="w-4 h-4 text-brand focus:ring-brand">
+                                        <span class="ml-2 text-xs font-medium text-gray-700">13.00 - 18.00 น.</span>
+                                    </label>
+                                    <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-brand-light/30 transition-colors">
+                                        <input type="radio" name="ช่วงเวลาที่สะดวก" value="18.00-22.00 น." class="w-4 h-4 text-brand focus:ring-brand">
+                                        <span class="ml-2 text-xs font-medium text-gray-700">18.00 - 22.00 น.</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" id="contact-submit-btn" class="w-full mt-2 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                                ส่งข้อมูล
+                            </button>
+                            <p id="contact-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อทางโทรศัพท์ 088-878-8648</p>
+                        </form>
+
+                        <!-- Success Box (Hidden by Default) -->
+                        <div id="contact-success-box" class="hidden text-center py-8">
+                            <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">ส่งข้อมูลเรียบร้อยแล้ว!</h3>
+                            <p class="text-gray-500 text-sm font-light">ทีมงานจะรีบติดต่อกลับตามช่วงเวลาที่ท่านสะดวกครับ</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-800">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <img src="logo.jpg" alt="เด็กชายบัญชี" class="w-9 h-9 object-contain rounded-full border border-gray-700">
+                        <span class="font-bold text-xl tracking-tight">บริษัท เด็กชายบัญชี จำกัด</span>
+                    </div>
+                    <p class="text-gray-400 text-sm font-light mb-2">DEKCHAIBUNCHEE CO.,LTD.</p>
+                    <p class="text-brand text-sm font-medium"><i class="fa-solid fa-id-card mr-2"></i>เลขประจำตัวผู้เสียภาษีอากร: 0555569000181</p>
+                </div>
+
+                <div class="md:text-right">
+                    <h5 class="text-white font-semibold mb-3">ที่อยู่สำนักงาน</h5>
+                    <p class="text-gray-400 text-sm font-light leading-relaxed">
+                        346 หมู่ที่ 3 ตำบลปัว อำเภอปัว<br>
+                        จังหวัดน่าน 55120
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-light">
+                <p>&copy; 2026 บริษัท เด็กชายบัญชี จำกัด. All Rights Reserved.</p>
+                <div class="flex gap-4">
+                    <a href="https://www.dcbc.co.th" target="_blank" class="hover:text-brand transition-colors"><i class="fa-solid fa-globe text-base"></i></a>
+                    <a href="https://line.me/R/ti/p/@474oimtj" target="_blank" class="hover:text-brand transition-colors"><i class="fa-brands fa-line text-base"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // 1. ระบบจัดการเมนู (Scroll Effect)
+        let lastScrollTop = 0;
+        const navbar = document.getElementById('main-nav');
+
+        window.addEventListener('scroll', function() {
+            let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (scrollTop > lastScrollTop && scrollTop > 80) {
+                navbar.classList.add('nav-hidden');
+                navbar.classList.remove('nav-visible');
+            } else {
+                navbar.classList.remove('nav-hidden');
+                navbar.classList.add('nav-visible');
+            }
+            
+            lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, false);
+
+        // 2. ระบบ Scroll Reveal Animation
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(element => {
+            observer.observe(element);
+        });
+
+        // 3. ระบบส่งฟอร์มติดต่อกลับ (ส่งเข้าอีเมลจริงผ่าน FormSubmit)
+        const contactForm = document.getElementById('contact-form');
+        if (contactForm) {
+            contactForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const btn = document.getElementById('contact-submit-btn');
+                const errorMsg = document.getElementById('contact-form-error');
+                errorMsg.classList.add('hidden');
+                btn.disabled = true;
+                btn.innerText = 'กำลังส่งข้อมูล...';
+
+                fetch(contactForm.action, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: new FormData(contactForm)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('ส่งข้อมูลไม่สำเร็จ');
+                    contactForm.classList.add('hidden');
+                    document.getElementById('contact-success-box').classList.remove('hidden');
+                })
+                .catch(() => {
+                    errorMsg.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerText = 'ส่งข้อมูล';
+                });
+            });
+        }
+    </script>
 </body>
 </html>

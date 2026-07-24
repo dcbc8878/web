@@ -1,91 +1,81 @@
-# DCBC — เว็บไซต์บริษัท
+# บริษัท เด็กชายบัญชี จำกัด — เว็บไซต์
 
-เว็บไซต์ static (HTML / CSS / JavaScript) สำหรับโดเมน **dcbc.co.th**
-ออกแบบให้โหลดเร็ว รองรับมือถือ (responsive) มีโหมดมืด (dark mode) อัตโนมัติ
-และรองรับ SEO เบื้องต้น
+เว็บไซต์ static (HTML / Tailwind CDN / JavaScript) สำหรับโดเมน **www.dcbc.co.th**
+รองรับมือถือ (responsive) มีโหมดมืดอัตโนมัติ ฟอนต์ Prompt ตามคู่มือแบรนด์
 
 ## 📁 โครงสร้างไฟล์
 
 ```
 web/
-├── index.html          หน้าหลักของเว็บไซต์
-├── styles.css          สไตล์ทั้งหมด (responsive + dark mode)
-├── script.js           เมนูมือถือ + เอฟเฟกต์ scroll
-├── 404.html            หน้าเมื่อไม่พบ URL
-├── CNAME               ระบุโดเมน dcbc.co.th (สำหรับ GitHub Pages)
-├── robots.txt          กติกาสำหรับ search engine
-├── sitemap.xml         แผนผังเว็บไซต์
-├── .nojekyll           ปิดการประมวลผล Jekyll บน GitHub Pages
+├── index.html          หน้าหลัก (บริการ, รีวิว, ฟอร์มติดต่อ)
+├── portal.html          ระบบเอกสารลูกค้า (ดาวน์โหลดฟอร์ม + อัปโหลดเอกสาร)
+├── review.html          ฟอร์มให้ลูกค้าส่งรีวิว
+├── adminupload.html      หน้าอัปโหลดเอกสารของแอดมิน (มีรหัสผ่านป้องกัน)
+├── logo.jpg             โลโก้บริษัท
+├── 404.html             หน้าเมื่อไม่พบ URL
+├── CNAME                ระบุโดเมน www.dcbc.co.th (สำหรับ GitHub Pages)
+├── robots.txt           กติกาสำหรับ search engine
+├── sitemap.xml          แผนผังเว็บไซต์
+├── .nojekyll            ปิดการประมวลผล Jekyll บน GitHub Pages
 └── .github/workflows/
-    └── deploy.yml      Deploy อัตโนมัติขึ้น GitHub Pages
+    └── deploy.yml       Deploy อัตโนมัติขึ้น GitHub Pages
 ```
 
 ## 🖥️ ดูเว็บบนเครื่อง (Local Preview)
 
-เปิดไฟล์ `index.html` ด้วยเบราว์เซอร์ได้เลย หรือรันเซิร์ฟเวอร์เล็ก ๆ:
-
 ```bash
-# ถ้ามี Python
 python3 -m http.server 8000
 # แล้วเปิด http://localhost:8000
 ```
 
-## ✏️ วิธีแก้ไขเนื้อหา
+## ✉️ ฟอร์มต่างๆ
 
-เนื้อหาทั้งหมดเป็นข้อความปกติในไฟล์ `index.html` แก้ได้ตรง ๆ ส่วนที่ควรปรับให้เป็นข้อมูลจริง:
+ฟอร์มทั้ง 3 จุด (ติดต่อในหน้าแรก, อัปโหลดเอกสารใน portal.html, รีวิวใน review.html,
+และอัปโหลดของแอดมิน) ส่งเข้าอีเมล **contact@dcbc.co.th** ผ่านบริการ [FormSubmit](https://formsubmit.co)
+(ฟรี ไม่ต้องมี backend)
 
-| จุดที่ต้องแก้ | อยู่ตรงไหน |
-|---|---|
-| ชื่อบริษัท / โลโก้ | ค้นหา `DCBC` |
-| ข้อความ hero / บริการ | ส่วน `<section class="hero">`, `#services` |
-| อีเมล / เบอร์โทร / ที่อยู่ | ส่วน `#contact` และ footer |
-| ตัวเลขสถิติ | `<dl class="hero-stats">` |
-| สีแบรนด์ | ตัวแปร `--brand` ใน `styles.css` |
+> **สำคัญ:** การส่งฟอร์มครั้งแรกหลัง deploy จะมีอีเมลยืนยัน (one-time activation)
+> ส่งไปที่ `contact@dcbc.co.th` ต้องกดยืนยันในอีเมลนั้นก่อน ฟอร์มถึงจะส่งข้อมูลมาถึงจริง
 
-> **ฟอร์มติดต่อ:** ตอนนี้ตั้งค่าให้ส่งผ่าน [FormSubmit](https://formsubmit.co) ไปที่ `info@dcbc.co.th`
-> ครั้งแรกต้องยืนยันอีเมลก่อนใช้งาน หรือจะเปลี่ยนไปใช้บริการอื่น (Formspree, Google Forms) ก็ได้
+## 🔒 หน้าแอดมิน
 
-## 🚀 นำขึ้นโดเมน dcbc.co.th
+`adminupload.html` มีหน้าจอถามรหัสผ่านก่อนเข้าใช้งาน (ป้องกันแบบพื้นฐาน ไม่ใช่ระบบความปลอดภัยระดับสูง)
+รหัสผ่านตั้งต้น: `dekchai2026` — แก้ไขได้ที่ตัวแปร `ADMIN_PANEL_PASSWORD` ในไฟล์ `adminupload.html`
 
-ไฟล์ `CNAME` ตั้งค่าไว้ให้แล้ว รองรับหลายวิธี เลือกอย่างใดอย่างหนึ่ง:
+## 🚀 นำขึ้นโดเมน www.dcbc.co.th
 
-### ตัวเลือก A — GitHub Pages (ฟรี, ตั้งค่าไว้แล้ว)
+ไฟล์ `CNAME` ตั้งค่าเป็น `www.dcbc.co.th` ไว้แล้ว ใช้ GitHub Pages (ฟรี):
 
-1. Push โค้ดขึ้น GitHub (branch นี้)
-2. ไปที่ **Settings → Pages** ของ repo
-   - Source: เลือก **GitHub Actions** (workflow `deploy.yml` จะ deploy อัตโนมัติ)
-   - Custom domain: ใส่ `dcbc.co.th` แล้วกด Save
-3. ตั้งค่า DNS ที่ผู้ให้บริการโดเมน (.co.th มักเป็น T.H.NIC / ผู้รับจดในไทย):
+1. **เปิด GitHub Pages:** ไปที่ repo → **Settings → Pages**
+   - Source: เลือก **GitHub Actions** (workflow `deploy.yml` จะ deploy อัตโนมัติทุกครั้งที่ push)
+   - Custom domain: ใส่ `www.dcbc.co.th` แล้วกด Save
 
-   **แบบ apex domain (dcbc.co.th):** สร้าง A records ชี้ไปที่ IP ของ GitHub Pages
+2. **ตั้งค่า DNS** ที่หน้าจัดการโดเมนของผู้รับจด `.co.th` (เช่น T.H.NIC หรือผู้ให้บริการที่คุณจดไว้):
+
+   **Record สำหรับ www (โดเมนหลักที่จะใช้งานจริง):**
+   ```
+   CNAME   www   dcbc8878.github.io.
+   ```
+
+   **Record สำหรับ apex/root (dcbc.co.th ไม่มี www)** — ใส่ไว้ด้วยเพื่อให้ GitHub Pages
+   รีไดเรกต์จาก `dcbc.co.th` ไป `www.dcbc.co.th` ให้อัตโนมัติ:
    ```
    A   @   185.199.108.153
    A   @   185.199.109.153
    A   @   185.199.110.153
    A   @   185.199.111.153
    ```
-   **แบบ www:**
-   ```
-   CNAME   www   <username>.github.io.
-   ```
-4. รอ DNS propagate (ไม่กี่นาที–24 ชม.) แล้วเปิด **Enforce HTTPS** ใน Settings → Pages
 
-### ตัวเลือก B — Cloudflare Pages / Netlify / Vercel
+3. รอ DNS propagate (ปกติไม่กี่นาที บางที่นานถึง 24 ชม.)
 
-1. เชื่อม repo กับบริการที่เลือก
-2. Build command: *(ไม่ต้องมี)* — Output directory: `/` (root)
-3. เพิ่ม custom domain `dcbc.co.th` ในแดชบอร์ด แล้วทำตามคำแนะนำ DNS ที่ระบบให้มา
-
-### ตัวเลือก C — โฮสติ้งทั่วไป (cPanel / FTP)
-
-อัปโหลดไฟล์ทั้งหมดในโฟลเดอร์นี้ไปที่ `public_html/` ของโฮสต์ที่ผูกกับ dcbc.co.th ได้เลย
-(ไฟล์ `CNAME`, `.nojekyll`, `.github/` ไม่จำเป็นสำหรับวิธีนี้ จะลบออกก็ได้)
+4. กลับไปที่ **Settings → Pages** อีกครั้ง รอสถานะ DNS ขึ้นเป็นถูกต้อง (✓) แล้วเปิด
+   **Enforce HTTPS** เพื่อบังคับใช้ HTTPS
 
 ## 📝 หมายเหตุเรื่องโดเมน .co.th
 
-โดเมน `.co.th` จดทะเบียนผ่าน **T.H.NIC** และต้องมีเอกสารนิติบุคคล (เช่น หนังสือรับรองบริษัท
-หรือเครื่องหมายการค้า) การตั้งค่า DNS ทำได้ที่หน้าจัดการโดเมนของผู้รับจดที่คุณใช้บริการ
+โดเมน `.co.th` จดทะเบียนผ่าน **T.H.NIC** และต้องมีเอกสารนิติบุคคล (เช่น หนังสือรับรองบริษัท)
+การตั้งค่า DNS ทำได้ที่หน้าจัดการโดเมนของผู้รับจดที่คุณใช้บริการอยู่
 
 ---
 
-สร้างด้วย HTML/CSS/JS ล้วน ไม่มี dependency — แก้ไขและดูแลง่าย
+สร้างด้วย HTML/Tailwind CDN/JS — ไม่มี build step แก้ไขและดูแลง่าย
