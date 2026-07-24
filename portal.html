@@ -48,20 +48,8 @@
             z-index: 60; transition: width 0.1s ease-out;
         }
 
-        .btn-shine { position: relative; overflow: hidden; }
-        .btn-shine::after {
-            content: '';
-            position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
-            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
-            transform: skewX(-20deg);
-            transition: left 0.65s ease;
-            pointer-events: none;
-        }
-        .btn-shine:hover::after { left: 125%; }
-
         @media (prefers-reduced-motion: reduce) {
             html { scroll-behavior: auto; }
-            .btn-shine::after { transition: none !important; }
         }
     </style>
 </head>
@@ -95,7 +83,7 @@
                     <i class="fa-solid fa-folder-open text-3xl"></i>
                 </div>
                 <h1 class="text-3xl md:text-4xl font-bold text-gray-900">ระบบเอกสารลูกค้า</h1>
-                <p class="mt-3 text-base md:text-lg text-gray-600">ค้นหาเอกสาร ดาวน์โหลดแบบฟอร์ม หรือส่งไฟล์ข้อมูลเบื้องหลัง</p>
+                <p class="mt-3 text-base md:text-lg text-gray-600">ค้นหาเอกสาร และดาวน์โหลดแบบฟอร์มที่ต้องการ</p>
             </div>
 
             <!-- Search Bar Section (แถบค้นหาข้อความที่เกี่ยวข้อง) -->
@@ -111,8 +99,8 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
+            <div class="max-w-2xl mx-auto">
+
                 <!-- Download Box (พร้อมระบบ ค้นหา/กรองข้อมูล) -->
                 <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-light flex flex-col justify-between">
                     <div>
@@ -137,57 +125,6 @@
                             <p class="text-xs text-gray-400 font-light mt-1">ลองเปลี่ยนคำค้นหา หรือกดล้างคำค้นหา</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Client Upload Box -->
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-brand-light">
-                    <h2 class="text-2xl font-semibold mb-6 flex items-center gap-3">
-                        <i class="fa-solid fa-upload text-brand"></i> อัปโหลดข้อมูลเบื้องหลัง
-                    </h2>
-
-                    <form id="client-upload-form" action="https://formsubmit.co/ajax/contact@dcbc.co.th" method="POST" enctype="multipart/form-data">
-                        <input type="hidden" name="_subject" value="ลูกค้าอัปโหลดเอกสารผ่านระบบเอกสารลูกค้า">
-                        <input type="hidden" name="_captcha" value="false">
-
-                        <div id="upload-area" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-brand transition-colors bg-gray-50 cursor-pointer relative" onclick="document.getElementById('file-upload').click()">
-                            <input type="file" id="file-upload" name="attachment" class="hidden" onchange="handleFileSelect(event)">
-
-                            <div id="upload-idle">
-                                <div class="w-16 h-16 bg-brand-light rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand"></i>
-                                </div>
-                                <p class="text-gray-600 font-medium mb-1">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</p>
-                                <p class="text-sm text-gray-400">รองรับ PDF, JPG, PNG, Excel (ไม่เกิน 15MB)</p>
-                            </div>
-
-                            <div id="upload-selected" class="hidden">
-                                <i class="fa-solid fa-file-circle-check text-4xl text-green-500 mb-3"></i>
-                                <p class="text-gray-800 font-medium text-sm" id="file-name">filename.pdf</p>
-                                <p class="text-xs text-brand mt-1">คลิก "ส่งเอกสาร" เพื่อยืนยัน</p>
-                            </div>
-
-                            <div id="upload-progress" class="hidden">
-                                <i class="fa-solid fa-spinner fa-spin text-4xl text-brand mb-3"></i>
-                                <p class="text-gray-600 text-sm">กำลังอัปโหลดเอกสาร...</p>
-                            </div>
-
-                            <div id="upload-success" class="hidden">
-                                <i class="fa-solid fa-check-circle text-4xl text-green-500 mb-3"></i>
-                                <p class="text-gray-800 font-medium">ส่งเอกสารเรียบร้อยแล้ว!</p>
-                                <p class="text-xs text-gray-500 mt-1">ทีมงานจะรีบดำเนินการตรวจสอบ</p>
-                            </div>
-
-                            <div id="upload-error" class="hidden">
-                                <i class="fa-solid fa-circle-exclamation text-4xl text-red-500 mb-3"></i>
-                                <p class="text-gray-800 font-medium">ส่งเอกสารไม่สำเร็จ</p>
-                                <p class="text-xs text-gray-500 mt-1">กรุณาลองใหม่อีกครั้ง หรือติดต่อทีมงานทาง LINE</p>
-                            </div>
-                        </div>
-
-                        <button type="submit" id="submit-btn" class="btn-shine w-full mt-6 py-3.5 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
-                            ส่งเอกสาร
-                        </button>
-                    </form>
                 </div>
 
             </div>
@@ -322,58 +259,6 @@
             document.getElementById('document-search').value = '';
             filterDocuments();
         }
-
-        // --- 2. Client File Upload (ส่งเข้าอีเมลจริงผ่าน FormSubmit) ---
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                document.getElementById('upload-idle').classList.add('hidden');
-                document.getElementById('upload-error').classList.add('hidden');
-                document.getElementById('upload-selected').classList.remove('hidden');
-                document.getElementById('file-name').innerText = file.name;
-                document.getElementById('submit-btn').disabled = false;
-                document.getElementById('upload-success').classList.add('hidden');
-            }
-        }
-
-        const clientUploadForm = document.getElementById('client-upload-form');
-        clientUploadForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            btn.disabled = true;
-            btn.innerHTML = 'กำลังดำเนินการ...';
-
-            document.getElementById('upload-selected').classList.add('hidden');
-            document.getElementById('upload-progress').classList.remove('hidden');
-
-            fetch(clientUploadForm.action, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json' },
-                body: new FormData(clientUploadForm)
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('ส่งเอกสารไม่สำเร็จ');
-                document.getElementById('upload-progress').classList.add('hidden');
-                document.getElementById('upload-success').classList.remove('hidden');
-                btn.innerHTML = 'ส่งเอกสารสำเร็จ';
-                btn.classList.replace('bg-brand', 'bg-green-500');
-
-                setTimeout(() => {
-                    document.getElementById('upload-success').classList.add('hidden');
-                    document.getElementById('upload-idle').classList.remove('hidden');
-                    document.getElementById('file-upload').value = '';
-                    btn.innerHTML = 'ส่งเอกสาร';
-                    btn.classList.replace('bg-green-500', 'bg-brand');
-                    btn.disabled = true;
-                }, 4000);
-            })
-            .catch(() => {
-                document.getElementById('upload-progress').classList.add('hidden');
-                document.getElementById('upload-error').classList.remove('hidden');
-                btn.innerHTML = 'ส่งเอกสาร';
-                btn.disabled = false;
-            });
-        });
     </script>
 </body>
 </html>
