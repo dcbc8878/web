@@ -239,7 +239,7 @@
     </section>
 
     <!-- Services Section -->
-    <section id="services" class="py-20 bg-gray-50">
+    <section id="services" class="py-20 bg-brand-light">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16 reveal">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900">บริการของเรา</h2>
@@ -474,7 +474,7 @@
     </section>
 
     <!-- Reviews Section (Infinite Continuous Horizontal Scrolling Only) -->
-    <section id="reviews" class="py-20 bg-white overflow-hidden">
+    <section id="reviews" class="py-20 bg-brand-light overflow-hidden">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-12 reveal">
             <div class="inline-block p-3 bg-brand-light rounded-2xl mb-4 text-brand">
                 <i class="fa-regular fa-comments text-2xl"></i>
@@ -485,15 +485,15 @@
 
         <!-- Slider Container with Infinite Marquee -->
         <div class="relative w-full overflow-hidden py-4">
-            <div class="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
-            <div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-brand-light to-transparent z-10 pointer-events-none"></div>
+            <div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-brand-light to-transparent z-10 pointer-events-none"></div>
 
             <div id="marquee-container" class="animate-marquee flex gap-6"></div>
         </div>
     </section>
 
     <!-- Contact & Form Section (แบ่งสัดส่วน 30:70 ซ้าย/ขวา) -->
-    <section id="contact" class="py-20 bg-white">
+    <section id="contact" class="py-20 bg-brand-light">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
             <div class="text-center mb-12">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900">ติดต่อเรา</h2>
@@ -506,7 +506,7 @@
                 <div class="w-full lg:w-[30%] space-y-4">
                     
                     <!-- โทรศัพท์ -->
-                    <div class="bg-gray-50 p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                    <div class="bg-white p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
                         <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand flex-shrink-0 shadow-sm">
                             <i class="fa-solid fa-phone text-lg"></i>
                         </div>
@@ -517,7 +517,7 @@
                     </div>
 
                     <!-- LINE Official -->
-                    <div class="bg-gray-50 p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group" onclick="window.open('https://line.me/R/ti/p/@dcbc', '_blank')">
+                    <div class="bg-white p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group" onclick="window.open('https://line.me/R/ti/p/@dcbc', '_blank')">
                         <div class="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                             <i class="fa-brands fa-line text-2xl"></i>
                         </div>
@@ -529,7 +529,7 @@
                     </div>
 
                     <!-- ที่อยู่ -->
-                    <div class="bg-gray-50 p-6 rounded-3xl flex items-start gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+                    <div class="bg-white p-6 rounded-3xl flex items-start gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
                         <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-brand flex-shrink-0 shadow-sm mt-1">
                             <i class="fa-solid fa-location-dot text-lg"></i>
                         </div>
@@ -753,7 +753,7 @@
 
         function reviewCardHtml(r) {
             return `
-                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-gray-50 p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                <div class="w-[350px] md:w-[400px] flex-shrink-0 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between">
                     <div>
                         <p class="text-gray-600 font-light text-sm leading-relaxed mb-6 mt-2">"${escapeHtml(r.message)}"</p>
                     </div>
