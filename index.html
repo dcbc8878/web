@@ -99,9 +99,65 @@
         .animate-marquee:hover {
             animation-play-state: paused;
         }
+
+        /* Scroll progress bar */
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+            background: linear-gradient(90deg, #FFB88C, #E5976A);
+            z-index: 60; transition: width 0.1s ease-out;
+        }
+
+        /* Staggered reveal for grid items (each direct child fades in one after another) */
+        .stagger.active > * {
+            opacity: 0; transform: translateY(24px);
+            animation: stagger-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .stagger.active > *:nth-child(1) { animation-delay: 0ms; }
+        .stagger.active > *:nth-child(2) { animation-delay: 100ms; }
+        .stagger.active > *:nth-child(3) { animation-delay: 200ms; }
+        .stagger.active > *:nth-child(4) { animation-delay: 300ms; }
+        @keyframes stagger-in {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Gentle floating glow blobs (replaces flat animate-pulse in hero) */
+        @keyframes blob-float {
+            0%, 100% { transform: translate(0, 0); opacity: 0.18; }
+            50% { transform: translate(12px, -22px); opacity: 0.32; }
+        }
+        .animate-blob { animation: blob-float 8s ease-in-out infinite; }
+        .animate-blob.delay-1 { animation-delay: 1.5s; }
+
+        /* Logo pop-in on page load */
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        .animate-pop-in { animation: pop-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+        /* Shine sweep on primary buttons */
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after {
+            content: '';
+            position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.65s ease;
+            pointer-events: none;
+        }
+        .btn-shine:hover::after { left: 125%; }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .reveal, .stagger.active > * { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; }
+            .animate-marquee, .animate-blob, .animate-pop-in, .btn-shine::after { animation: none !important; transition: none !important; }
+        }
     </style>
 </head>
 <body class="text-brand-text bg-white antialiased selection:bg-brand selection:text-white">
+
+    <div id="scroll-progress"></div>
 
     <!-- Navigation -->
     <nav id="main-nav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 border-b border-brand-light transition-transform duration-300 nav-visible">
@@ -109,7 +165,7 @@
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
                 <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
-                    <img src="logo.jpg" alt="เด็กชายบัญชี" class="h-12 w-12 object-contain rounded-full shadow-sm border border-brand/20 p-0.5 transform transition-transform hover:scale-105">
+                    <img src="logo.jpg" alt="เด็กชายบัญชี" class="h-12 w-12 object-contain rounded-full shadow-sm border border-brand/20 p-0.5 transform transition-transform hover:scale-105 hover:rotate-6 animate-pop-in">
                     <span class="font-bold text-2xl tracking-tight text-gray-800">เด็กชายบัญชี</span>
                 </div>
                 
@@ -135,8 +191,8 @@
 
     <!-- Hero Section (พร้อมมาสค็อตต้อนรับ) -->
     <section class="pt-28 pb-16 lg:pt-36 lg:pb-24 bg-brand-light relative overflow-hidden">
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand opacity-20 rounded-full blur-3xl animate-pulse"></div>
-        <div class="absolute top-1/2 -left-24 w-72 h-72 bg-brand opacity-20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand opacity-20 rounded-full blur-3xl animate-blob"></div>
+        <div class="absolute top-1/2 -left-24 w-72 h-72 bg-brand opacity-20 rounded-full blur-3xl animate-blob delay-1"></div>
         
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
@@ -155,7 +211,7 @@
                         บริการรับทำบัญชี วางแผนภาษี และที่ปรึกษาธุรกิจ เรามุ่งเน้นให้คำแนะนำ และสอนผู้ประกอบการให้เข้าใจระบบบัญชีอย่างแท้จริง
                     </p>
                     <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 reveal delay-200">
-                        <a href="portal.html" class="px-8 py-4 bg-brand text-white rounded-full font-medium hover:bg-brand-dark transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        <a href="portal.html" class="btn-shine px-8 py-4 bg-brand text-white rounded-full font-medium hover:bg-brand-dark transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center gap-2">
                             ระบบเอกสารลูกค้า <i class="fa-solid fa-folder-open"></i>
                         </a>
                         <a href="#services" class="px-8 py-4 bg-white text-brand border border-brand rounded-full font-medium hover:bg-brand-light transition-all text-center">
@@ -317,9 +373,9 @@
             <!-- 3. บริการอื่นๆ (Grid 4 บริการ) -->
             <div class="reveal">
                 <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center md:text-left">บริการอื่นๆ ที่พร้อมดูแลคุณ</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-                    
-                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 reveal stagger">
+
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1 hover:scale-[1.02]">
                         <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
                             <i class="fa-solid fa-pen-to-square text-2xl text-brand group-hover:text-white transition-colors"></i>
                         </div>
@@ -330,7 +386,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1 hover:scale-[1.02]">
                         <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
                             <i class="fa-solid fa-user-tie text-2xl text-brand group-hover:text-white transition-colors"></i>
                         </div>
@@ -341,7 +397,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1 hover:scale-[1.02]">
                         <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
                             <i class="fa-solid fa-chalkboard-user text-2xl text-brand group-hover:text-white transition-colors"></i>
                         </div>
@@ -352,7 +408,7 @@
                         </div>
                     </div>
 
-                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1">
+                    <div class="bg-white p-6 rounded-3xl shadow-sm hover:shadow-md transition-all border border-gray-100 group flex flex-col h-full transform hover:-translate-y-1 hover:scale-[1.02]">
                         <div class="w-14 h-14 bg-brand-light rounded-2xl flex items-center justify-center mb-6 group-hover:bg-brand transition-colors">
                             <i class="fa-solid fa-building-circle-check text-2xl text-brand group-hover:text-white transition-colors"></i>
                         </div>
@@ -540,7 +596,7 @@
                                 </div>
                             </div>
 
-                            <button type="submit" id="contact-submit-btn" class="w-full mt-2 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                            <button type="submit" id="contact-submit-btn" class="btn-shine w-full mt-2 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
                                 ส่งข้อมูล
                             </button>
                             <p id="contact-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อทางโทรศัพท์ 088-878-8648</p>
@@ -614,6 +670,15 @@
             }
             
             lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+        }, false);
+
+        // 1b. แถบแสดงความคืบหน้าการเลื่อนหน้าเว็บ (Scroll Progress Bar)
+        const scrollProgressBar = document.getElementById('scroll-progress');
+        window.addEventListener('scroll', function () {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            scrollProgressBar.style.width = pct + '%';
         }, false);
 
         // 2. ระบบ Scroll Reveal Animation

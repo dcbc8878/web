@@ -41,9 +41,33 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #FFB88C; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #E5976A; }
+
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+            background: linear-gradient(90deg, #FFB88C, #E5976A);
+            z-index: 60; transition: width 0.1s ease-out;
+        }
+
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after {
+            content: '';
+            position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.65s ease;
+            pointer-events: none;
+        }
+        .btn-shine:hover::after { left: 125%; }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .btn-shine::after { transition: none !important; }
+        }
     </style>
 </head>
 <body class="text-brand-text bg-white antialiased flex flex-col min-h-screen">
+
+    <div id="scroll-progress"></div>
 
     <!-- Navigation -->
     <nav class="w-full bg-white/90 backdrop-blur-md z-50 border-b border-brand-light sticky top-0">
@@ -119,7 +143,7 @@
                     </div>
 
                     <!-- Submit Button -->
-                    <button type="submit" id="submit-review-btn" class="w-full py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                    <button type="submit" id="submit-review-btn" class="btn-shine w-full py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
                         ส่งรีวิวประสบการณ์
                     </button>
                     <p id="review-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อทีมงานทาง LINE</p>
@@ -180,6 +204,14 @@
     <script src="supabase-client.js"></script>
 
     <script>
+        // --- แถบแสดงความคืบหน้าการเลื่อนหน้าเว็บ ---
+        const scrollProgressBar = document.getElementById('scroll-progress');
+        window.addEventListener('scroll', function () {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            scrollProgressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
+        }, false);
+
         function previewLogo(event) {
             const file = event.target.files[0];
             const previewBox = document.getElementById('logo-preview-box');

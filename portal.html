@@ -41,9 +41,33 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #FFB88C; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #E5976A; }
+
+        #scroll-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+            background: linear-gradient(90deg, #FFB88C, #E5976A);
+            z-index: 60; transition: width 0.1s ease-out;
+        }
+
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after {
+            content: '';
+            position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.65s ease;
+            pointer-events: none;
+        }
+        .btn-shine:hover::after { left: 125%; }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .btn-shine::after { transition: none !important; }
+        }
     </style>
 </head>
 <body class="text-brand-text bg-white antialiased flex flex-col min-h-screen">
+
+    <div id="scroll-progress"></div>
 
     <!-- Navigation -->
     <nav class="w-full bg-white/90 backdrop-blur-md z-50 border-b border-brand-light sticky top-0">
@@ -160,7 +184,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" id="submit-btn" class="w-full mt-6 py-3.5 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
+                        <button type="submit" id="submit-btn" class="btn-shine w-full mt-6 py-3.5 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md" disabled>
                             ส่งเอกสาร
                         </button>
                     </form>
@@ -210,6 +234,14 @@
 
     <!-- Scripts -->
     <script>
+        // --- แถบแสดงความคืบหน้าการเลื่อนหน้าเว็บ ---
+        const scrollProgressBar = document.getElementById('scroll-progress');
+        window.addEventListener('scroll', function () {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            scrollProgressBar.style.width = (docHeight > 0 ? (scrollTop / docHeight) * 100 : 0) + '%';
+        }, false);
+
         // --- 0. Load real document list from Supabase ---
         async function loadDocumentList() {
             const listEl = document.getElementById('document-list');
