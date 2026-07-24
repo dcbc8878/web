@@ -101,71 +101,9 @@
                             </span>
                         </div>
 
-                        <!-- Document Item List -->
+                        <!-- Document Item List (โหลดจากฐานข้อมูลจริง) -->
                         <ul id="document-list" class="space-y-4">
-                            <!-- Item 1 -->
-                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="fa-regular fa-file-pdf text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">แบบฟอร์มสรุปรายจ่ายประจำเดือน</h3>
-                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">แบบฟอร์มสำหรับรวบรวมใบเสร็จและใบสำคัญจ่ายประจำเดือน (.pdf)</p>
-                                    </div>
-                                </div>
-                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: แบบฟอร์มสรุปรายจ่ายประจำเดือน.pdf')">
-                                    <i class="fa-solid fa-arrow-down"></i> โหลด
-                                </button>
-                            </li>
-
-                            <!-- Item 2 -->
-                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="fa-regular fa-file-excel text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">Template สต็อกสินค้าเบื้องต้น</h3>
-                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">ไฟล์คุมสต็อกสินค้า รายรับ-รายจ่ายสินค้าคงเหลือ (.xlsx)</p>
-                                    </div>
-                                </div>
-                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: Template สต็อกสินค้าเบื้องต้น.xlsx')">
-                                    <i class="fa-solid fa-arrow-down"></i> โหลด
-                                </button>
-                            </li>
-
-                            <!-- Item 3 -->
-                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="fa-regular fa-file-word text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">Checklist เอกสารยื่นภาษีประจำปี</h3>
-                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">รายการเช็คลิสต์เอกสารที่ต้องจัดเตรียมส่งสำนักงานบัญชี (.docx)</p>
-                                    </div>
-                                </div>
-                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: Checklist เอกสารยื่นภาษีประจำปี.docx')">
-                                    <i class="fa-solid fa-arrow-down"></i> โหลด
-                                </button>
-                            </li>
-
-                            <!-- Item 4 -->
-                            <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <i class="fa-regular fa-file-pdf text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-semibold text-gray-800 text-sm doc-title">หนังสือยินยอมเปิดเผยข้อมูลภาษี</h3>
-                                        <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">แบบฟอร์มมอบอำนาจและยินยอมยื่นเอกสารสรรพากร (.pdf)</p>
-                                    </div>
-                                </div>
-                                <button class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm" onclick="alert('กำลังดาวน์โหลด: หนังสือยินยอมเปิดเผยข้อมูลภาษี.pdf')">
-                                    <i class="fa-solid fa-arrow-down"></i> โหลด
-                                </button>
-                            </li>
+                            <li class="text-center text-gray-400 text-sm py-8">กำลังโหลดเอกสาร...</li>
                         </ul>
 
                         <!-- No Result Found Notice -->
@@ -266,8 +204,51 @@
         </div>
     </footer>
 
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+
     <!-- Scripts -->
     <script>
+        // --- 0. Load real document list from Supabase ---
+        async function loadDocumentList() {
+            const listEl = document.getElementById('document-list');
+            const { data, error } = await dcbcSupabase.from('documents').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                listEl.innerHTML = `<li class="text-center text-red-400 text-sm py-8">โหลดเอกสารไม่สำเร็จ กรุณาลองใหม่ภายหลัง</li>`;
+                return;
+            }
+            if (!data.length) {
+                listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ยังไม่มีเอกสารให้ดาวน์โหลดในขณะนี้</li>`;
+                document.getElementById('doc-count').innerText = 'แสดงทั้งหมด 0 รายการ';
+                return;
+            }
+
+            listEl.innerHTML = data.map(doc => {
+                const { icon, bg, text } = dcbcFileIcon(doc.file_name || '');
+                const url = doc.file_path ? dcbcSupabase.storage.from('documents').getPublicUrl(doc.file_path).data.publicUrl : '#';
+                return `
+                <li class="doc-item flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-brand-light/30 transition-colors border border-gray-100 gap-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl ${bg} ${text} flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="${icon} text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800 text-sm doc-title">${escapeHtml(doc.title)}</h3>
+                            <p class="text-xs text-gray-400 font-light mt-0.5 doc-desc">${escapeHtml(doc.description)}</p>
+                        </div>
+                    </div>
+                    <a href="${url}" download="${escapeHtml(doc.file_name || '')}" target="_blank" rel="noopener" class="self-end sm:self-center text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-arrow-down"></i> โหลด
+                    </a>
+                </li>`;
+            }).join('');
+
+            document.getElementById('doc-count').innerText = `แสดงทั้งหมด ${data.length} รายการ`;
+        }
+        loadDocumentList();
+
         // --- 1. Filter / Search Documents ---
         function filterDocuments() {
             const input = document.getElementById('document-search').value.toLowerCase().trim();

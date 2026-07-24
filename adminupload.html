@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow"> <!-- ป้องกันไม่ให้ AI / Search Engine จัดเก็บหน้านี้ -->
-    <title>อัปโหลดข้อมูลเอกสารระบบ | บริษัท เด็กชายบัญชี จำกัด</title>
+    <title>ระบบจัดการหลังบ้าน | บริษัท เด็กชายบัญชี จำกัด</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -41,22 +41,33 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #FFB88C; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #E5976A; }
+        .tab-btn.active { background: #FFB88C; color: #fff; }
+        .status-badge-pending { background: #FEF3C7; color: #92400E; }
+        .status-badge-approved { background: #D1FAE5; color: #065F46; }
+        .status-badge-rejected { background: #FEE2E2; color: #991B1B; }
     </style>
 </head>
-<body class="text-brand-text bg-white antialiased flex flex-col min-h-screen">
+<body class="text-brand-text bg-gray-50 antialiased flex flex-col min-h-screen">
 
-    <!-- Password Gate Overlay (basic deterrent, not full security) -->
+    <!-- Login Overlay -->
     <div id="admin-lock-overlay" class="fixed inset-0 z-[9999] bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-sm w-full text-center">
             <div class="w-16 h-16 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">
                 <i class="fa-solid fa-lock"></i>
             </div>
-            <h1 class="text-xl font-bold text-gray-900 mb-1">หน้าระบบภายใน</h1>
-            <p class="text-xs text-gray-400 font-light mb-6">กรุณาใส่รหัสผ่านเพื่อเข้าใช้งาน</p>
-            <form id="admin-lock-form" class="space-y-3">
-                <input type="password" id="admin-lock-password" required autocomplete="current-password" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm text-center" placeholder="รหัสผ่าน">
-                <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all">เข้าสู่ระบบ</button>
-                <p id="admin-lock-error" class="hidden text-red-500 text-xs">รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่</p>
+            <h1 class="text-xl font-bold text-gray-900 mb-1">ระบบจัดการหลังบ้าน</h1>
+            <p class="text-xs text-gray-400 font-light mb-6">เข้าสู่ระบบด้วยบัญชีแอดมิน</p>
+            <form id="admin-lock-form" class="space-y-3 text-left">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">อีเมล</label>
+                    <input type="email" id="admin-lock-email" required autocomplete="username" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="you@dcbc.co.th">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">รหัสผ่าน</label>
+                    <input type="password" id="admin-lock-password" required autocomplete="current-password" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="รหัสผ่าน">
+                </div>
+                <button type="submit" id="admin-lock-submit" class="w-full py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-60">เข้าสู่ระบบ</button>
+                <p id="admin-lock-error" class="hidden text-red-500 text-xs text-center">อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่</p>
             </form>
         </div>
     </div>
@@ -74,91 +85,153 @@
                         <span class="block text-[10px] text-gray-400 uppercase tracking-widest font-semibold">Admin Panel</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 text-xs bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full border border-amber-200">
-                    <i class="fa-solid fa-shield-halved"></i> หน้าระบบภายใน (ไม่แสดงในหน้าเว็บ)
+                <div class="flex items-center gap-3">
+                    <div class="hidden sm:flex items-center gap-2 text-xs bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full border border-amber-200">
+                        <i class="fa-solid fa-shield-halved"></i> หน้าระบบภายใน (ไม่แสดงในหน้าเว็บ)
+                    </div>
+                    <button id="admin-signout-btn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-full font-medium flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- Main Upload Form Section -->
-    <main class="flex-grow py-12 md:py-16 bg-gray-50 flex items-center justify-center">
-        <div class="max-w-2xl w-full mx-auto px-4">
-            
-            <div class="bg-white p-8 md:p-10 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
-                
-                <div class="border-b border-gray-100 pb-6 mb-8 text-center md:text-left flex flex-col md:flex-row items-center gap-4">
-                    <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
-                        <i class="fa-solid fa-file-arrow-up"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold text-gray-900">อัปโหลดข้อมูล / เพิ่มเอกสารใหม่</h1>
-                        <p class="text-xs text-gray-400 font-light mt-1">กรอกรายละเอียดเพื่อนำส่งข้อมูลขึ้นระบบเอกสาร</p>
-                    </div>
-                </div>
+    <!-- Tabs -->
+    <div class="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-200 w-fit shadow-sm">
+            <button class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="documents-tab" onclick="switchTab('documents-tab', this)">
+                <i class="fa-solid fa-folder-open"></i> เอกสาร
+            </button>
+            <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="reviews-tab" onclick="switchTab('reviews-tab', this)">
+                <i class="fa-regular fa-comment-dots"></i> รีวิว
+            </button>
+        </div>
+    </div>
 
-                <form id="admin-upload-form" action="https://formsubmit.co/ajax/contact@dcbc.co.th" method="POST" enctype="multipart/form-data" class="space-y-6">
-                    <input type="hidden" name="_subject" value="แอดมินอัปโหลดเอกสารใหม่เข้าระบบ">
-                    <input type="hidden" name="_captcha" value="false">
+    <!-- Main -->
+    <main class="flex-grow py-8">
+        <div class="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
-                    <!-- 1. ชื่องาน -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">1. ชื่องาน <span class="text-red-500">*</span></label>
-                        <input type="text" id="job-title" name="ชื่องาน" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="ระบุชื่องาน หรือชื่อเอกสาร เช่น สรุปงบการเงินประจำปี 2026">
-                    </div>
+            <!-- ============ DOCUMENTS TAB ============ -->
+            <div id="documents-tab" class="tab-panel space-y-8">
 
-                    <!-- 2. คำอธิบาย -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">2. คำอธิบาย <span class="text-red-500">*</span></label>
-                        <textarea id="job-description" name="คำอธิบาย" required rows="4" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="ระบุรายละเอียด หรือคำอธิบายเพิ่มเติมเกี่ยวกับงานหรือเอกสารนี้..."></textarea>
-                    </div>
-
-                    <!-- 3. ไฟล์อัปโหลด -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">3. ไฟล์อัปโหลด <span class="text-red-500">*</span></label>
-
-                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('admin-file').click()">
-                            <input type="file" id="admin-file" name="attachment" required class="hidden" onchange="previewAdminFile(event)">
-
-                            <div id="admin-upload-idle">
-                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand mb-2"></i>
-                                <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                                <p class="text-xs text-gray-400 font-light mt-1">รองรับทุกนามสกุลไฟล์ เช่น PDF, XLSX, DOCX, ZIP (สูงสุด 50MB)</p>
-                            </div>
-
-                            <div id="admin-upload-selected" class="hidden flex items-center justify-between p-3 bg-white rounded-xl border border-brand/30">
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-file-lines text-2xl text-brand"></i>
-                                    <div class="text-left">
-                                        <p id="admin-file-name" class="text-sm font-medium text-gray-800 truncate max-w-[250px] sm:max-w-[350px]">filename.pdf</p>
-                                        <p id="admin-file-size" class="text-xs text-gray-400">0 KB</p>
-                                    </div>
-                                </div>
-                                <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">พร้อมอัปโหลด</span>
-                            </div>
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+                        <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </div>
+                        <div>
+                            <h1 id="doc-form-title" class="text-2xl font-bold text-gray-900">เพิ่มเอกสารใหม่</h1>
+                            <p class="text-xs text-gray-400 font-light mt-1">เอกสารที่เพิ่มจะแสดงในหน้า "ระบบเอกสารลูกค้า" ทันที</p>
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" id="admin-submit-btn" class="w-full py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
-                        <i class="fa-solid fa-paper-plane"></i> ยืนยันการอัปโหลดข้อมูล
-                    </button>
-                    <p id="admin-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
-                </form>
+                    <form id="admin-upload-form" class="space-y-6">
+                        <input type="hidden" id="editing-doc-id" value="">
 
-                <!-- Success Box (Hidden by Default) -->
-                <div id="admin-success-box" class="hidden text-center py-8">
-                    <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">บันทึกและอัปโหลดข้อมูลสำเร็จ!</h2>
-                    <p class="text-gray-500 text-sm font-light mb-6">ข้อมูลงานและไฟล์เอกสารของคุณถูกบันทึกเข้าสู่ระบบเรียบร้อยแล้ว</p>
-                    <button onclick="resetAdminForm()" class="px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors shadow-md text-sm">
-                        + อัปโหลดรายการถัดไป
-                    </button>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. ชื่องาน <span class="text-red-500">*</span></label>
+                            <input type="text" id="job-title" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="ระบุชื่องาน หรือชื่อเอกสาร เช่น สรุปงบการเงินประจำปี 2026">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. คำอธิบาย <span class="text-red-500">*</span></label>
+                            <textarea id="job-description" required rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="ระบุรายละเอียด หรือคำอธิบายเพิ่มเติมเกี่ยวกับงานหรือเอกสารนี้..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                3. ไฟล์อัปโหลด <span id="file-required-star" class="text-red-500">*</span>
+                                <span id="file-optional-note" class="hidden text-xs text-gray-400 font-light">(เว้นว่างได้ถ้าไม่ต้องการเปลี่ยนไฟล์เดิม)</span>
+                            </label>
+
+                            <div id="drop-zone" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('admin-file').click()">
+                                <input type="file" id="admin-file" class="hidden" onchange="previewAdminFile(event)">
+
+                                <div id="admin-upload-idle">
+                                    <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand mb-2"></i>
+                                    <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
+                                    <p class="text-xs text-gray-400 font-light mt-1">รองรับทุกนามสกุลไฟล์ เช่น PDF, XLSX, DOCX, ZIP (สูงสุด 50MB)</p>
+                                </div>
+
+                                <div id="admin-upload-selected" class="hidden flex items-center justify-between p-3 bg-white rounded-xl border border-brand/30">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-file-lines text-2xl text-brand"></i>
+                                        <div class="text-left">
+                                            <p id="admin-file-name" class="text-sm font-medium text-gray-800 truncate max-w-[250px] sm:max-w-[350px]">filename.pdf</p>
+                                            <p id="admin-file-size" class="text-xs text-gray-400">0 KB</p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">พร้อมอัปโหลด</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="submit" id="admin-submit-btn" class="flex-1 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                                <i class="fa-solid fa-paper-plane"></i> <span id="admin-submit-label">เพิ่มเอกสาร</span>
+                            </button>
+                            <button type="button" id="cancel-edit-btn" onclick="cancelEditDocument()" class="hidden px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                                ยกเลิก
+                            </button>
+                        </div>
+                        <p id="admin-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
+                    </form>
                 </div>
 
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-list-check text-brand"></i> รายการเอกสารทั้งหมด
+                    </h2>
+                    <ul id="doc-management-list" class="space-y-3">
+                        <li class="text-center text-gray-400 text-sm py-8">กำลังโหลด...</li>
+                    </ul>
+                </div>
             </div>
+
+            <!-- ============ REVIEWS TAB ============ -->
+            <div id="reviews-tab" class="tab-panel hidden space-y-8">
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                                <i class="fa-regular fa-comment-dots text-brand"></i> ลิงก์รับรีวิวจากลูกค้า
+                            </h2>
+                            <p id="approved-count-note" class="text-xs text-gray-400 font-light mt-1">กำลังโหลดจำนวนรีวิวที่อนุมัติแล้ว...</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="copyReviewLink()" class="px-4 py-2.5 bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 text-xs font-medium rounded-xl transition-colors border border-gray-200 flex items-center gap-2">
+                                <i class="fa-regular fa-copy"></i> คัดลอกลิงก์
+                            </button>
+                            <button onclick="downloadReviewQr()" class="px-4 py-2.5 bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 text-xs font-medium rounded-xl transition-colors border border-gray-200 flex items-center gap-2">
+                                <i class="fa-solid fa-qrcode"></i> ดาวน์โหลด QR Code
+                            </button>
+                        </div>
+                    </div>
+                    <p id="copy-link-feedback" class="hidden text-green-600 text-xs font-medium">คัดลอกลิงก์แล้ว ✓</p>
+                    <div id="qr-render-target" class="hidden"></div>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                            <i class="fa-solid fa-list-check text-brand"></i> รายการรีวิว
+                        </h2>
+                        <div class="flex gap-2 text-xs font-medium">
+                            <button class="review-filter-btn active px-3 py-1.5 rounded-lg border border-gray-200" data-status="all" onclick="setReviewFilter('all', this)">ทั้งหมด</button>
+                            <button class="review-filter-btn px-3 py-1.5 rounded-lg border border-gray-200" data-status="pending" onclick="setReviewFilter('pending', this)">รอตรวจสอบ</button>
+                            <button class="review-filter-btn px-3 py-1.5 rounded-lg border border-gray-200" data-status="approved" onclick="setReviewFilter('approved', this)">อนุมัติแล้ว</button>
+                            <button class="review-filter-btn px-3 py-1.5 rounded-lg border border-gray-200" data-status="rejected" onclick="setReviewFilter('rejected', this)">ปฏิเสธแล้ว</button>
+                        </div>
+                    </div>
+                    <ul id="review-management-list" class="space-y-3">
+                        <li class="text-center text-gray-400 text-sm py-8">กำลังโหลด...</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -167,87 +240,364 @@
         <p>&copy; 2026 บริษัท เด็กชายบัญชี จำกัด. Admin Internal Portal.</p>
     </footer>
 
+    <!-- Supabase + QR Code libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <script>
+        const REVIEW_LINK_URL = 'https://www.dcbc.co.th/review.html';
+        const REQUIRED_APPROVED_REVIEWS = 5;
+        let currentReviewFilter = 'all';
+        let allReviewsCache = [];
+
+        // ---------------- Tabs ----------------
+        function switchTab(tabId, btnEl) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btnEl.classList.add('active');
+        }
+
+        // ---------------- Auth ----------------
+        const lockOverlay = document.getElementById('admin-lock-overlay');
+        const lockForm = document.getElementById('admin-lock-form');
+        const lockEmail = document.getElementById('admin-lock-email');
+        const lockPassword = document.getElementById('admin-lock-password');
+        const lockError = document.getElementById('admin-lock-error');
+        const lockSubmitBtn = document.getElementById('admin-lock-submit');
+
+        async function showAdminApp() {
+            lockOverlay.style.display = 'none';
+            loadDocuments();
+            loadReviews();
+        }
+
+        dcbcSupabase.auth.getSession().then(({ data }) => {
+            if (data.session) showAdminApp();
+        });
+
+        dcbcSupabase.auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_OUT') {
+                lockOverlay.style.display = 'flex';
+            }
+        });
+
+        lockForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            lockError.classList.add('hidden');
+            lockSubmitBtn.disabled = true;
+            lockSubmitBtn.innerText = 'กำลังเข้าสู่ระบบ...';
+
+            const { error } = await dcbcSupabase.auth.signInWithPassword({
+                email: lockEmail.value,
+                password: lockPassword.value
+            });
+
+            lockSubmitBtn.disabled = false;
+            lockSubmitBtn.innerText = 'เข้าสู่ระบบ';
+
+            if (error) {
+                lockError.classList.remove('hidden');
+                lockPassword.value = '';
+                return;
+            }
+            showAdminApp();
+        });
+
+        document.getElementById('admin-signout-btn').addEventListener('click', async function () {
+            await dcbcSupabase.auth.signOut();
+            lockEmail.value = '';
+            lockPassword.value = '';
+        });
+
+        // ---------------- Documents: form + preview ----------------
         function previewAdminFile(event) {
             const file = event.target.files[0];
             if (file) {
                 document.getElementById('admin-upload-idle').classList.add('hidden');
                 document.getElementById('admin-upload-selected').classList.remove('hidden');
-                
                 document.getElementById('admin-file-name').innerText = file.name;
-                
-                // Format file size
-                const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
-                const sizeText = sizeInMB > 1 ? `${sizeInMB} MB` : `${(file.size / 1024).toFixed(1)} KB`;
-                document.getElementById('admin-file-size').innerText = sizeText;
+                document.getElementById('admin-file-size').innerText = dcbcFormatBytes(file.size);
             }
         }
 
+        function resetDocForm() {
+            document.getElementById('admin-upload-form').reset();
+            document.getElementById('editing-doc-id').value = '';
+            document.getElementById('doc-form-title').innerText = 'เพิ่มเอกสารใหม่';
+            document.getElementById('admin-submit-label').innerText = 'เพิ่มเอกสาร';
+            document.getElementById('cancel-edit-btn').classList.add('hidden');
+            document.getElementById('file-required-star').classList.remove('hidden');
+            document.getElementById('file-optional-note').classList.add('hidden');
+            document.getElementById('admin-upload-idle').classList.remove('hidden');
+            document.getElementById('admin-upload-selected').classList.add('hidden');
+        }
+
+        function cancelEditDocument() {
+            resetDocForm();
+        }
+
+        function editDocument(doc) {
+            document.getElementById('editing-doc-id').value = doc.id;
+            document.getElementById('job-title').value = doc.title;
+            document.getElementById('job-description').value = doc.description;
+            document.getElementById('doc-form-title').innerText = 'แก้ไขเอกสาร: ' + doc.title;
+            document.getElementById('admin-submit-label').innerText = 'บันทึกการแก้ไข';
+            document.getElementById('cancel-edit-btn').classList.remove('hidden');
+            document.getElementById('file-required-star').classList.add('hidden');
+            document.getElementById('file-optional-note').classList.remove('hidden');
+            document.getElementById('admin-upload-idle').classList.remove('hidden');
+            document.getElementById('admin-upload-selected').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         const adminUploadForm = document.getElementById('admin-upload-form');
-        adminUploadForm.addEventListener('submit', function (event) {
+        adminUploadForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const btn = document.getElementById('admin-submit-btn');
             const errorMsg = document.getElementById('admin-form-error');
             errorMsg.classList.add('hidden');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลดข้อมูล...';
 
-            fetch(adminUploadForm.action, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json' },
-                body: new FormData(adminUploadForm)
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('อัปโหลดไม่สำเร็จ');
-                adminUploadForm.classList.add('hidden');
-                document.getElementById('admin-success-box').classList.remove('hidden');
-            })
-            .catch(() => {
+            const editingId = document.getElementById('editing-doc-id').value;
+            const title = document.getElementById('job-title').value.trim();
+            const description = document.getElementById('job-description').value.trim();
+            const fileInput = document.getElementById('admin-file');
+            const file = fileInput.files[0];
+
+            if (!editingId && !file) {
+                errorMsg.textContent = 'กรุณาเลือกไฟล์ที่ต้องการอัปโหลด';
                 errorMsg.classList.remove('hidden');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันการอัปโหลดข้อมูล';
-            });
-        });
-
-        function resetAdminForm() {
-            adminUploadForm.reset();
-            document.getElementById('admin-upload-idle').classList.remove('hidden');
-            document.getElementById('admin-upload-selected').classList.add('hidden');
-
-            const btn = document.getElementById('admin-submit-btn');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ยืนยันการอัปโหลดข้อมูล';
-
-            document.getElementById('admin-success-box').classList.add('hidden');
-            adminUploadForm.classList.remove('hidden');
-        }
-
-        // --- Password Gate (basic deterrent only — not real security) ---
-        // เปลี่ยนรหัสผ่านได้โดยแก้ค่าในบรรทัดถัดไป
-        const ADMIN_PANEL_PASSWORD = 'dekchai2026';
-
-        (function () {
-            const overlay = document.getElementById('admin-lock-overlay');
-            const lockForm = document.getElementById('admin-lock-form');
-            const passwordInput = document.getElementById('admin-lock-password');
-            const lockError = document.getElementById('admin-lock-error');
-
-            if (sessionStorage.getItem('dcbc_admin_authed') === 'true') {
-                overlay.style.display = 'none';
+                return;
             }
 
-            lockForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                if (passwordInput.value === ADMIN_PANEL_PASSWORD) {
-                    sessionStorage.setItem('dcbc_admin_authed', 'true');
-                    overlay.style.display = 'none';
-                } else {
-                    lockError.classList.remove('hidden');
-                    passwordInput.value = '';
-                    passwordInput.focus();
+            btn.disabled = true;
+            btn.querySelector('span').innerText = 'กำลังบันทึก...';
+
+            try {
+                let filePath = null;
+                let fileName = null;
+                let fileSize = null;
+
+                if (file) {
+                    filePath = `${Date.now()}-${crypto.randomUUID()}-${file.name}`;
+                    const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, file);
+                    if (uploadError) throw uploadError;
+                    fileName = file.name;
+                    fileSize = file.size;
                 }
+
+                if (editingId) {
+                    const updatePayload = { title, description, updated_at: new Date().toISOString() };
+                    if (filePath) {
+                        const existing = (await dcbcSupabase.from('documents').select('file_path').eq('id', editingId).single()).data;
+                        updatePayload.file_path = filePath;
+                        updatePayload.file_name = fileName;
+                        updatePayload.file_size = fileSize;
+                        const { error: updateError } = await dcbcSupabase.from('documents').update(updatePayload).eq('id', editingId);
+                        if (updateError) throw updateError;
+                        if (existing && existing.file_path) {
+                            await dcbcSupabase.storage.from('documents').remove([existing.file_path]);
+                        }
+                    } else {
+                        const { error: updateError } = await dcbcSupabase.from('documents').update(updatePayload).eq('id', editingId);
+                        if (updateError) throw updateError;
+                    }
+                } else {
+                    const { error: insertError } = await dcbcSupabase.from('documents').insert({
+                        title, description, file_path: filePath, file_name: fileName, file_size: fileSize
+                    });
+                    if (insertError) throw insertError;
+                }
+
+                resetDocForm();
+                loadDocuments();
+            } catch (err) {
+                errorMsg.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('admin-submit-label').innerText = editingId ? 'บันทึกการแก้ไข' : 'เพิ่มเอกสาร';
+            }
+        });
+
+        // ---------------- Documents: list ----------------
+        async function loadDocuments() {
+            const listEl = document.getElementById('doc-management-list');
+            const { data, error } = await dcbcSupabase.from('documents').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                listEl.innerHTML = `<li class="text-center text-red-500 text-sm py-8">โหลดรายการไม่สำเร็จ: ${escapeHtml(error.message)}</li>`;
+                return;
+            }
+            if (!data.length) {
+                listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ยังไม่มีเอกสารในระบบ</li>`;
+                return;
+            }
+
+            listEl.innerHTML = data.map(doc => {
+                const { icon, bg, text } = dcbcFileIcon(doc.file_name || '');
+                return `
+                <li class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl ${bg} ${text} flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="${icon} text-xl"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(doc.title)}</h3>
+                            <p class="text-xs text-gray-400 font-light mt-0.5">${escapeHtml(doc.description)}</p>
+                            <p class="text-[11px] text-gray-400 mt-1">${escapeHtml(doc.file_name || '')} ${doc.file_size ? '· ' + dcbcFormatBytes(doc.file_size) : ''}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
+                        <button onclick='editDocument(${JSON.stringify(doc).replace(/'/g, "&apos;")})' class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-pen"></i> แก้ไข
+                        </button>
+                        <button onclick="deleteDocument('${doc.id}', '${(doc.file_path || '').replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash"></i> ลบ
+                        </button>
+                    </div>
+                </li>`;
+            }).join('');
+        }
+
+        async function deleteDocument(id, filePath) {
+            if (!confirm('ยืนยันการลบเอกสารนี้?')) return;
+            if (filePath) {
+                await dcbcSupabase.storage.from('documents').remove([filePath]);
+            }
+            const { error } = await dcbcSupabase.from('documents').delete().eq('id', id);
+            if (error) {
+                alert('ลบไม่สำเร็จ: ' + error.message);
+                return;
+            }
+            loadDocuments();
+        }
+
+        // ---------------- Reviews: link + QR ----------------
+        function copyReviewLink() {
+            navigator.clipboard.writeText(REVIEW_LINK_URL).then(() => {
+                const fb = document.getElementById('copy-link-feedback');
+                fb.classList.remove('hidden');
+                setTimeout(() => fb.classList.add('hidden'), 2500);
             });
-        })();
+        }
+
+        function downloadReviewQr() {
+            const target = document.getElementById('qr-render-target');
+            target.innerHTML = '';
+            new QRCode(target, { text: REVIEW_LINK_URL, width: 320, height: 320 });
+
+            setTimeout(() => {
+                const canvas = target.querySelector('canvas');
+                const img = target.querySelector('img');
+                const dataUrl = canvas ? canvas.toDataURL('image/png') : (img ? img.src : null);
+                if (!dataUrl) return;
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'dcbc-review-qr.png';
+                a.click();
+            }, 150);
+        }
+
+        // ---------------- Reviews: list ----------------
+        function setReviewFilter(status, btnEl) {
+            currentReviewFilter = status;
+            document.querySelectorAll('.review-filter-btn').forEach(b => b.classList.remove('active', 'bg-brand', 'text-white'));
+            btnEl.classList.add('active', 'bg-brand', 'text-white');
+            renderReviewList();
+        }
+
+        async function loadReviews() {
+            const { data, error } = await dcbcSupabase.from('reviews').select('*').order('created_at', { ascending: false });
+            if (error) {
+                document.getElementById('review-management-list').innerHTML = `<li class="text-center text-red-500 text-sm py-8">โหลดรายการไม่สำเร็จ: ${escapeHtml(error.message)}</li>`;
+                return;
+            }
+            allReviewsCache = data;
+
+            const approvedCount = data.filter(r => r.status === 'approved').length;
+            const note = document.getElementById('approved-count-note');
+            note.innerText = approvedCount >= REQUIRED_APPROVED_REVIEWS
+                ? `อนุมัติแล้ว ${approvedCount} รายการ — แสดงบนหน้าเว็บแล้ว`
+                : `อนุมัติแล้ว ${approvedCount} รายการ (ต้องมีอย่างน้อย ${REQUIRED_APPROVED_REVIEWS} รายการ เซคชันรีวิวจึงจะแสดงบนหน้าเว็บ)`;
+
+            renderReviewList();
+        }
+
+        function reviewLogoUrl(logoPath) {
+            if (!logoPath) return null;
+            return dcbcSupabase.storage.from('review-logos').getPublicUrl(logoPath).data.publicUrl;
+        }
+
+        function renderReviewList() {
+            const listEl = document.getElementById('review-management-list');
+            const filtered = currentReviewFilter === 'all'
+                ? allReviewsCache
+                : allReviewsCache.filter(r => r.status === currentReviewFilter);
+
+            if (!filtered.length) {
+                listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ไม่มีรีวิวในหมวดนี้</li>`;
+                return;
+            }
+
+            const statusLabel = { pending: 'รอตรวจสอบ', approved: 'อนุมัติแล้ว', rejected: 'ปฏิเสธแล้ว' };
+
+            listEl.innerHTML = filtered.map(r => {
+                const logoUrl = reviewLogoUrl(r.logo_path);
+                const avatar = logoUrl
+                    ? `<img src="${logoUrl}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0">`
+                    : `<div class="w-12 h-12 rounded-xl bg-brand-light text-brand flex items-center justify-center font-bold flex-shrink-0">${escapeHtml((r.display_name || '?').charAt(0))}</div>`;
+
+                let actions = '';
+                if (r.status === 'pending') {
+                    actions = `
+                        <button onclick="setReviewStatus('${r.id}', 'approved')" class="text-green-600 hover:text-green-700 bg-white border border-green-200 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+                        <button onclick="setReviewStatus('${r.id}', 'rejected')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>`;
+                } else if (r.status === 'approved') {
+                    actions = `
+                        <button onclick="setReviewStatus('${r.id}', 'rejected')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-xmark"></i> ปฏิเสธ</button>
+                        <button onclick="deleteReview('${r.id}')" class="text-gray-500 hover:text-gray-700 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-trash"></i> ลบ</button>`;
+                } else {
+                    actions = `
+                        <button onclick="setReviewStatus('${r.id}', 'approved')" class="text-green-600 hover:text-green-700 bg-white border border-green-200 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-check"></i> อนุมัติ</button>
+                        <button onclick="deleteReview('${r.id}')" class="text-gray-500 hover:text-gray-700 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-trash"></i> ลบ</button>`;
+                }
+
+                return `
+                <li class="flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
+                    <div class="flex items-start gap-3 min-w-0 flex-1">
+                        ${avatar}
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-semibold text-gray-800 text-sm">${escapeHtml(r.display_name)}</h3>
+                                <span class="status-badge-${r.status} text-[10px] font-bold px-2 py-0.5 rounded-md">${statusLabel[r.status]}</span>
+                            </div>
+                            ${r.business_type ? `<p class="text-xs text-gray-400 mt-0.5">${escapeHtml(r.business_type)}</p>` : ''}
+                            <p class="text-sm text-gray-600 font-light mt-1.5">${escapeHtml(r.message)}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0 self-end sm:self-center">${actions}</div>
+                </li>`;
+            }).join('');
+        }
+
+        async function setReviewStatus(id, status) {
+            const { error } = await dcbcSupabase.from('reviews').update({ status }).eq('id', id);
+            if (error) { alert('อัปเดตไม่สำเร็จ: ' + error.message); return; }
+            loadReviews();
+        }
+
+        async function deleteReview(id) {
+            if (!confirm('ยืนยันการลบรีวิวนี้?')) return;
+            const review = allReviewsCache.find(r => r.id === id);
+            if (review && review.logo_path) {
+                await dcbcSupabase.storage.from('review-logos').remove([review.logo_path]);
+            }
+            const { error } = await dcbcSupabase.from('reviews').delete().eq('id', id);
+            if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+            loadReviews();
+        }
     </script>
 </body>
 </html>

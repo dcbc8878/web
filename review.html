@@ -131,7 +131,7 @@
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">ส่งรีวิวสำเร็จเรียบร้อย!</h2>
-                    <p class="text-gray-500 text-sm font-light mb-6">ขอบคุณสำหรับคำติชมและความประทับใจ ทีมงานจะนำไปพัฒนาบริการให้ดียิ่งขึ้นครับ</p>
+                    <p class="text-gray-500 text-sm font-light mb-6">ขอบคุณสำหรับคำติชมและความประทับใจ รีวิวของคุณจะแสดงบนเว็บไซต์หลังจากทีมงานตรวจสอบและอนุมัติแล้วครับ</p>
                     <a href="index.html" class="inline-block px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors shadow-md text-sm">
                         กลับสู่หน้าหลัก
                     </a>
@@ -175,6 +175,10 @@
         </div>
     </footer>
 
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js"></script>
+
     <script>
         function previewLogo(event) {
             const file = event.target.files[0];
@@ -189,7 +193,7 @@
         }
 
         const reviewForm = document.getElementById('standalone-review-form');
-        reviewForm.addEventListener('submit', function (event) {
+        reviewForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const btn = document.getElementById('submit-review-btn');
             const errorMsg = document.getElementById('review-form-error');
@@ -197,21 +201,42 @@
             btn.disabled = true;
             btn.innerText = 'กำลังส่งรีวิว...';
 
+            // Fire the email heads-up in parallel — must never block or fail
+            // the visible success state; the DB insert below is the source of truth.
             fetch(reviewForm.action, {
                 method: 'POST',
                 headers: { 'Accept': 'application/json' },
                 body: new FormData(reviewForm)
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('ส่งข้อมูลไม่สำเร็จ');
+            }).catch(() => {});
+
+            const displayName = document.getElementById('display-name').value.trim();
+            const businessType = document.getElementById('business-type').value.trim();
+            const message = document.getElementById('review-message').value.trim();
+            const logoFile = document.getElementById('company-logo').files[0];
+
+            try {
+                let logoPath = null;
+                if (logoFile) {
+                    const path = `${Date.now()}-${crypto.randomUUID()}-${logoFile.name}`;
+                    const { error: uploadError } = await dcbcSupabase.storage.from('review-logos').upload(path, logoFile);
+                    if (!uploadError) logoPath = path;
+                }
+
+                const { error: insertError } = await dcbcSupabase.from('reviews').insert({
+                    display_name: displayName,
+                    business_type: businessType || null,
+                    message: message,
+                    logo_path: logoPath
+                });
+                if (insertError) throw insertError;
+
                 reviewForm.classList.add('hidden');
                 document.getElementById('review-success-box').classList.remove('hidden');
-            })
-            .catch(() => {
+            } catch (err) {
                 errorMsg.classList.remove('hidden');
                 btn.disabled = false;
                 btn.innerText = 'ส่งรีวิวประสบการณ์';
-            });
+            }
         });
     </script>
 </body>
