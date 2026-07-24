@@ -106,18 +106,21 @@
             z-index: 60; transition: width 0.1s ease-out;
         }
 
-        /* Staggered reveal for grid items (each direct child fades in one after another) */
-        .stagger.active > * {
+        /* Staggered reveal for grid items — transition-based so it plays
+           smoothly both entering AND leaving the viewport (scroll up or down) */
+        .stagger > * {
             opacity: 0; transform: translateY(24px);
-            animation: stagger-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .stagger.active > *:nth-child(1) { animation-delay: 0ms; }
-        .stagger.active > *:nth-child(2) { animation-delay: 100ms; }
-        .stagger.active > *:nth-child(3) { animation-delay: 200ms; }
-        .stagger.active > *:nth-child(4) { animation-delay: 300ms; }
-        @keyframes stagger-in {
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .stagger.active > * { opacity: 1; transform: translateY(0); }
+        .stagger.active > *:nth-child(1) { transition-delay: 0ms; }
+        .stagger.active > *:nth-child(2) { transition-delay: 100ms; }
+        .stagger.active > *:nth-child(3) { transition-delay: 200ms; }
+        .stagger.active > *:nth-child(4) { transition-delay: 300ms; }
+        /* The grid itself is also a .reveal target (so it's observed and
+           gets .active toggled) but its OWN fade is cancelled here — only
+           its children should visibly animate, not the grid wrapper too */
+        .reveal.stagger { opacity: 1; transform: none; transition: none; }
 
         /* Gentle floating glow blobs (replaces flat animate-pulse in hero) */
         @keyframes blob-float {
@@ -149,7 +152,7 @@
 
         @media (prefers-reduced-motion: reduce) {
             html { scroll-behavior: auto; }
-            .reveal, .stagger.active > * { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; }
+            .reveal, .stagger > * { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; }
             .animate-marquee, .animate-blob, .animate-pop-in, .btn-shine::after { animation: none !important; transition: none !important; }
         }
     </style>
@@ -687,10 +690,14 @@
             threshold: 0.15
         };
 
-        const observer = new IntersectionObserver((entries, observer) => {
+        // สลับ .active เข้า/ออกตามการมองเห็นจริง (ไม่ใช่ครั้งเดียว) — เลื่อนลงแล้วปรากฏ
+        // เลื่อนขึ้นผ่านไปแล้วก็เฟดกลับเหมือนเว็บของ Apple
+        const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('active');
+                } else {
+                    entry.target.classList.remove('active');
                 }
             });
         }, observerOptions);
