@@ -333,7 +333,7 @@
 
     <!-- Supabase + QR Code libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js?v=3"></script>
+    <script src="supabase-client.js?v=4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
@@ -474,7 +474,7 @@
                 let fileSize = null;
 
                 if (file) {
-                    filePath = `${Date.now()}-${dcbcRandomId()}-${file.name}`;
+                    filePath = dcbcStoragePath(file.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, file);
                     if (uploadError) throw uploadError;
                     fileName = file.name;
@@ -661,7 +661,7 @@
                 status.className = 'text-xs text-center mt-3 text-gray-500';
                 status.innerText = `กำลังอัปโหลด: ${entry.file.name}`;
                 try {
-                    const filePath = `${Date.now()}-${dcbcRandomId()}-${entry.file.name}`;
+                    const filePath = dcbcStoragePath(entry.file.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, entry.file);
                     if (uploadError) throw uploadError;
 

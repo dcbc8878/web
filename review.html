@@ -204,7 +204,7 @@
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js?v=3"></script>
+    <script src="supabase-client.js?v=4"></script>
 
     <script>
         // --- แถบแสดงความคืบหน้าการเลื่อนหน้าเว็บ ---
@@ -253,7 +253,7 @@
                 let logoPath = null;
                 let logoFailed = false;
                 if (logoFile) {
-                    const path = `${Date.now()}-${dcbcRandomId()}-${logoFile.name}`;
+                    const path = dcbcStoragePath(logoFile.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('review-logos').upload(path, logoFile);
                     if (!uploadError) { logoPath = path; } else { logoFailed = true; }
                 }

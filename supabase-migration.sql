@@ -191,11 +191,15 @@ on conflict (code) do nothing;
 
 -- ---------- Storage: documents bucket ----------
 -- (bucket itself created via Dashboard, see manual steps)
+--
+-- NOTE: there is deliberately NO public SELECT policy here. Both buckets
+-- are PUBLIC, and a public bucket serves its files over the public URL
+-- without consulting RLS at all — so downloads work regardless. Adding a
+-- broad SELECT policy on storage.objects would additionally let anyone
+-- LIST every object in the bucket, which Supabase's own advisor flags as
+-- exposing more than intended. Dropped here in case an earlier run of
+-- this migration created it.
 drop policy if exists "documents_bucket_public_read" on storage.objects;
-create policy "documents_bucket_public_read"
-  on storage.objects for select
-  to anon, authenticated
-  using (bucket_id = 'documents');
 
 drop policy if exists "documents_bucket_admin_insert" on storage.objects;
 create policy "documents_bucket_admin_insert"
@@ -220,11 +224,10 @@ create policy "documents_bucket_admin_delete"
 -- review from review.html uploads their own logo directly, before
 -- any admin has logged in. Only admin can UPDATE/DELETE (moderation
 -- cleanup); anon never gets those.
+-- As with the documents bucket, no public SELECT policy — the bucket is
+-- public so logos load fine over their public URL, and omitting it stops
+-- anyone from listing the whole bucket.
 drop policy if exists "review_logos_bucket_public_read" on storage.objects;
-create policy "review_logos_bucket_public_read"
-  on storage.objects for select
-  to anon, authenticated
-  using (bucket_id = 'review-logos');
 
 drop policy if exists "review_logos_bucket_public_insert" on storage.objects;
 create policy "review_logos_bucket_public_insert"

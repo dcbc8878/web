@@ -42,3 +42,30 @@ function dcbcRandomId() {
     }
     return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
+
+// Supabase Storage rejects object keys containing non-ASCII characters,
+// which every Thai-named file would hit. The real filename is kept in the
+// documents.file_name column (used for display and the download attribute);
+// this only sanitizes the storage key itself.
+function dcbcSafeStorageKey(fileName) {
+    const name = fileName || 'file';
+    const lastDot = name.lastIndexOf('.');
+    const hasExt = lastDot > 0;
+
+    const ext = hasExt
+        ? name.slice(lastDot + 1).replace(/[^A-Za-z0-9]/g, '').toLowerCase()
+        : '';
+
+    const base = (hasExt ? name.slice(0, lastDot) : name)
+        .replace(/[^A-Za-z0-9._-]/g, '-')  // anything outside the safe set (incl. Thai) -> dash
+        .replace(/-+/g, '-')
+        .replace(/^[-.]+|[-.]+$/g, '')
+        .slice(0, 60) || 'file';
+
+    return ext ? `${base}.${ext}` : base;
+}
+
+// Full storage path for a newly uploaded file: unique prefix + safe key.
+function dcbcStoragePath(fileName) {
+    return `${Date.now()}-${dcbcRandomId()}-${dcbcSafeStorageKey(fileName)}`;
+}
