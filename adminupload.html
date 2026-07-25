@@ -333,7 +333,7 @@
 
     <!-- Supabase + QR Code libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js?v=2"></script>
+    <script src="supabase-client.js?v=3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
@@ -652,6 +652,7 @@
 
             let done = 0;
             let failed = 0;
+            let firstError = '';
             const total = bulkFiles.length;
             let nextOrder = await nextDocumentSortOrder();
 
@@ -676,6 +677,7 @@
                     done++;
                 } catch (err) {
                     failed++;
+                    if (!firstError) firstError = err.message || String(err);
                 }
             }
 
@@ -683,7 +685,7 @@
             btn.disabled = false;
             status.className = failed ? 'text-xs text-center mt-3 text-red-500' : 'text-xs text-center mt-3 text-green-600';
             status.innerText = failed
-                ? `อัปโหลดสำเร็จ ${done} รายการ, ไม่สำเร็จ ${failed} รายการ`
+                ? `อัปโหลดสำเร็จ ${done} รายการ, ไม่สำเร็จ ${failed} รายการ — สาเหตุ: ${firstError}`
                 : `อัปโหลดสำเร็จทั้งหมด ${done} รายการ`;
 
             bulkFiles = [];
