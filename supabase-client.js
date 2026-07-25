@@ -28,3 +28,17 @@ function dcbcFormatBytes(bytes) {
     const mb = bytes / (1024 * 1024);
     return mb >= 1 ? `${mb.toFixed(2)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
 }
+
+// Unique-ID generator for storage file paths. crypto.randomUUID() only
+// exists in secure contexts (HTTPS) on newer browsers, so it can throw
+// "crypto.randomUUID is not a function" elsewhere — fall back gracefully.
+function dcbcRandomId() {
+    if (window.crypto && typeof crypto.randomUUID === 'function') {
+        return crypto.randomUUID();
+    }
+    if (window.crypto && typeof crypto.getRandomValues === 'function') {
+        const bytes = crypto.getRandomValues(new Uint8Array(16));
+        return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+    }
+    return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+}

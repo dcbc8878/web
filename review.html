@@ -251,7 +251,7 @@
             try {
                 let logoPath = null;
                 if (logoFile) {
-                    const path = `${Date.now()}-${crypto.randomUUID()}-${logoFile.name}`;
+                    const path = `${Date.now()}-${dcbcRandomId()}-${logoFile.name}`;
                     const { error: uploadError } = await dcbcSupabase.storage.from('review-logos').upload(path, logoFile);
                     if (!uploadError) logoPath = path;
                 }

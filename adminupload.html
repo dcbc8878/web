@@ -442,7 +442,7 @@
                 let fileSize = null;
 
                 if (file) {
-                    filePath = `${Date.now()}-${crypto.randomUUID()}-${file.name}`;
+                    filePath = `${Date.now()}-${dcbcRandomId()}-${file.name}`;
                     const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, file);
                     if (uploadError) throw uploadError;
                     fileName = file.name;
