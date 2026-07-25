@@ -200,7 +200,7 @@
         // --- 0. Load real document list from Supabase ---
         async function loadDocumentList() {
             const listEl = document.getElementById('document-list');
-            const { data, error } = await dcbcSupabase.from('documents').select('*').order('created_at', { ascending: false });
+            const { data, error } = await dcbcSupabase.from('documents').select('*').order('sort_order', { ascending: true });
 
             if (error) {
                 listEl.innerHTML = `<li class="text-center text-red-400 text-sm py-8">โหลดเอกสารไม่สำเร็จ กรุณาลองใหม่ภายหลัง</li>`;

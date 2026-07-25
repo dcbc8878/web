@@ -496,8 +496,9 @@
                         if (updateError) throw updateError;
                     }
                 } else {
+                    const sortOrder = await nextDocumentSortOrder();
                     const { error: insertError } = await dcbcSupabase.from('documents').insert({
-                        title, description, file_path: filePath, file_name: fileName, file_size: fileSize
+                        title, description, file_path: filePath, file_name: fileName, file_size: fileSize, sort_order: sortOrder
                     });
                     if (insertError) throw insertError;
                 }
@@ -650,6 +651,7 @@
             let done = 0;
             let failed = 0;
             const total = bulkFiles.length;
+            let nextOrder = await nextDocumentSortOrder();
 
             for (const entry of bulkFiles.slice()) {
                 label.innerText = `กำลังอัปโหลด (${done + failed + 1}/${total})...`;
@@ -665,7 +667,8 @@
                         description: entry.description || '',
                         file_path: filePath,
                         file_name: entry.file.name,
-                        file_size: entry.file.size
+                        file_size: entry.file.size,
+                        sort_order: nextOrder++
                     });
                     if (insertError) throw insertError;
                     done++;
@@ -687,24 +690,36 @@
         }
 
         // ---------------- Documents: list ----------------
+        let allDocumentsCache = [];
+
+        async function nextDocumentSortOrder() {
+            const { data } = await dcbcSupabase.from('documents').select('sort_order').order('sort_order', { ascending: false }).limit(1);
+            return (data && data.length && data[0].sort_order != null) ? data[0].sort_order + 1 : 1;
+        }
+
         async function loadDocuments() {
             const listEl = document.getElementById('doc-management-list');
-            const { data, error } = await dcbcSupabase.from('documents').select('*').order('created_at', { ascending: false });
+            const { data, error } = await dcbcSupabase.from('documents').select('*').order('sort_order', { ascending: true });
 
             if (error) {
                 listEl.innerHTML = `<li class="text-center text-red-500 text-sm py-8">โหลดรายการไม่สำเร็จ: ${escapeHtml(error.message)}</li>`;
                 return;
             }
+            allDocumentsCache = data;
             if (!data.length) {
                 listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ยังไม่มีเอกสารในระบบ</li>`;
                 return;
             }
 
-            listEl.innerHTML = data.map(doc => {
+            listEl.innerHTML = data.map((doc, idx) => {
                 const { icon, bg, text } = dcbcFileIcon(doc.file_name || '');
                 return `
                 <li class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
                     <div class="flex items-start gap-3 min-w-0">
+                        <div class="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
+                            <button onclick="moveDocument('${doc.id}', 'up')" ${idx === 0 ? 'disabled' : ''} class="w-6 h-5 flex items-center justify-center text-gray-400 hover:text-brand disabled:opacity-25 disabled:hover:text-gray-400 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-up text-xs"></i></button>
+                            <button onclick="moveDocument('${doc.id}', 'down')" ${idx === data.length - 1 ? 'disabled' : ''} class="w-6 h-5 flex items-center justify-center text-gray-400 hover:text-brand disabled:opacity-25 disabled:hover:text-gray-400 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-down text-xs"></i></button>
+                        </div>
                         <div class="w-10 h-10 rounded-xl ${bg} ${text} flex items-center justify-center flex-shrink-0 mt-0.5">
                             <i class="${icon} text-xl"></i>
                         </div>
@@ -724,6 +739,22 @@
                     </div>
                 </li>`;
             }).join('');
+        }
+
+        async function moveDocument(id, direction) {
+            const idx = allDocumentsCache.findIndex(d => d.id === id);
+            if (idx === -1) return;
+            const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+            if (swapIdx < 0 || swapIdx >= allDocumentsCache.length) return;
+
+            const a = allDocumentsCache[idx];
+            const b = allDocumentsCache[swapIdx];
+            const [{ error: e1 }, { error: e2 }] = await Promise.all([
+                dcbcSupabase.from('documents').update({ sort_order: b.sort_order }).eq('id', a.id),
+                dcbcSupabase.from('documents').update({ sort_order: a.sort_order }).eq('id', b.id)
+            ]);
+            if (e1 || e2) { alert('ย้ายลำดับไม่สำเร็จ'); }
+            loadDocuments();
         }
 
         async function deleteDocument(id, filePath) {

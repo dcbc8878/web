@@ -16,9 +16,23 @@ create table if not exists public.documents (
   file_path    text not null,      -- storage object key inside 'documents' bucket
   file_name    text not null,      -- original filename (for download attr + display)
   file_size    bigint,             -- bytes, optional, for UI display parity
+  sort_order   integer,            -- manual display order, admin can reorder
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
 );
+
+-- Adds sort_order to a documents table that already existed before this
+-- column was introduced. Safe to re-run: no-ops if the column is already
+-- there or already backfilled.
+alter table public.documents add column if not exists sort_order integer;
+
+with ranked as (
+  select id, row_number() over (order by created_at desc) as rn
+  from public.documents
+  where sort_order is null
+)
+update public.documents d set sort_order = ranked.rn
+from ranked where ranked.id = d.id;
 
 alter table public.documents enable row level security;
 
