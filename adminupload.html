@@ -187,6 +187,36 @@
                     </form>
                 </div>
 
+                <!-- Bulk Add -->
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+                        <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">เพิ่มเอกสารหลายไฟล์พร้อมกัน</h1>
+                            <p class="text-xs text-gray-400 font-light mt-1">เลือกได้หลายไฟล์ในครั้งเดียว ระบบจะช่วยตั้งชื่อ/คำอธิบายให้อัตโนมัติ แก้ไขได้ก่อนอัปโหลด</p>
+                        </div>
+                    </div>
+
+                    <div id="bulk-drop-zone" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('bulk-file-input').click()">
+                        <input type="file" id="bulk-file-input" multiple class="hidden" onchange="handleBulkFileSelect(event)">
+                        <i class="fa-solid fa-layer-group text-3xl text-brand mb-2"></i>
+                        <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกหลายไฟล์</p>
+                        <p class="text-xs text-gray-400 font-light mt-1">รองรับทุกนามสกุลไฟล์ เลือกได้ครั้งละหลายไฟล์</p>
+                    </div>
+
+                    <div id="bulk-file-cards" class="space-y-4 mt-6"></div>
+
+                    <div id="bulk-upload-actions" class="hidden flex gap-3 mt-6">
+                        <button type="button" id="bulk-upload-btn" onclick="uploadBulkFiles()" class="flex-1 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> <span id="bulk-upload-label">อัปโหลดทั้งหมด</span>
+                        </button>
+                        <button type="button" onclick="clearBulkFiles()" class="px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">ล้างรายการ</button>
+                    </div>
+                    <p id="bulk-upload-status" class="hidden text-xs text-center mt-3"></p>
+                </div>
+
                 <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
                         <i class="fa-solid fa-list-check text-brand"></i> รายการเอกสารทั้งหมด
@@ -482,6 +512,179 @@
                 document.getElementById('admin-submit-label').innerText = editingId ? 'บันทึกการแก้ไข' : 'เพิ่มเอกสาร';
             }
         });
+
+        // ---------------- Documents: bulk add ----------------
+        // Suggested title/description for filenames we already know about;
+        // anything else falls back to a cleaned-up version of the filename
+        // with a blank description for the admin to fill in.
+        const KNOWN_DOC_INFO = {
+            'ใบขออนุมัติเบิกค่ารับรอง.docx': {
+                title: 'ใบขออนุมัติเบิกค่ารับรอง',
+                description: 'แบบฟอร์มขออนุมัติเบิกค่าใช้จ่ายในการรับรองลูกค้าหรือบุคคลภายนอก สำหรับกรอกรายละเอียดค่าใช้จ่ายเพื่อขออนุมัติจากผู้บริหารก่อนเบิกจ่าย'
+            },
+            'ใบเบิกค่าใช้จ่ายการเดินทาง.xlsx': {
+                title: 'ใบเบิกค่าใช้จ่ายการเดินทาง',
+                description: 'แบบฟอร์มสรุปค่าใช้จ่ายในการเดินทางไปปฏิบัติงาน เช่น ค่าที่พัก ค่าเดินทาง ค่าอาหาร สำหรับใช้ประกอบการเบิกจ่ายคืนจากบริษัท'
+            },
+            'ใบเบิกเงินสดย่อย.xlsx': {
+                title: 'ใบเบิกเงินสดย่อย',
+                description: 'แบบฟอร์มขอเบิกเงินสดย่อยสำหรับค่าใช้จ่ายเล็กน้อยในการดำเนินงานประจำวัน พร้อมช่องกรอกรายการและจำนวนเงินที่เบิก'
+            },
+            'ใบรับรองแทนใบเสร็จรับเงิน.xlsx': {
+                title: 'ใบรับรองแทนใบเสร็จรับเงิน',
+                description: 'แบบฟอร์มใช้รับรองการจ่ายเงินในกรณีที่ไม่สามารถขอใบเสร็จรับเงินจากผู้รับเงินได้ เพื่อใช้เป็นหลักฐานประกอบการบันทึกบัญชี'
+            },
+            'ใบสมัครงาน.doc': {
+                title: 'ใบสมัครงาน',
+                description: 'แบบฟอร์มใบสมัครงานสำหรับผู้ที่สนใจร่วมงานกับบริษัท กรอกประวัติส่วนตัว ประวัติการศึกษา และประสบการณ์ทำงาน'
+            },
+            'ใบสำคัญรับเงิน.xlsm': {
+                title: 'ใบสำคัญรับเงิน',
+                description: 'แบบฟอร์มใบสำคัญรับเงิน ใช้เป็นหลักฐานยืนยันการรับเงินระหว่างบริษัทกับบุคคลหรือหน่วยงานภายนอก'
+            },
+            'ฟอร์มคำนวณการหัก ณ ที่จ่ายเงินเดือน.pdf': {
+                title: 'ฟอร์มคำนวณการหัก ณ ที่จ่ายเงินเดือน',
+                description: 'แบบฟอร์มสำหรับคำนวณภาษีหัก ณ ที่จ่ายของเงินเดือนพนักงาน ช่วยให้ฝ่ายบัญชีคำนวณยอดภาษีที่ต้องนำส่งได้อย่างถูกต้อง'
+            },
+            'ฟอร์มหนังสือเลิกจ้างเพราะทำผิด.docx': {
+                title: 'หนังสือเลิกจ้างเนื่องจากกระทำผิด',
+                description: 'แบบฟอร์มหนังสือแจ้งเลิกจ้างพนักงานกรณีกระทำผิดวินัยร้ายแรง ระบุเหตุผลและรายละเอียดการเลิกจ้างตามที่กฎหมายแรงงานกำหนด'
+            },
+            'รายงานการประชุมใช้เบอร์โทรศัพท์.docx': {
+                title: 'รายงานการประชุมอนุมัติการใช้เบอร์โทรศัพท์',
+                description: 'แบบฟอร์มบันทึกรายงานการประชุมเพื่ออนุมัติการใช้หมายเลขโทรศัพท์ของบริษัทในนามกรรมการหรือพนักงาน ใช้ประกอบการเบิกค่าใช้จ่ายโทรศัพท์'
+            },
+            'รายงานการประชุมใช้รถยนต์.docx': {
+                title: 'รายงานการประชุมอนุมัติการใช้รถยนต์',
+                description: 'แบบฟอร์มบันทึกรายงานการประชุมเพื่ออนุมัติการใช้รถยนต์ส่วนตัวหรือของบริษัทในการดำเนินธุรกิจ ใช้ประกอบการเบิกค่าใช้จ่ายที่เกี่ยวข้อง'
+            },
+            'รายงานการประชุมเลิกบริษัท.doc': {
+                title: 'รายงานการประชุมมติเลิกบริษัท',
+                description: 'แบบฟอร์มบันทึกรายงานการประชุมผู้ถือหุ้นเพื่อมีมติเลิกกิจการบริษัท ใช้เป็นเอกสารประกอบการจดทะเบียนเลิกบริษัทต่อกรมพัฒนาธุรกิจการค้า'
+            },
+            'หนังสือยินยอมให้ใช้สถานที่.pdf': {
+                title: 'หนังสือยินยอมให้ใช้สถานที่',
+                description: 'แบบฟอร์มหนังสือยินยอมจากเจ้าของสถานที่ให้ใช้เป็นที่ตั้งสำนักงานหรือประกอบกิจการ ใช้ประกอบการจดทะเบียนบริษัทหรือขอใบอนุญาตต่างๆ'
+            },
+            'หนังสือรับรองเงินเดือน (Thai).docx': {
+                title: 'หนังสือรับรองเงินเดือน',
+                description: 'แบบฟอร์มหนังสือรับรองเงินเดือนพนักงาน ออกให้เพื่อใช้ประกอบการยื่นขอสินเชื่อ วีซ่า หรือธุรกรรมอื่นๆ ที่ต้องใช้หลักฐานรายได้'
+            },
+            'หนังสือเลิกจ้างโดยลูกจ้างไม่ได้กระทำผิด.docx': {
+                title: 'หนังสือเลิกจ้างกรณีลูกจ้างไม่ได้กระทำผิด',
+                description: 'แบบฟอร์มหนังสือแจ้งเลิกจ้างพนักงานในกรณีที่ไม่ได้เกิดจากความผิดของลูกจ้าง เช่น ปรับลดขนาดองค์กร พร้อมรายละเอียดสิทธิประโยชน์ที่พึงได้รับตามกฎหมาย'
+            },
+            'หนังสือสัญญาโอนหุ้นในบริษัท.docx': {
+                title: 'หนังสือสัญญาโอนหุ้นในบริษัท',
+                description: 'แบบฟอร์มสัญญาสำหรับการโอนหุ้นระหว่างผู้ถือหุ้นในบริษัท ระบุจำนวนหุ้น มูลค่า และเงื่อนไขการโอน ใช้ประกอบการจดทะเบียนเปลี่ยนแปลงผู้ถือหุ้น'
+            }
+        };
+
+        function humanizeFilename(name) {
+            return name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+        }
+
+        let bulkFiles = []; // [{ file, title, description }]
+
+        function handleBulkFileSelect(event) {
+            const files = Array.from(event.target.files || []);
+            files.forEach(file => {
+                const known = KNOWN_DOC_INFO[file.name];
+                bulkFiles.push({
+                    file,
+                    title: known ? known.title : humanizeFilename(file.name),
+                    description: known ? known.description : ''
+                });
+            });
+            event.target.value = '';
+            renderBulkFileCards();
+        }
+
+        function updateBulkField(index, field, value) {
+            bulkFiles[index][field] = value;
+        }
+
+        function removeBulkFile(index) {
+            bulkFiles.splice(index, 1);
+            renderBulkFileCards();
+        }
+
+        function clearBulkFiles() {
+            bulkFiles = [];
+            renderBulkFileCards();
+            const status = document.getElementById('bulk-upload-status');
+            status.classList.add('hidden');
+        }
+
+        function renderBulkFileCards() {
+            const container = document.getElementById('bulk-file-cards');
+            const actions = document.getElementById('bulk-upload-actions');
+
+            if (!bulkFiles.length) {
+                container.innerHTML = '';
+                actions.classList.add('hidden');
+                return;
+            }
+
+            actions.classList.remove('hidden');
+            container.innerHTML = bulkFiles.map((entry, i) => `
+                <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-xs text-gray-400 font-light truncate flex-1">
+                            <i class="fa-solid fa-file-lines mr-1"></i> ${escapeHtml(entry.file.name)} · ${dcbcFormatBytes(entry.file.size)}
+                        </p>
+                        <button type="button" onclick="removeBulkFile(${i})" class="text-red-400 hover:text-red-600 text-xs flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="text" value="${escapeHtml(entry.title)}" oninput="updateBulkField(${i}, 'title', this.value)" placeholder="ชื่องาน" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-light focus:border-brand outline-none">
+                    <textarea rows="2" oninput="updateBulkField(${i}, 'description', this.value)" placeholder="คำอธิบาย" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-brand-light focus:border-brand outline-none">${escapeHtml(entry.description)}</textarea>
+                </div>`).join('');
+        }
+
+        async function uploadBulkFiles() {
+            const btn = document.getElementById('bulk-upload-btn');
+            const label = document.getElementById('bulk-upload-label');
+            const status = document.getElementById('bulk-upload-status');
+            status.classList.remove('hidden');
+            btn.disabled = true;
+
+            let done = 0;
+            let failed = 0;
+            const total = bulkFiles.length;
+
+            for (const entry of bulkFiles.slice()) {
+                label.innerText = `กำลังอัปโหลด (${done + failed + 1}/${total})...`;
+                status.className = 'text-xs text-center mt-3 text-gray-500';
+                status.innerText = `กำลังอัปโหลด: ${entry.file.name}`;
+                try {
+                    const filePath = `${Date.now()}-${dcbcRandomId()}-${entry.file.name}`;
+                    const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, entry.file);
+                    if (uploadError) throw uploadError;
+
+                    const { error: insertError } = await dcbcSupabase.from('documents').insert({
+                        title: entry.title || humanizeFilename(entry.file.name),
+                        description: entry.description || '',
+                        file_path: filePath,
+                        file_name: entry.file.name,
+                        file_size: entry.file.size
+                    });
+                    if (insertError) throw insertError;
+                    done++;
+                } catch (err) {
+                    failed++;
+                }
+            }
+
+            label.innerText = 'อัปโหลดทั้งหมด';
+            btn.disabled = false;
+            status.className = failed ? 'text-xs text-center mt-3 text-red-500' : 'text-xs text-center mt-3 text-green-600';
+            status.innerText = failed
+                ? `อัปโหลดสำเร็จ ${done} รายการ, ไม่สำเร็จ ${failed} รายการ`
+                : `อัปโหลดสำเร็จทั้งหมด ${done} รายการ`;
+
+            bulkFiles = [];
+            renderBulkFileCards();
+            loadDocuments();
+        }
 
         // ---------------- Documents: list ----------------
         async function loadDocuments() {
