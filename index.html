@@ -187,10 +187,16 @@
                     <a href="portal.html" class="text-xs bg-brand text-white px-3 py-1.5 rounded-full font-medium">
                         <i class="fa-solid fa-folder-open"></i> เอกสาร
                     </a>
-                    <button class="text-gray-600 hover:text-brand focus:outline-none">
-                        <i class="fa-solid fa-bars text-2xl"></i>
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="text-gray-600 hover:text-brand focus:outline-none" aria-label="เปิดเมนู" aria-expanded="false">
+                        <i id="mobile-menu-icon" class="fa-solid fa-bars text-2xl"></i>
                     </button>
                 </div>
+            </div>
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4 flex flex-col gap-1">
+                <a href="#services" onclick="closeMobileMenu()" class="px-3 py-2.5 rounded-xl hover:bg-white/60 font-medium">บริการของเรา</a>
+                <a href="#reviews" onclick="closeMobileMenu()" class="px-3 py-2.5 rounded-xl hover:bg-white/60 font-medium">รีวิวจากลูกค้า</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="px-3 py-2.5 rounded-xl hover:bg-white/60 font-medium">ติดต่อเรา</a>
             </div>
         </div>
     </nav>
@@ -660,6 +666,30 @@
 
     <!-- Scripts -->
     <script>
+        // 0. เมนูมือถือ (Mobile Menu Toggle)
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuIcon = document.getElementById('mobile-menu-icon');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+
+        function toggleMobileMenu() {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            if (isOpen) { closeMobileMenu(); } else { openMobileMenu(); }
+        }
+
+        function openMobileMenu() {
+            mobileMenu.classList.remove('hidden');
+            mobileMenuIcon.classList.remove('fa-bars');
+            mobileMenuIcon.classList.add('fa-xmark');
+            mobileMenuBtn.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.add('hidden');
+            mobileMenuIcon.classList.remove('fa-xmark');
+            mobileMenuIcon.classList.add('fa-bars');
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        }
+
         // 1. ระบบจัดการเมนู (Scroll Effect)
         let lastScrollTop = 0;
         const navbar = document.getElementById('main-nav');

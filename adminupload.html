@@ -430,7 +430,9 @@
             resetDocForm();
         }
 
-        function editDocument(doc) {
+        function editDocument(id) {
+            const doc = allDocumentsCache.find(d => d.id === id);
+            if (!doc) return;
             document.getElementById('editing-doc-id').value = doc.id;
             document.getElementById('job-title').value = doc.title;
             document.getElementById('job-description').value = doc.description;
@@ -730,10 +732,10 @@
                         </div>
                     </div>
                     <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
-                        <button onclick='editDocument(${JSON.stringify(doc).replace(/'/g, "&apos;")})' class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                        <button onclick="editDocument('${doc.id}')" class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-pen"></i> แก้ไข
                         </button>
-                        <button onclick="deleteDocument('${doc.id}', '${(doc.file_path || '').replace(/'/g, "\\'")}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                        <button onclick="deleteDocument('${doc.id}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-trash"></i> ลบ
                         </button>
                     </div>
@@ -757,10 +759,11 @@
             loadDocuments();
         }
 
-        async function deleteDocument(id, filePath) {
+        async function deleteDocument(id) {
             if (!confirm('ยืนยันการลบเอกสารนี้?')) return;
-            if (filePath) {
-                await dcbcSupabase.storage.from('documents').remove([filePath]);
+            const doc = allDocumentsCache.find(d => d.id === id);
+            if (doc && doc.file_path) {
+                await dcbcSupabase.storage.from('documents').remove([doc.file_path]);
             }
             const { error } = await dcbcSupabase.from('documents').delete().eq('id', id);
             if (error) {
@@ -934,7 +937,9 @@
             resetCodeForm();
         }
 
-        function editCode(code) {
+        function editCode(id) {
+            const code = allCodesCache.find(c => c.id === id);
+            if (!code) return;
             document.getElementById('editing-code-id').value = code.id;
             document.getElementById('code-value').value = code.code;
             document.getElementById('code-client-name').value = code.client_name || '';
@@ -1015,7 +1020,7 @@
                         </div>
                     </div>
                     <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
-                        <button onclick='editCode(${JSON.stringify(c).replace(/'/g, "&apos;")})' class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                        <button onclick="editCode('${c.id}')" class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
                             <i class="fa-solid fa-pen"></i> แก้ไข
                         </button>
                         <button onclick="toggleCodeActive('${c.id}', ${c.active})" class="text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">

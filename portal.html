@@ -127,7 +127,7 @@
                                 <i class="fa-solid fa-download text-brand"></i> ดาวน์โหลดแบบฟอร์ม
                             </h2>
                             <span id="doc-count" class="text-xs bg-brand-light text-brand font-medium px-3 py-1 rounded-full">
-                                แสดงทั้งหมด 4 รายการ
+                                กำลังโหลด...
                             </span>
                         </div>
 
@@ -279,7 +279,7 @@
             const clearBtn = document.getElementById('clear-search-btn');
             const noResult = document.getElementById('no-result');
             const countLabel = document.getElementById('doc-count');
-            
+
             let visibleCount = 0;
 
             if (input.length > 0) {
@@ -306,7 +306,9 @@
                 noResult.classList.add('hidden');
             }
 
-            countLabel.innerText = `พบ ${visibleCount} รายการ`;
+            countLabel.innerText = input.length > 0
+                ? `พบ ${visibleCount} รายการ`
+                : `แสดงทั้งหมด ${items.length} รายการ`;
         }
 
         function clearSearch() {

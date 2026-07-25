@@ -34,6 +34,11 @@ with ranked as (
 update public.documents d set sort_order = ranked.rn
 from ranked where ranked.id = d.id;
 
+-- Guard against any future insert (outside the admin UI) leaving this
+-- NULL, which would sort unpredictably.
+alter table public.documents alter column sort_order set default 0;
+alter table public.documents alter column sort_order set not null;
+
 alter table public.documents enable row level security;
 
 create policy "documents_public_read"

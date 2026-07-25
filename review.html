@@ -157,7 +157,8 @@
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <h2 class="text-2xl font-bold text-gray-800 mb-2">ส่งรีวิวสำเร็จเรียบร้อย!</h2>
-                    <p class="text-gray-500 text-sm font-light mb-6">ขอบคุณสำหรับคำติชมและความประทับใจ รีวิวของคุณจะแสดงบนเว็บไซต์หลังจากทีมงานตรวจสอบและอนุมัติแล้วครับ</p>
+                    <p class="text-gray-500 text-sm font-light mb-4">ขอบคุณสำหรับคำติชมและความประทับใจ รีวิวของคุณจะแสดงบนเว็บไซต์หลังจากทีมงานตรวจสอบและอนุมัติแล้วครับ</p>
+                    <p id="review-logo-warning" class="hidden text-amber-600 text-xs font-medium bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 mb-4"><i class="fa-solid fa-triangle-exclamation mr-1"></i> อัปโหลดโลโก้ไม่สำเร็จ (ไฟล์อาจใหญ่เกิน 5MB) แต่รีวิวของคุณถูกบันทึกเรียบร้อยแล้ว</p>
                     <a href="index.html" class="inline-block px-6 py-3 bg-brand text-white rounded-xl font-medium hover:bg-brand-dark transition-colors shadow-md text-sm">
                         กลับสู่หน้าหลัก
                     </a>
@@ -250,10 +251,11 @@
 
             try {
                 let logoPath = null;
+                let logoFailed = false;
                 if (logoFile) {
                     const path = `${Date.now()}-${dcbcRandomId()}-${logoFile.name}`;
                     const { error: uploadError } = await dcbcSupabase.storage.from('review-logos').upload(path, logoFile);
-                    if (!uploadError) logoPath = path;
+                    if (!uploadError) { logoPath = path; } else { logoFailed = true; }
                 }
 
                 const { error: insertError } = await dcbcSupabase.from('reviews').insert({
@@ -265,6 +267,7 @@
                 if (insertError) throw insertError;
 
                 reviewForm.classList.add('hidden');
+                if (logoFailed) document.getElementById('review-logo-warning').classList.remove('hidden');
                 document.getElementById('review-success-box').classList.remove('hidden');
             } catch (err) {
                 errorMsg.classList.remove('hidden');
