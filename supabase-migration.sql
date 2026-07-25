@@ -1,6 +1,12 @@
 -- ============================================================
--- DCBC: documents library + reviews moderation
--- Run this once in Supabase SQL Editor, top to bottom.
+-- DCBC: documents library + reviews moderation + portal codes
+-- Run in Supabase SQL Editor, top to bottom.
+--
+-- SAFE TO RE-RUN. Every statement is idempotent: tables use
+-- "if not exists", policies are dropped before being recreated
+-- (Postgres has no "create policy if not exists"), and the
+-- function uses "create or replace".
+--
 -- Prerequisite: create the two storage buckets first via
 -- Dashboard -> Storage (documents, review-logos) so the
 -- bucket_id values referenced below already exist.
@@ -22,8 +28,8 @@ create table if not exists public.documents (
 );
 
 -- Adds sort_order to a documents table that already existed before this
--- column was introduced. Safe to re-run: no-ops if the column is already
--- there or already backfilled.
+-- column was introduced, then backfills it to preserve the previous
+-- newest-first display order.
 alter table public.documents add column if not exists sort_order integer;
 
 with ranked as (
@@ -41,21 +47,25 @@ alter table public.documents alter column sort_order set not null;
 
 alter table public.documents enable row level security;
 
+drop policy if exists "documents_public_read" on public.documents;
 create policy "documents_public_read"
   on public.documents for select
   to anon, authenticated
   using (true);
 
+drop policy if exists "documents_admin_insert" on public.documents;
 create policy "documents_admin_insert"
   on public.documents for insert
   to authenticated
   with check (true);
 
+drop policy if exists "documents_admin_update" on public.documents;
 create policy "documents_admin_update"
   on public.documents for update
   to authenticated
   using (true) with check (true);
 
+drop policy if exists "documents_admin_delete" on public.documents;
 create policy "documents_admin_delete"
   on public.documents for delete
   to authenticated
@@ -76,12 +86,14 @@ create table if not exists public.reviews (
 alter table public.reviews enable row level security;
 
 -- Public site (index.html) may only ever see approved reviews
+drop policy if exists "reviews_public_read_approved" on public.reviews;
 create policy "reviews_public_read_approved"
   on public.reviews for select
   to anon
   using (status = 'approved');
 
 -- Admin dashboard sees everything (pending/approved/rejected)
+drop policy if exists "reviews_admin_read_all" on public.reviews;
 create policy "reviews_admin_read_all"
   on public.reviews for select
   to authenticated
@@ -93,68 +105,24 @@ create policy "reviews_admin_read_all"
 -- (the column default fills in 'pending'), while any insert attempt
 -- that explicitly sends status='approved' or 'rejected' is REJECTED
 -- by Postgres regardless of what the client-side JS tries to send.
+drop policy if exists "reviews_public_insert_pending" on public.reviews;
 create policy "reviews_public_insert_pending"
   on public.reviews for insert
   to anon
   with check (status = 'pending');
 
 -- Only the admin can approve/reject or edit a review
+drop policy if exists "reviews_admin_update" on public.reviews;
 create policy "reviews_admin_update"
   on public.reviews for update
   to authenticated
   using (true) with check (true);
 
+drop policy if exists "reviews_admin_delete" on public.reviews;
 create policy "reviews_admin_delete"
   on public.reviews for delete
   to authenticated
   using (true);
-
--- ---------- Storage: documents bucket ----------
--- (bucket itself created via Dashboard, see manual steps)
-create policy "documents_bucket_public_read"
-  on storage.objects for select
-  to anon, authenticated
-  using (bucket_id = 'documents');
-
-create policy "documents_bucket_admin_insert"
-  on storage.objects for insert
-  to authenticated
-  with check (bucket_id = 'documents');
-
-create policy "documents_bucket_admin_update"
-  on storage.objects for update
-  to authenticated
-  using (bucket_id = 'documents') with check (bucket_id = 'documents');
-
-create policy "documents_bucket_admin_delete"
-  on storage.objects for delete
-  to authenticated
-  using (bucket_id = 'documents');
-
--- ---------- Storage: review-logos bucket ----------
--- Public INSERT is intentional: a customer submitting a pending
--- review from review.html uploads their own logo directly, before
--- any admin has logged in. Only admin can UPDATE/DELETE (moderation
--- cleanup); anon never gets those.
-create policy "review_logos_bucket_public_read"
-  on storage.objects for select
-  to anon, authenticated
-  using (bucket_id = 'review-logos');
-
-create policy "review_logos_bucket_public_insert"
-  on storage.objects for insert
-  to anon, authenticated
-  with check (bucket_id = 'review-logos');
-
-create policy "review_logos_bucket_admin_update"
-  on storage.objects for update
-  to authenticated
-  using (bucket_id = 'review-logos') with check (bucket_id = 'review-logos');
-
-create policy "review_logos_bucket_admin_delete"
-  on storage.objects for delete
-  to authenticated
-  using (bucket_id = 'review-logos');
 
 -- ---------- portal_codes ----------
 -- Access codes for the client document portal (portal.html).
@@ -172,21 +140,25 @@ create table if not exists public.portal_codes (
 
 alter table public.portal_codes enable row level security;
 
+drop policy if exists "portal_codes_admin_select" on public.portal_codes;
 create policy "portal_codes_admin_select"
   on public.portal_codes for select
   to authenticated
   using (true);
 
+drop policy if exists "portal_codes_admin_insert" on public.portal_codes;
 create policy "portal_codes_admin_insert"
   on public.portal_codes for insert
   to authenticated
   with check (true);
 
+drop policy if exists "portal_codes_admin_update" on public.portal_codes;
 create policy "portal_codes_admin_update"
   on public.portal_codes for update
   to authenticated
   using (true) with check (true);
 
+drop policy if exists "portal_codes_admin_delete" on public.portal_codes;
 create policy "portal_codes_admin_delete"
   on public.portal_codes for delete
   to authenticated
@@ -216,3 +188,58 @@ grant execute on function public.check_portal_code(text) to anon, authenticated;
 insert into public.portal_codes (code) values
   ('DCBC'), ('EPED'), ('JYNE'), ('VTLB'), ('ACMS'), ('KKRB'), ('DCRG')
 on conflict (code) do nothing;
+
+-- ---------- Storage: documents bucket ----------
+-- (bucket itself created via Dashboard, see manual steps)
+drop policy if exists "documents_bucket_public_read" on storage.objects;
+create policy "documents_bucket_public_read"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'documents');
+
+drop policy if exists "documents_bucket_admin_insert" on storage.objects;
+create policy "documents_bucket_admin_insert"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'documents');
+
+drop policy if exists "documents_bucket_admin_update" on storage.objects;
+create policy "documents_bucket_admin_update"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'documents') with check (bucket_id = 'documents');
+
+drop policy if exists "documents_bucket_admin_delete" on storage.objects;
+create policy "documents_bucket_admin_delete"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'documents');
+
+-- ---------- Storage: review-logos bucket ----------
+-- Public INSERT is intentional: a customer submitting a pending
+-- review from review.html uploads their own logo directly, before
+-- any admin has logged in. Only admin can UPDATE/DELETE (moderation
+-- cleanup); anon never gets those.
+drop policy if exists "review_logos_bucket_public_read" on storage.objects;
+create policy "review_logos_bucket_public_read"
+  on storage.objects for select
+  to anon, authenticated
+  using (bucket_id = 'review-logos');
+
+drop policy if exists "review_logos_bucket_public_insert" on storage.objects;
+create policy "review_logos_bucket_public_insert"
+  on storage.objects for insert
+  to anon, authenticated
+  with check (bucket_id = 'review-logos');
+
+drop policy if exists "review_logos_bucket_admin_update" on storage.objects;
+create policy "review_logos_bucket_admin_update"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'review-logos') with check (bucket_id = 'review-logos');
+
+drop policy if exists "review_logos_bucket_admin_delete" on storage.objects;
+create policy "review_logos_bucket_admin_delete"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'review-logos');
