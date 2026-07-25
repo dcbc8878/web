@@ -136,3 +136,64 @@ create policy "review_logos_bucket_admin_delete"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'review-logos');
+
+-- ---------- portal_codes ----------
+-- Access codes for the client document portal (portal.html).
+-- The codes themselves are NEVER exposed to anon — there is no
+-- anon select policy on this table at all. The public page instead
+-- calls the check_portal_code() function below, which only ever
+-- returns true/false, so the code list can't be read off the network.
+create table if not exists public.portal_codes (
+  id           uuid primary key default gen_random_uuid(),
+  code         text not null unique,   -- stored uppercase, 4 characters
+  client_name  text,                   -- optional label, e.g. which client this code belongs to
+  active       boolean not null default true,
+  created_at   timestamptz not null default now()
+);
+
+alter table public.portal_codes enable row level security;
+
+create policy "portal_codes_admin_select"
+  on public.portal_codes for select
+  to authenticated
+  using (true);
+
+create policy "portal_codes_admin_insert"
+  on public.portal_codes for insert
+  to authenticated
+  with check (true);
+
+create policy "portal_codes_admin_update"
+  on public.portal_codes for update
+  to authenticated
+  using (true) with check (true);
+
+create policy "portal_codes_admin_delete"
+  on public.portal_codes for delete
+  to authenticated
+  using (true);
+
+-- Callable by anon (and authenticated) from portal.html's lock screen.
+-- SECURITY DEFINER lets it read the table despite anon having no
+-- select policy above; it only ever leaks a boolean, never the codes.
+create or replace function public.check_portal_code(input_code text)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.portal_codes
+    where code = upper(trim(input_code)) and active = true
+  );
+$$;
+
+revoke all on function public.check_portal_code(text) from public;
+grant execute on function public.check_portal_code(text) to anon, authenticated;
+
+-- Seed the codes that were previously hardcoded in portal.html, so
+-- access doesn't break the moment this migration runs. Safe to
+-- re-run; manage/replace these from the admin panel afterwards.
+insert into public.portal_codes (code) values
+  ('DCBC'), ('EPED'), ('JYNE'), ('VTLB'), ('ACMS'), ('KKRB'), ('DCRG')
+on conflict (code) do nothing;

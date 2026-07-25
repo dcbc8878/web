@@ -69,7 +69,7 @@
             <p class="text-xs text-gray-400 font-light mb-6">กรุณากรอกรหัส 4 หลักที่ได้รับจากบริษัท</p>
             <form id="portal-lock-form" class="space-y-3 text-left">
                 <input type="text" id="portal-lock-code" required maxlength="4" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-center text-2xl font-bold tracking-[0.4em] uppercase" placeholder="XXXX">
-                <button type="submit" class="w-full py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-60">เข้าสู่ระบบ</button>
+                <button type="submit" id="portal-lock-submit" class="w-full py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-60">เข้าสู่ระบบ</button>
                 <p id="portal-lock-error" class="hidden text-red-500 text-xs text-center">รหัสไม่ถูกต้อง กรุณาลองใหม่</p>
             </form>
         </div>
@@ -236,11 +236,14 @@
         }
 
         // --- Access code gate ---
-        const PORTAL_ACCESS_CODES = ['DCBC', 'EPED', 'JYNE', 'VTLB', 'ACMS', 'KKRB', 'DCRG'];
+        // Codes are managed from the admin panel and checked via a
+        // database function (check_portal_code) so the valid code list
+        // itself is never sent to the browser — only a true/false answer.
         const portalLockOverlay = document.getElementById('portal-lock-overlay');
         const portalLockForm = document.getElementById('portal-lock-form');
         const portalLockCode = document.getElementById('portal-lock-code');
         const portalLockError = document.getElementById('portal-lock-error');
+        const portalLockSubmit = document.getElementById('portal-lock-submit');
 
         function unlockPortal() {
             sessionStorage.setItem('dcbc_portal_unlocked', '1');
@@ -252,10 +255,14 @@
             unlockPortal();
         }
 
-        portalLockForm.addEventListener('submit', function (e) {
+        portalLockForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-            const entered = portalLockCode.value.trim().toUpperCase();
-            if (PORTAL_ACCESS_CODES.includes(entered)) {
+            portalLockSubmit.disabled = true;
+            const entered = portalLockCode.value.trim();
+            const { data, error } = await dcbcSupabase.rpc('check_portal_code', { input_code: entered });
+            portalLockSubmit.disabled = false;
+
+            if (!error && data === true) {
                 portalLockError.classList.add('hidden');
                 unlockPortal();
             } else {

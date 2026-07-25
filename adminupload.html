@@ -110,6 +110,9 @@
             <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="reviews-tab" onclick="switchTab('reviews-tab', this)">
                 <i class="fa-regular fa-comment-dots"></i> รีวิว
             </button>
+            <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="codes-tab" onclick="switchTab('codes-tab', this)">
+                <i class="fa-solid fa-key"></i> รหัสลูกค้า
+            </button>
         </div>
     </div>
 
@@ -241,6 +244,55 @@
                 </div>
             </div>
 
+            <!-- ============ CLIENT CODES TAB ============ -->
+            <div id="codes-tab" class="tab-panel hidden space-y-8">
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+                        <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h1 id="code-form-title" class="text-2xl font-bold text-gray-900">เพิ่มรหัสลูกค้าใหม่</h1>
+                            <p class="text-xs text-gray-400 font-light mt-1">รหัสนี้ใช้ล็อกอินเข้าหน้า "ระบบเอกสารลูกค้า" (portal.html)</p>
+                        </div>
+                    </div>
+
+                    <form id="admin-code-form" class="space-y-6">
+                        <input type="hidden" id="editing-code-id" value="">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. รหัส 4 หลัก <span class="text-red-500">*</span></label>
+                            <input type="text" id="code-value" required maxlength="4" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm uppercase tracking-widest font-bold" placeholder="เช่น DCBC">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. ชื่อลูกค้า (สำหรับจดจำ)</label>
+                            <input type="text" id="code-client-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น บริษัท เอบีซี จำกัด (ไม่บังคับ)">
+                        </div>
+
+                        <div class="flex gap-3">
+                            <button type="submit" id="code-submit-btn" class="flex-1 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                                <i class="fa-solid fa-plus"></i> <span id="code-submit-label">เพิ่มรหัส</span>
+                            </button>
+                            <button type="button" id="cancel-edit-code-btn" onclick="cancelEditCode()" class="hidden px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">
+                                ยกเลิก
+                            </button>
+                        </div>
+                        <p id="code-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
+                    </form>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-list-check text-brand"></i> รายการรหัสทั้งหมด
+                    </h2>
+                    <ul id="code-management-list" class="space-y-3">
+                        <li class="text-center text-gray-400 text-sm py-8">กำลังโหลด...</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -280,6 +332,7 @@
             lockOverlay.style.display = 'none';
             loadDocuments();
             loadReviews();
+            loadPortalCodes();
         }
 
         dcbcSupabase.auth.getSession().then(({ data }) => {
@@ -630,6 +683,128 @@
             const { error } = await dcbcSupabase.from('reviews').delete().eq('id', id);
             if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
             loadReviews();
+        }
+
+        // ---------------- Client Codes: form ----------------
+        let allCodesCache = [];
+
+        function resetCodeForm() {
+            document.getElementById('admin-code-form').reset();
+            document.getElementById('editing-code-id').value = '';
+            document.getElementById('code-form-title').innerText = 'เพิ่มรหัสลูกค้าใหม่';
+            document.getElementById('code-submit-label').innerText = 'เพิ่มรหัส';
+            document.getElementById('cancel-edit-code-btn').classList.add('hidden');
+        }
+
+        function cancelEditCode() {
+            resetCodeForm();
+        }
+
+        function editCode(code) {
+            document.getElementById('editing-code-id').value = code.id;
+            document.getElementById('code-value').value = code.code;
+            document.getElementById('code-client-name').value = code.client_name || '';
+            document.getElementById('code-form-title').innerText = 'แก้ไขรหัส: ' + code.code;
+            document.getElementById('code-submit-label').innerText = 'บันทึกการแก้ไข';
+            document.getElementById('cancel-edit-code-btn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const adminCodeForm = document.getElementById('admin-code-form');
+        adminCodeForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const btn = document.getElementById('code-submit-btn');
+            const errorMsg = document.getElementById('code-form-error');
+            errorMsg.classList.add('hidden');
+
+            const editingId = document.getElementById('editing-code-id').value;
+            const code = document.getElementById('code-value').value.trim().toUpperCase();
+            const clientName = document.getElementById('code-client-name').value.trim();
+
+            if (code.length !== 4) {
+                errorMsg.textContent = 'รหัสต้องมีความยาว 4 หลัก';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            document.getElementById('code-submit-label').innerText = 'กำลังบันทึก...';
+
+            try {
+                if (editingId) {
+                    const { error } = await dcbcSupabase.from('portal_codes')
+                        .update({ code, client_name: clientName || null })
+                        .eq('id', editingId);
+                    if (error) throw error;
+                } else {
+                    const { error } = await dcbcSupabase.from('portal_codes')
+                        .insert({ code, client_name: clientName || null });
+                    if (error) throw error;
+                }
+                resetCodeForm();
+                loadPortalCodes();
+            } catch (err) {
+                errorMsg.textContent = err.code === '23505'
+                    ? 'รหัสนี้มีอยู่ในระบบแล้ว กรุณาใช้รหัสอื่น'
+                    : 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('code-submit-label').innerText = editingId ? 'บันทึกการแก้ไข' : 'เพิ่มรหัส';
+            }
+        });
+
+        // ---------------- Client Codes: list ----------------
+        async function loadPortalCodes() {
+            const listEl = document.getElementById('code-management-list');
+            const { data, error } = await dcbcSupabase.from('portal_codes').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                listEl.innerHTML = `<li class="text-center text-red-500 text-sm py-8">โหลดรายการไม่สำเร็จ: ${escapeHtml(error.message)}</li>`;
+                return;
+            }
+            allCodesCache = data;
+            if (!data.length) {
+                listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ยังไม่มีรหัสลูกค้าในระบบ</li>`;
+                return;
+            }
+
+            listEl.innerHTML = data.map(c => `
+                <li class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center flex-shrink-0 font-bold text-xs tracking-widest">${escapeHtml(c.code)}</div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-semibold text-gray-800 text-sm">${escapeHtml(c.client_name || 'ไม่ระบุชื่อลูกค้า')}</h3>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${c.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">${c.active ? 'ใช้งานอยู่' : 'ปิดใช้งาน'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
+                        <button onclick='editCode(${JSON.stringify(c).replace(/'/g, "&apos;")})' class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-pen"></i> แก้ไข
+                        </button>
+                        <button onclick="toggleCodeActive('${c.id}', ${c.active})" class="text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-power-off"></i> ${c.active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}
+                        </button>
+                        <button onclick="deleteCode('${c.id}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash"></i> ลบ
+                        </button>
+                    </div>
+                </li>`).join('');
+        }
+
+        async function toggleCodeActive(id, currentlyActive) {
+            const { error } = await dcbcSupabase.from('portal_codes').update({ active: !currentlyActive }).eq('id', id);
+            if (error) { alert('อัปเดตไม่สำเร็จ: ' + error.message); return; }
+            loadPortalCodes();
+        }
+
+        async function deleteCode(id) {
+            if (!confirm('ยืนยันการลบรหัสนี้?')) return;
+            const { error } = await dcbcSupabase.from('portal_codes').delete().eq('id', id);
+            if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+            loadPortalCodes();
         }
     </script>
 </body>
