@@ -116,6 +116,9 @@
             <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="releases-tab" onclick="switchTab('releases-tab', this)">
                 <i class="fa-solid fa-cloud-arrow-down"></i> โปรแกรม
             </button>
+            <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="articles-tab" onclick="switchTab('articles-tab', this)">
+                <i class="fa-regular fa-newspaper"></i> บทความ
+            </button>
         </div>
     </div>
 
@@ -421,6 +424,102 @@
                 </div>
             </div>
 
+            <!-- ============ ARTICLES TAB ============ -->
+            <div id="articles-tab" class="tab-panel hidden space-y-8">
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+                        <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="fa-regular fa-newspaper"></i>
+                        </div>
+                        <div>
+                            <h1 id="article-form-title" class="text-2xl font-bold text-gray-900">เขียนบทความใหม่</h1>
+                            <p class="text-xs text-gray-400 font-light mt-1">บทความที่เผยแพร่จะขึ้นเว็บภายใน 1 ชั่วโมง (ระบบสร้างหน้าใหม่อัตโนมัติ)</p>
+                        </div>
+                    </div>
+
+                    <form id="admin-article-form" class="space-y-6">
+                        <input type="hidden" id="editing-article-id" value="">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. หัวข้อบทความ <span class="text-red-500">*</span></label>
+                            <input type="text" id="article-title" required oninput="maybeAutoSlug()" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น รายได้เท่าไหร่ต้องจดทะเบียน VAT? สรุปเกณฑ์ปี 2569">
+                            <p class="text-[11px] text-gray-400 mt-1.5 font-light">ตั้งหัวข้อให้ตรงกับที่คนพิมพ์ค้นหาจริง จะถูกเจอง่ายกว่าหัวข้อกวนๆ แบบโพสต์ Facebook</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. ลิงก์หน้าบทความ (slug) <span class="text-red-500">*</span></label>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-400 font-mono flex-shrink-0">/articles/</span>
+                                <input type="text" id="article-slug" required pattern="[a-z0-9\-]+" class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm font-mono" placeholder="vat-threshold-2569">
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-1.5 font-light">ใช้ได้เฉพาะ a-z, 0-9 และขีดกลาง — ห้ามภาษาไทยและเว้นวรรค (ระบบเติมให้อัตโนมัติ แก้ได้)</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">3. คำโปรย <span class="text-gray-400 font-light text-xs">(สรุปสั้นๆ 1-2 บรรทัด แสดงในหน้ารวมและผลค้นหา Google)</span></label>
+                            <textarea id="article-excerpt" rows="2" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="สรุปเกณฑ์รายได้ที่ต้องจด VAT พร้อมสิ่งที่ต้องเตรียม"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">4. เนื้อหา <span class="text-red-500">*</span></label>
+                            <textarea id="article-content" required rows="14" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-y font-light leading-relaxed" placeholder="วางข้อความจากโพสต์ Facebook แล้วเกลาได้เลย&#10;&#10;## หัวข้อย่อย&#10;&#10;- รายการที่ 1&#10;- รายการที่ 2&#10;&#10;ใช้ **ตัวหนา** ได้ ลิงก์วางทั้ง URL ระบบจะทำให้กดได้เอง"></textarea>
+                            <p class="text-[11px] text-gray-400 mt-1.5 font-light">
+                                จัดรูปแบบได้: <code class="bg-gray-100 px-1 rounded">## หัวข้อ</code> ·
+                                <code class="bg-gray-100 px-1 rounded">- รายการ</code> ·
+                                <code class="bg-gray-100 px-1 rounded">**ตัวหนา**</code> · วาง URL ได้เลย
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">5. ลิงก์โพสต์ Facebook ต้นฉบับ <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
+                            <input type="url" id="article-source" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="https://www.facebook.com/...">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                6. รูปหน้าปก <span id="article-cover-note" class="text-gray-400 font-light text-xs">(ไม่บังคับ แต่ช่วยให้น่าคลิกกว่ามาก)</span>
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('article-cover').click()">
+                                <input type="file" id="article-cover" accept="image/*" class="hidden" onchange="previewArticleCover(event)">
+                                <div id="article-cover-idle">
+                                    <i class="fa-regular fa-image text-3xl text-brand mb-2"></i>
+                                    <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกรูปหน้าปก</p>
+                                    <p class="text-xs text-gray-400 font-light mt-1">แนะนำแนวนอน อัตราส่วนประมาณ 16:9</p>
+                                </div>
+                                <div id="article-cover-selected" class="hidden">
+                                    <img id="article-cover-preview" src="" alt="" class="max-h-40 mx-auto rounded-xl object-cover">
+                                    <p id="article-cover-name" class="text-xs text-gray-500 mt-2"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="article-published" class="w-4 h-4 text-brand rounded focus:ring-brand">
+                            <span class="text-sm text-gray-700">เผยแพร่ <span class="text-xs text-gray-400 font-light">(ถ้าไม่ติ๊ก จะเก็บเป็นฉบับร่างไว้ก่อน)</span></span>
+                        </label>
+
+                        <div class="flex gap-3">
+                            <button type="submit" id="article-submit-btn" class="flex-1 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                                <i class="fa-solid fa-paper-plane"></i> <span id="article-submit-label">บันทึกบทความ</span>
+                            </button>
+                            <button type="button" id="cancel-edit-article-btn" onclick="cancelEditArticle()" class="hidden px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">ยกเลิก</button>
+                        </div>
+                        <p id="article-form-error" class="hidden text-red-500 text-xs text-center"></p>
+                        <p id="article-form-success" class="hidden text-green-600 text-xs text-center font-medium"></p>
+                    </form>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-list-check text-brand"></i> บทความทั้งหมด
+                    </h2>
+                    <ul id="article-management-list" class="space-y-3">
+                        <li class="text-center text-gray-400 text-sm py-8">กำลังโหลด...</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -462,6 +561,7 @@
             loadReviews();
             loadPortalCodes();
             loadReleases();
+            loadArticles();
         }
 
         dcbcSupabase.auth.getSession().then(({ data }) => {
@@ -1338,6 +1438,229 @@
             const { error } = await dcbcSupabase.from('app_releases').delete().eq('id', id);
             if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
             loadReleases();
+        }
+
+        // ---------------- Articles ----------------
+        let allArticlesCache = [];
+
+        // Thai titles can't be transliterated reliably here, so the auto-slug
+        // keeps any latin/number runs and falls back to a dated placeholder.
+        // The admin can always overwrite it.
+        function slugify(title) {
+            const latin = String(title || '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, ' ')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            if (latin.length >= 3) return latin.slice(0, 60);
+            const d = new Date();
+            return `post-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}-${String(Date.now()).slice(-4)}`;
+        }
+
+        // Only fills the slug while the admin hasn't typed their own.
+        let slugTouched = false;
+        document.getElementById('article-slug').addEventListener('input', function () { slugTouched = true; });
+
+        function maybeAutoSlug() {
+            if (slugTouched || document.getElementById('editing-article-id').value) return;
+            document.getElementById('article-slug').value = slugify(document.getElementById('article-title').value);
+        }
+
+        function previewArticleCover(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('article-cover-preview').src = e.target.result;
+                document.getElementById('article-cover-name').innerText = file.name + ' · ' + dcbcFormatBytes(file.size);
+                document.getElementById('article-cover-idle').classList.add('hidden');
+                document.getElementById('article-cover-selected').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetArticleForm() {
+            document.getElementById('admin-article-form').reset();
+            document.getElementById('editing-article-id').value = '';
+            document.getElementById('article-form-title').innerText = 'เขียนบทความใหม่';
+            document.getElementById('article-submit-label').innerText = 'บันทึกบทความ';
+            document.getElementById('cancel-edit-article-btn').classList.add('hidden');
+            document.getElementById('article-cover-idle').classList.remove('hidden');
+            document.getElementById('article-cover-selected').classList.add('hidden');
+            document.getElementById('article-form-error').classList.add('hidden');
+            slugTouched = false;
+        }
+
+        function cancelEditArticle() { resetArticleForm(); }
+
+        function editArticle(id) {
+            const a = allArticlesCache.find(x => x.id === id);
+            if (!a) return;
+            document.getElementById('editing-article-id').value = a.id;
+            document.getElementById('article-title').value = a.title;
+            document.getElementById('article-slug').value = a.slug;
+            document.getElementById('article-excerpt').value = a.excerpt || '';
+            document.getElementById('article-content').value = a.content;
+            document.getElementById('article-source').value = a.source_url || '';
+            document.getElementById('article-published').checked = a.is_published;
+            document.getElementById('article-form-title').innerText = 'แก้ไขบทความ: ' + a.title;
+            document.getElementById('article-submit-label').innerText = 'บันทึกการแก้ไข';
+            document.getElementById('cancel-edit-article-btn').classList.remove('hidden');
+            document.getElementById('article-cover-idle').classList.remove('hidden');
+            document.getElementById('article-cover-selected').classList.add('hidden');
+            document.getElementById('article-cover-note').innerText = a.cover_path ? '(มีรูปอยู่แล้ว เลือกใหม่เพื่อเปลี่ยน)' : '(ไม่บังคับ แต่ช่วยให้น่าคลิกกว่ามาก)';
+            slugTouched = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const adminArticleForm = document.getElementById('admin-article-form');
+        adminArticleForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const btn = document.getElementById('article-submit-btn');
+            const errorMsg = document.getElementById('article-form-error');
+            const successMsg = document.getElementById('article-form-success');
+            errorMsg.classList.add('hidden');
+            successMsg.classList.add('hidden');
+
+            const editingId = document.getElementById('editing-article-id').value;
+            const title = document.getElementById('article-title').value.trim();
+            const slug = document.getElementById('article-slug').value.trim().toLowerCase();
+            const excerpt = document.getElementById('article-excerpt').value.trim();
+            const content = document.getElementById('article-content').value.trim();
+            const sourceUrl = document.getElementById('article-source').value.trim();
+            const isPublished = document.getElementById('article-published').checked;
+            const coverFile = document.getElementById('article-cover').files[0];
+
+            if (!/^[a-z0-9-]+$/.test(slug)) {
+                errorMsg.textContent = 'ลิงก์หน้าบทความ (slug) ใช้ได้เฉพาะ a-z, 0-9 และขีดกลางเท่านั้น';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            document.getElementById('article-submit-label').innerText = 'กำลังบันทึก...';
+
+            try {
+                let coverPath = null;
+                if (coverFile) {
+                    coverPath = dcbcStoragePath(coverFile.name);
+                    const { error: upErr } = await dcbcSupabase.storage.from('article-images').upload(coverPath, coverFile);
+                    if (upErr) throw upErr;
+                }
+
+                const existing = allArticlesCache.find(x => x.id === editingId);
+                const payload = {
+                    slug, title,
+                    excerpt: excerpt || null,
+                    content,
+                    source_url: sourceUrl || null,
+                    is_published: isPublished,
+                    updated_at: new Date().toISOString()
+                };
+                if (coverPath) payload.cover_path = coverPath;
+
+                // Stamp published_at the first time it actually goes live.
+                if (isPublished && !(existing && existing.published_at)) {
+                    payload.published_at = new Date().toISOString();
+                }
+
+                if (editingId) {
+                    const { error } = await dcbcSupabase.from('articles').update(payload).eq('id', editingId);
+                    if (error) throw error;
+                    if (coverPath && existing && existing.cover_path) {
+                        await dcbcSupabase.storage.from('article-images').remove([existing.cover_path]);
+                    }
+                } else {
+                    const { error } = await dcbcSupabase.from('articles').insert(payload);
+                    if (error) throw error;
+                }
+
+                resetArticleForm();
+                loadArticles();
+                successMsg.textContent = isPublished
+                    ? `บันทึกแล้ว — หน้า /articles/${slug} จะขึ้นเว็บภายใน 1 ชั่วโมง`
+                    : 'บันทึกเป็นฉบับร่างแล้ว (ยังไม่แสดงบนเว็บ)';
+                successMsg.classList.remove('hidden');
+            } catch (err) {
+                errorMsg.textContent = err.code === '23505'
+                    ? 'ลิงก์หน้าบทความ (slug) นี้ถูกใช้ไปแล้ว กรุณาเปลี่ยนเป็นอย่างอื่น'
+                    : 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('article-submit-label').innerText = editingId ? 'บันทึกการแก้ไข' : 'บันทึกบทความ';
+            }
+        });
+
+        async function loadArticles() {
+            const listEl = document.getElementById('article-management-list');
+            const { data, error } = await dcbcSupabase.from('articles').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                listEl.innerHTML = `<li class="text-center text-red-500 text-sm py-8">โหลดรายการไม่สำเร็จ: ${escapeHtml(error.message)}</li>`;
+                return;
+            }
+            allArticlesCache = data;
+            if (!data.length) {
+                listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ยังไม่มีบทความในระบบ</li>`;
+                return;
+            }
+
+            listEl.innerHTML = data.map(a => {
+                const cover = a.cover_path
+                    ? dcbcSupabase.storage.from('article-images').getPublicUrl(a.cover_path).data.publicUrl
+                    : null;
+                return `
+                <li class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                        ${cover
+                            ? `<img src="${cover}" alt="" class="w-14 h-14 rounded-xl object-cover flex-shrink-0">`
+                            : `<div class="w-14 h-14 rounded-xl bg-brand-light text-brand flex items-center justify-center flex-shrink-0"><i class="fa-regular fa-newspaper text-lg"></i></div>`}
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-semibold text-gray-800 text-sm">${escapeHtml(a.title)}</h3>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${a.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">${a.is_published ? 'เผยแพร่แล้ว' : 'ฉบับร่าง'}</span>
+                            </div>
+                            ${a.excerpt ? `<p class="text-xs text-gray-500 font-light mt-0.5">${escapeHtml(a.excerpt)}</p>` : ''}
+                            <p class="text-[11px] text-gray-400 mt-1 font-mono">/articles/${escapeHtml(a.slug)}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
+                        ${a.is_published ? `<a href="https://www.dcbc.co.th/articles/${encodeURIComponent(a.slug)}" target="_blank" rel="noopener" class="text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm"><i class="fa-solid fa-arrow-up-right-from-square"></i> ดู</a>` : ''}
+                        <button onclick="editArticle('${a.id}')" class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-pen"></i> แก้ไข
+                        </button>
+                        <button onclick="toggleArticlePublished('${a.id}', ${a.is_published})" class="text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-power-off"></i> ${a.is_published ? 'ซ่อน' : 'เผยแพร่'}
+                        </button>
+                        <button onclick="deleteArticle('${a.id}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash"></i> ลบ
+                        </button>
+                    </div>
+                </li>`;
+            }).join('');
+        }
+
+        async function toggleArticlePublished(id, currentlyPublished) {
+            const a = allArticlesCache.find(x => x.id === id);
+            const payload = { is_published: !currentlyPublished, updated_at: new Date().toISOString() };
+            if (!currentlyPublished && a && !a.published_at) payload.published_at = new Date().toISOString();
+            const { error } = await dcbcSupabase.from('articles').update(payload).eq('id', id);
+            if (error) { alert('อัปเดตไม่สำเร็จ: ' + error.message); return; }
+            loadArticles();
+        }
+
+        async function deleteArticle(id) {
+            if (!confirm('ยืนยันการลบบทความนี้?')) return;
+            const a = allArticlesCache.find(x => x.id === id);
+            if (a && a.cover_path) {
+                await dcbcSupabase.storage.from('article-images').remove([a.cover_path]);
+            }
+            const { error } = await dcbcSupabase.from('articles').delete().eq('id', id);
+            if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+            loadArticles();
         }
     </script>
 </body>

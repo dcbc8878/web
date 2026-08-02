@@ -267,6 +267,75 @@ $$;
 revoke all on function public.get_latest_app_release() from public;
 grant execute on function public.get_latest_app_release() to anon, authenticated;
 
+-- ---------- articles ----------
+-- Blog posts. Rendered to static HTML at deploy time by
+-- scripts/build-articles.mjs so search engines and AI crawlers get
+-- real markup instead of a page that only fills in via JavaScript.
+create table if not exists public.articles (
+  id            uuid primary key default gen_random_uuid(),
+  slug          text not null unique,   -- becomes /articles/<slug>
+  title         text not null,
+  excerpt       text,                   -- short summary for the listing + meta description
+  content       text not null,          -- body text, minimal markdown (##, -, **bold**, links)
+  cover_path    text,                   -- storage key inside 'article-images' bucket
+  source_url    text,                   -- original Facebook post, for reference
+  is_published  boolean not null default false,
+  published_at  timestamptz,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
+);
+
+alter table public.articles enable row level security;
+
+drop policy if exists "articles_public_read_published" on public.articles;
+create policy "articles_public_read_published"
+  on public.articles for select
+  to anon
+  using (is_published = true);
+
+drop policy if exists "articles_admin_read_all" on public.articles;
+create policy "articles_admin_read_all"
+  on public.articles for select
+  to authenticated
+  using (true);
+
+drop policy if exists "articles_admin_insert" on public.articles;
+create policy "articles_admin_insert"
+  on public.articles for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "articles_admin_update" on public.articles;
+create policy "articles_admin_update"
+  on public.articles for update
+  to authenticated
+  using (true) with check (true);
+
+drop policy if exists "articles_admin_delete" on public.articles;
+create policy "articles_admin_delete"
+  on public.articles for delete
+  to authenticated
+  using (true);
+
+-- ---------- Storage: article-images bucket ----------
+drop policy if exists "article_images_bucket_admin_insert" on storage.objects;
+create policy "article_images_bucket_admin_insert"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'article-images');
+
+drop policy if exists "article_images_bucket_admin_update" on storage.objects;
+create policy "article_images_bucket_admin_update"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'article-images') with check (bucket_id = 'article-images');
+
+drop policy if exists "article_images_bucket_admin_delete" on storage.objects;
+create policy "article_images_bucket_admin_delete"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'article-images');
+
 -- ---------- Storage: app-releases bucket ----------
 -- Public bucket, so the installer downloads over its public URL with no
 -- auth. Only the admin can upload or remove builds.

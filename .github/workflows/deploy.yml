@@ -4,6 +4,10 @@ on:
   push:
     branches: ["main", "claude/dcbc-website-setup-1hs9tw"]
   workflow_dispatch:
+  # Article pages are generated from Supabase at build time, so the site
+  # has to redeploy on a timer for newly published articles to appear.
+  schedule:
+    - cron: "0 * * * *"
 
 permissions:
   contents: read
@@ -23,6 +27,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build article pages
+        run: node scripts/build-articles.mjs
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

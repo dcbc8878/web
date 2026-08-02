@@ -3,3 +3,6 @@ Thumbs.db
 *.log
 preview-*.png
 node_modules/
+
+# Article pages are generated at deploy time by scripts/build-articles.mjs
+/articles/
