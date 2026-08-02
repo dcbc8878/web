@@ -189,6 +189,105 @@ insert into public.portal_codes (code) values
   ('DCBC'), ('EPED'), ('JYNE'), ('VTLB'), ('ACMS'), ('KKRB'), ('DCRG')
 on conflict (code) do nothing;
 
+-- ---------- app_releases ----------
+-- Versions of the downloadable helper program, served by the unlisted
+-- download.html page and by the program's own update check.
+create table if not exists public.app_releases (
+  id            uuid primary key default gen_random_uuid(),
+  version       text not null,          -- e.g. '1.0.3'
+  notes         text,                   -- what changed in this version
+  file_path     text not null,          -- storage key inside 'app-releases' bucket
+  file_name     text not null,          -- original filename, for the download attribute
+  file_size     bigint,
+  is_published  boolean not null default true,
+  created_at    timestamptz not null default now()
+);
+
+alter table public.app_releases enable row level security;
+
+-- Anyone (the download page, and the program checking for updates) may
+-- read published releases. Unpublished ones stay admin-only, so a build
+-- can be staged before it goes live.
+drop policy if exists "app_releases_public_read_published" on public.app_releases;
+create policy "app_releases_public_read_published"
+  on public.app_releases for select
+  to anon
+  using (is_published = true);
+
+drop policy if exists "app_releases_admin_read_all" on public.app_releases;
+create policy "app_releases_admin_read_all"
+  on public.app_releases for select
+  to authenticated
+  using (true);
+
+drop policy if exists "app_releases_admin_insert" on public.app_releases;
+create policy "app_releases_admin_insert"
+  on public.app_releases for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "app_releases_admin_update" on public.app_releases;
+create policy "app_releases_admin_update"
+  on public.app_releases for update
+  to authenticated
+  using (true) with check (true);
+
+drop policy if exists "app_releases_admin_delete" on public.app_releases;
+create policy "app_releases_admin_delete"
+  on public.app_releases for delete
+  to authenticated
+  using (true);
+
+-- The update-check endpoint the installed program calls. Returns the
+-- newest published release as JSON (or null if none), including a ready
+-- to use download URL. "Newest" = most recently added, so publishing
+-- order is what decides it — not string-comparing version numbers,
+-- which breaks as soon as you reach 1.10 vs 1.9.
+create or replace function public.get_latest_app_release()
+returns json
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select json_build_object(
+    'version',      version,
+    'notes',        notes,
+    'file_name',    file_name,
+    'file_size',    file_size,
+    'download_url', 'https://dqegkyobclqqichhnxfm.supabase.co/storage/v1/object/public/app-releases/' || file_path,
+    'released_at',  created_at
+  )
+  from public.app_releases
+  where is_published = true
+  order by created_at desc
+  limit 1;
+$$;
+
+revoke all on function public.get_latest_app_release() from public;
+grant execute on function public.get_latest_app_release() to anon, authenticated;
+
+-- ---------- Storage: app-releases bucket ----------
+-- Public bucket, so the installer downloads over its public URL with no
+-- auth. Only the admin can upload or remove builds.
+drop policy if exists "app_releases_bucket_admin_insert" on storage.objects;
+create policy "app_releases_bucket_admin_insert"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'app-releases');
+
+drop policy if exists "app_releases_bucket_admin_update" on storage.objects;
+create policy "app_releases_bucket_admin_update"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'app-releases') with check (bucket_id = 'app-releases');
+
+drop policy if exists "app_releases_bucket_admin_delete" on storage.objects;
+create policy "app_releases_bucket_admin_delete"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'app-releases');
+
 -- ---------- Storage: documents bucket ----------
 -- (bucket itself created via Dashboard, see manual steps)
 --

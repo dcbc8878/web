@@ -113,6 +113,9 @@
             <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="codes-tab" onclick="switchTab('codes-tab', this)">
                 <i class="fa-solid fa-key"></i> รหัสลูกค้า
             </button>
+            <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="releases-tab" onclick="switchTab('releases-tab', this)">
+                <i class="fa-solid fa-cloud-arrow-down"></i> โปรแกรม
+            </button>
         </div>
     </div>
 
@@ -323,6 +326,101 @@
                 </div>
             </div>
 
+            <!-- ============ APP RELEASES TAB ============ -->
+            <div id="releases-tab" class="tab-panel hidden space-y-8">
+
+                <!-- Info banner -->
+                <div class="bg-white p-6 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <h2 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-link text-brand"></i> ลิงก์หน้าดาวน์โหลด (ไม่แสดงในเว็บไซต์)
+                    </h2>
+                    <p class="text-[11px] text-gray-400 font-light mb-3">หน้านี้ไม่มีลิงก์จากหน้าใดในเว็บไซต์ ต้องส่งลิงก์นี้ให้ลูกค้าโดยตรงเท่านั้น</p>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="download-link-display" readonly value="https://www.dcbc.co.th/download.html" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
+                        <button onclick="copyDownloadLink()" class="px-4 py-2.5 bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 text-xs font-medium rounded-xl transition-colors border border-gray-200 flex items-center gap-2 flex-shrink-0">
+                            <i class="fa-regular fa-copy"></i> คัดลอก
+                        </button>
+                    </div>
+                    <p id="copy-download-feedback" class="hidden text-green-600 text-xs font-medium mt-2">คัดลอกลิงก์แล้ว ✓</p>
+                    <p id="copy-download-error" class="hidden text-red-500 text-xs font-medium mt-2">คัดลอกอัตโนมัติไม่สำเร็จ กรุณาคัดลอกจากช่องด้านบนแทน</p>
+                </div>
+
+                <!-- Upload new version -->
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+                        <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <div>
+                            <h1 id="release-form-title" class="text-2xl font-bold text-gray-900">อัปโหลดเวอร์ชันใหม่</h1>
+                            <p class="text-xs text-gray-400 font-light mt-1">เวอร์ชันที่เผยแพร่ล่าสุดจะแสดงบนหน้าดาวน์โหลด และโปรแกรมจะเห็นว่ามีอัปเดต</p>
+                        </div>
+                    </div>
+
+                    <form id="admin-release-form" class="space-y-6">
+                        <input type="hidden" id="editing-release-id" value="">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. เลขเวอร์ชัน <span class="text-red-500">*</span></label>
+                            <input type="text" id="release-version-input" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น 1.0.0">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. รายละเอียดเวอร์ชันนี้ <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
+                            <textarea id="release-notes-input" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="เช่น แก้ไขปัญหาดาวน์โหลดค้าง / เพิ่มการรองรับไฟล์ Excel"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                3. ไฟล์โปรแกรม <span id="release-file-required-star" class="text-red-500">*</span>
+                                <span id="release-file-optional-note" class="hidden text-xs text-gray-400 font-light">(เว้นว่างได้ถ้าไม่ต้องการเปลี่ยนไฟล์เดิม)</span>
+                            </label>
+                            <div class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('release-file').click()">
+                                <input type="file" id="release-file" class="hidden" onchange="previewReleaseFile(event)">
+                                <div id="release-upload-idle">
+                                    <i class="fa-solid fa-file-zipper text-3xl text-brand mb-2"></i>
+                                    <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกไฟล์โปรแกรม</p>
+                                    <p class="text-xs text-gray-400 font-light mt-1">เช่น .exe, .zip, .msi</p>
+                                </div>
+                                <div id="release-upload-selected" class="hidden flex items-center justify-between p-3 bg-white rounded-xl border border-brand/30">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-file-zipper text-2xl text-brand"></i>
+                                        <div class="text-left">
+                                            <p id="release-file-name" class="text-sm font-medium text-gray-800 truncate max-w-[250px] sm:max-w-[350px]"></p>
+                                            <p id="release-file-size" class="text-xs text-gray-400"></p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">พร้อมอัปโหลด</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label class="flex items-center gap-2.5 cursor-pointer">
+                            <input type="checkbox" id="release-published" checked class="w-4 h-4 text-brand rounded focus:ring-brand">
+                            <span class="text-sm text-gray-700">เผยแพร่ทันที <span class="text-xs text-gray-400 font-light">(ถ้าไม่ติ๊ก จะเก็บไว้ก่อน ลูกค้ายังไม่เห็น)</span></span>
+                        </label>
+
+                        <div class="flex gap-3">
+                            <button type="submit" id="release-submit-btn" class="flex-1 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
+                                <i class="fa-solid fa-paper-plane"></i> <span id="release-submit-label">อัปโหลดเวอร์ชัน</span>
+                            </button>
+                            <button type="button" id="cancel-edit-release-btn" onclick="cancelEditRelease()" class="hidden px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">ยกเลิก</button>
+                        </div>
+                        <p id="release-form-error" class="hidden text-red-500 text-xs text-center"></p>
+                    </form>
+                </div>
+
+                <!-- Version list -->
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                        <i class="fa-solid fa-clock-rotate-left text-brand"></i> ประวัติเวอร์ชัน
+                    </h2>
+                    <ul id="release-management-list" class="space-y-3">
+                        <li class="text-center text-gray-400 text-sm py-8">กำลังโหลด...</li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -363,6 +461,7 @@
             loadDocuments();
             loadReviews();
             loadPortalCodes();
+            loadReleases();
         }
 
         dcbcSupabase.auth.getSession().then(({ data }) => {
@@ -1046,6 +1145,199 @@
             const { error } = await dcbcSupabase.from('portal_codes').delete().eq('id', id);
             if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
             loadPortalCodes();
+        }
+
+        // ---------------- App Releases ----------------
+        const DOWNLOAD_PAGE_URL = 'https://www.dcbc.co.th/download.html';
+        let allReleasesCache = [];
+
+        function copyDownloadLink() {
+            const fb = document.getElementById('copy-download-feedback');
+            const err = document.getElementById('copy-download-error');
+            const show = (ok) => {
+                fb.classList.add('hidden');
+                err.classList.add('hidden');
+                const t = ok ? fb : err;
+                t.classList.remove('hidden');
+                setTimeout(() => t.classList.add('hidden'), 4000);
+            };
+            const fallback = () => {
+                const input = document.getElementById('download-link-display');
+                input.focus(); input.select();
+                try { show(document.execCommand('copy')); } catch (e) { show(false); }
+            };
+            if (!navigator.clipboard || !window.isSecureContext) { fallback(); return; }
+            navigator.clipboard.writeText(DOWNLOAD_PAGE_URL).then(() => show(true)).catch(fallback);
+        }
+
+        function previewReleaseFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('release-upload-idle').classList.add('hidden');
+            document.getElementById('release-upload-selected').classList.remove('hidden');
+            document.getElementById('release-file-name').innerText = file.name;
+            document.getElementById('release-file-size').innerText = dcbcFormatBytes(file.size);
+        }
+
+        function resetReleaseForm() {
+            document.getElementById('admin-release-form').reset();
+            document.getElementById('editing-release-id').value = '';
+            document.getElementById('release-form-title').innerText = 'อัปโหลดเวอร์ชันใหม่';
+            document.getElementById('release-submit-label').innerText = 'อัปโหลดเวอร์ชัน';
+            document.getElementById('cancel-edit-release-btn').classList.add('hidden');
+            document.getElementById('release-file-required-star').classList.remove('hidden');
+            document.getElementById('release-file-optional-note').classList.add('hidden');
+            document.getElementById('release-upload-idle').classList.remove('hidden');
+            document.getElementById('release-upload-selected').classList.add('hidden');
+            document.getElementById('release-published').checked = true;
+        }
+
+        function cancelEditRelease() { resetReleaseForm(); }
+
+        function editRelease(id) {
+            const r = allReleasesCache.find(x => x.id === id);
+            if (!r) return;
+            document.getElementById('editing-release-id').value = r.id;
+            document.getElementById('release-version-input').value = r.version;
+            document.getElementById('release-notes-input').value = r.notes || '';
+            document.getElementById('release-published').checked = r.is_published;
+            document.getElementById('release-form-title').innerText = 'แก้ไขเวอร์ชัน: ' + r.version;
+            document.getElementById('release-submit-label').innerText = 'บันทึกการแก้ไข';
+            document.getElementById('cancel-edit-release-btn').classList.remove('hidden');
+            document.getElementById('release-file-required-star').classList.add('hidden');
+            document.getElementById('release-file-optional-note').classList.remove('hidden');
+            document.getElementById('release-upload-idle').classList.remove('hidden');
+            document.getElementById('release-upload-selected').classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        const adminReleaseForm = document.getElementById('admin-release-form');
+        adminReleaseForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const btn = document.getElementById('release-submit-btn');
+            const errorMsg = document.getElementById('release-form-error');
+            errorMsg.classList.add('hidden');
+
+            const editingId = document.getElementById('editing-release-id').value;
+            const version = document.getElementById('release-version-input').value.trim();
+            const notes = document.getElementById('release-notes-input').value.trim();
+            const isPublished = document.getElementById('release-published').checked;
+            const file = document.getElementById('release-file').files[0];
+
+            if (!editingId && !file) {
+                errorMsg.textContent = 'กรุณาเลือกไฟล์โปรแกรมที่ต้องการอัปโหลด';
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            document.getElementById('release-submit-label').innerText = 'กำลังอัปโหลด...';
+
+            try {
+                let filePath = null, fileName = null, fileSize = null;
+                if (file) {
+                    filePath = dcbcStoragePath(file.name);
+                    const { error: uploadError } = await dcbcSupabase.storage.from('app-releases').upload(filePath, file);
+                    if (uploadError) throw uploadError;
+                    fileName = file.name;
+                    fileSize = file.size;
+                }
+
+                if (editingId) {
+                    const payload = { version, notes: notes || null, is_published: isPublished };
+                    const existing = allReleasesCache.find(r => r.id === editingId);
+                    if (filePath) {
+                        payload.file_path = filePath;
+                        payload.file_name = fileName;
+                        payload.file_size = fileSize;
+                    }
+                    const { error } = await dcbcSupabase.from('app_releases').update(payload).eq('id', editingId);
+                    if (error) throw error;
+                    if (filePath && existing && existing.file_path) {
+                        await dcbcSupabase.storage.from('app-releases').remove([existing.file_path]);
+                    }
+                } else {
+                    const { error } = await dcbcSupabase.from('app_releases').insert({
+                        version, notes: notes || null, file_path: filePath,
+                        file_name: fileName, file_size: fileSize, is_published: isPublished
+                    });
+                    if (error) throw error;
+                }
+
+                resetReleaseForm();
+                loadReleases();
+            } catch (err) {
+                errorMsg.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');
+                errorMsg.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('release-submit-label').innerText = editingId ? 'บันทึกการแก้ไข' : 'อัปโหลดเวอร์ชัน';
+            }
+        });
+
+        async function loadReleases() {
+            const listEl = document.getElementById('release-management-list');
+            const { data, error } = await dcbcSupabase.from('app_releases').select('*').order('created_at', { ascending: false });
+
+            if (error) {
+                listEl.innerHTML = `<li class="text-center text-red-500 text-sm py-8">โหลดรายการไม่สำเร็จ: ${escapeHtml(error.message)}</li>`;
+                return;
+            }
+            allReleasesCache = data;
+            if (!data.length) {
+                listEl.innerHTML = `<li class="text-center text-gray-400 text-sm py-8">ยังไม่มีเวอร์ชันในระบบ</li>`;
+                return;
+            }
+
+            // The newest published row is what download.html and the update
+            // check both resolve to — mark it so it's obvious which is live.
+            const liveId = (data.find(r => r.is_published) || {}).id;
+
+            listEl.innerHTML = data.map(r => `
+                <li class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
+                    <div class="flex items-start gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-brand-light text-brand flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-file-zipper text-lg"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-semibold text-gray-800 text-sm">v${escapeHtml(r.version)}</h3>
+                                ${r.id === liveId ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-green-100 text-green-700">ใช้งานอยู่</span>' : ''}
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${r.is_published ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-500'}">${r.is_published ? 'เผยแพร่' : 'ยังไม่เผยแพร่'}</span>
+                            </div>
+                            ${r.notes ? `<p class="text-xs text-gray-500 font-light mt-1 whitespace-pre-line">${escapeHtml(r.notes)}</p>` : ''}
+                            <p class="text-[11px] text-gray-400 mt-1">${escapeHtml(r.file_name || '')} ${r.file_size ? '· ' + dcbcFormatBytes(r.file_size) : ''}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
+                        <button onclick="editRelease('${r.id}')" class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-pen"></i> แก้ไข
+                        </button>
+                        <button onclick="toggleReleasePublished('${r.id}', ${r.is_published})" class="text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-power-off"></i> ${r.is_published ? 'หยุดเผยแพร่' : 'เผยแพร่'}
+                        </button>
+                        <button onclick="deleteRelease('${r.id}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash"></i> ลบ
+                        </button>
+                    </div>
+                </li>`).join('');
+        }
+
+        async function toggleReleasePublished(id, currentlyPublished) {
+            const { error } = await dcbcSupabase.from('app_releases').update({ is_published: !currentlyPublished }).eq('id', id);
+            if (error) { alert('อัปเดตไม่สำเร็จ: ' + error.message); return; }
+            loadReleases();
+        }
+
+        async function deleteRelease(id) {
+            if (!confirm('ยืนยันการลบเวอร์ชันนี้?')) return;
+            const r = allReleasesCache.find(x => x.id === id);
+            if (r && r.file_path) {
+                await dcbcSupabase.storage.from('app-releases').remove([r.file_path]);
+            }
+            const { error } = await dcbcSupabase.from('app_releases').delete().eq('id', id);
+            if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+            loadReleases();
         }
     </script>
 </body>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- หน้านี้ไม่ถูกลิงก์จากหน้าใดในเว็บไซต์ และไม่ให้ search engine เก็บ -->
+    <meta name="robots" content="noindex, nofollow">
+    <title>ดาวน์โหลดโปรแกรมช่วยดาวน์โหลด | บริษัท เด็กชายบัญชี จำกัด</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+    <link rel="shortcut icon" href="favicon.ico">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            light: '#FFF2E8',
+                            DEFAULT: '#FFB88C',
+                            dark: '#E5976A',
+                            text: '#4A4A4A',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #FFB88C; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E5976A; }
+
+        .btn-shine { position: relative; overflow: hidden; }
+        .btn-shine::after {
+            content: '';
+            position: absolute; top: 0; left: -75%; width: 50%; height: 100%;
+            background: linear-gradient(120deg, transparent, rgba(255,255,255,0.55), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.65s ease;
+            pointer-events: none;
+        }
+        .btn-shine:hover::after { left: 125%; }
+
+        @keyframes blob-float {
+            0%, 100% { transform: translate(0, 0); opacity: 0.18; }
+            50% { transform: translate(12px, -22px); opacity: 0.32; }
+        }
+        .animate-blob { animation: blob-float 8s ease-in-out infinite; }
+        .animate-blob.delay-1 { animation-delay: 1.5s; }
+
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .animate-blob { animation: none !important; }
+            .btn-shine::after { transition: none !important; }
+        }
+    </style>
+</head>
+<body class="text-brand-text bg-white antialiased flex flex-col min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="w-full bg-brand-light/90 backdrop-blur-md z-50 border-b border-brand-light sticky top-0">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <a href="index.html" class="flex items-center gap-2">
+                    <img src="logo.png" alt="เด็กชายบัญชี" class="h-12 w-12 object-contain">
+                    <span class="font-bold text-2xl tracking-tight text-gray-800">เด็กชายบัญชี</span>
+                </a>
+                <a href="index.html" class="text-brand font-medium hover:underline flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-arrow-left"></i> กลับหน้าหลัก
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="flex-grow bg-brand-light relative overflow-hidden py-12 md:py-20">
+        <div class="absolute -top-24 -right-24 w-96 h-96 bg-brand opacity-20 rounded-full blur-3xl animate-blob"></div>
+        <div class="absolute top-1/2 -left-24 w-72 h-72 bg-brand opacity-20 rounded-full blur-3xl animate-blob delay-1"></div>
+
+        <div class="max-w-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-brand text-4xl mx-auto mb-5 shadow-sm">
+                    <i class="fa-solid fa-cloud-arrow-down"></i>
+                </div>
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">โปรแกรมช่วยดาวน์โหลด</h1>
+                <p class="mt-3 text-base text-gray-600 font-light">สำหรับลูกค้าของบริษัท เด็กชายบัญชี จำกัด</p>
+            </div>
+
+            <!-- Loading -->
+            <div id="release-loading" class="bg-white rounded-3xl shadow-[0_10px_35px_rgb(255,184,140,0.15)] border border-gray-100 p-10 text-center">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl text-brand mb-3"></i>
+                <p class="text-gray-500 text-sm font-light">กำลังโหลดข้อมูลเวอร์ชันล่าสุด...</p>
+            </div>
+
+            <!-- Not available -->
+            <div id="release-empty" class="hidden bg-white rounded-3xl shadow-[0_10px_35px_rgb(255,184,140,0.15)] border border-gray-100 p-10 text-center">
+                <div class="w-16 h-16 bg-gray-100 text-gray-400 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h2 class="text-lg font-bold text-gray-800 mb-2">ยังไม่มีโปรแกรมให้ดาวน์โหลด</h2>
+                <p class="text-gray-500 text-sm font-light">ขณะนี้ยังไม่มีเวอร์ชันที่เผยแพร่ กรุณาติดต่อทีมงานหากต้องการความช่วยเหลือ</p>
+            </div>
+
+            <!-- Release card -->
+            <div id="release-card" class="hidden bg-white rounded-3xl shadow-[0_10px_35px_rgb(255,184,140,0.15)] border border-gray-100 overflow-hidden">
+
+                <div class="p-8 md:p-10">
+                    <div class="flex items-center justify-between gap-4 mb-6 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-brand bg-brand-light px-3 py-1.5 rounded-full">
+                                เวอร์ชันล่าสุด
+                            </span>
+                            <span id="release-version" class="text-xl font-bold text-gray-900">–</span>
+                        </div>
+                        <span id="release-date" class="text-xs text-gray-400 font-light"></span>
+                    </div>
+
+                    <a id="release-download-btn" href="#" download class="btn-shine w-full py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 mb-4">
+                        <i class="fa-solid fa-download"></i> ดาวน์โหลดโปรแกรม
+                    </a>
+
+                    <div class="flex items-center justify-center gap-4 text-xs text-gray-400 font-light">
+                        <span id="release-filename" class="truncate max-w-[220px]"></span>
+                        <span id="release-size"></span>
+                    </div>
+                </div>
+
+                <!-- Release notes -->
+                <div id="release-notes-wrap" class="hidden border-t border-gray-100 bg-gray-50 px-8 md:px-10 py-6">
+                    <h3 class="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ul text-brand"></i> รายละเอียดเวอร์ชันนี้
+                    </h3>
+                    <p id="release-notes" class="text-sm text-gray-600 font-light leading-relaxed whitespace-pre-line"></p>
+                </div>
+            </div>
+
+            <!-- Help note -->
+            <div class="mt-6 bg-white/70 backdrop-blur-sm border border-brand/20 rounded-2xl p-5 text-center">
+                <p class="text-xs text-gray-500 font-light leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-brand mr-1"></i>
+                    หากดาวน์โหลดหรือติดตั้งไม่สำเร็จ ติดต่อทีมงานได้ที่
+                    <a href="tel:0888788648" class="text-brand font-medium hover:underline">088-878-8648</a>
+                    หรือ LINE
+                    <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="text-brand font-medium hover:underline">@dcbc</a>
+                </p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 border-t border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-gray-400 text-sm font-light mb-1">บริษัท เด็กชายบัญชี จำกัด (DEKCHAIBUNCHEE CO.,LTD.)</p>
+            <p class="text-xs text-gray-500 font-light">&copy; 2026 All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-client.js?v=4"></script>
+
+    <script>
+        async function loadLatestRelease() {
+            const loading = document.getElementById('release-loading');
+            const empty = document.getElementById('release-empty');
+            const card = document.getElementById('release-card');
+
+            const { data, error } = await dcbcSupabase.rpc('get_latest_app_release');
+
+            loading.classList.add('hidden');
+
+            if (error || !data) {
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('release-version').innerText = data.version || '–';
+            document.getElementById('release-filename').innerText = data.file_name || '';
+            document.getElementById('release-size').innerText = data.file_size ? dcbcFormatBytes(data.file_size) : '';
+
+            if (data.released_at) {
+                document.getElementById('release-date').innerText =
+                    'อัปเดตเมื่อ ' + new Date(data.released_at).toLocaleDateString('th-TH', {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                    });
+            }
+
+            const btn = document.getElementById('release-download-btn');
+            btn.href = data.download_url;
+            if (data.file_name) btn.setAttribute('download', data.file_name);
+
+            if (data.notes) {
+                document.getElementById('release-notes').innerText = data.notes;
+                document.getElementById('release-notes-wrap').classList.remove('hidden');
+            }
+
+            card.classList.remove('hidden');
+        }
+        loadLatestRelease();
+    </script>
+</body>
+</html>
