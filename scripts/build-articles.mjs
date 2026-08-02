@@ -273,7 +273,7 @@ ${a.source_url ? `                    <p class="mt-8 pt-5 border-t border-gray-1
     </main>`;
 
     return layout({
-        title: `${a.title} | บริษัท เด็กชายบัญชี จำกัด`,
+        title: `${a.title} | เด็กชายบัญชี`,
         description,
         canonical: url,
         head,
@@ -320,7 +320,7 @@ ${cards}
     </main>`;
 
     return layout({
-        title: 'บทความความรู้บัญชีและภาษี | บริษัท เด็กชายบัญชี จำกัด',
+        title: 'บทความความรู้บัญชีและภาษี | เด็กชายบัญชี',
         description: 'รวมบทความความรู้เรื่องบัญชี ภาษี และการทำธุรกิจ จากบริษัท เด็กชายบัญชี จำกัด สำนักงานบัญชีในกรุงเทพมหานคร',
         canonical: `${SITE_URL}/articles`,
         body
