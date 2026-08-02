@@ -384,9 +384,10 @@ create table if not exists public.app_releases (
   id            uuid primary key default gen_random_uuid(),
   version       text not null,          -- e.g. '1.0.3'
   notes         text,                   -- what changed in this version
-  file_path     text not null,          -- storage key inside 'app-releases' bucket
-  file_name     text not null,          -- original filename, for the download attribute
+  file_path     text,                   -- storage key inside 'app-releases' bucket (null when external_url is used)
+  file_name     text,                   -- original filename, for the download attribute (null when external_url is used)
   file_size     bigint,
+  external_url  text,                   -- direct download URL (e.g. GitHub Releases) used instead of storage
   is_published  boolean not null default true,
   created_at    timestamptz not null default now()
 );
@@ -443,7 +444,10 @@ as $$
     'notes',        notes,
     'file_name',    file_name,
     'file_size',    file_size,
-    'download_url', 'https://dqegkyobclqqichhnxfm.supabase.co/storage/v1/object/public/app-releases/' || file_path,
+    'download_url', coalesce(
+      external_url,
+      'https://dqegkyobclqqichhnxfm.supabase.co/storage/v1/object/public/app-releases/' || file_path
+    ),
     'released_at',  created_at
   )
   from public.app_releases

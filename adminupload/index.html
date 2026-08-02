@@ -385,27 +385,38 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                                3. ไฟล์โปรแกรม <span id="release-file-required-star" class="text-red-500">*</span>
-                                <span id="release-file-optional-note" class="hidden text-xs text-gray-400 font-light">(เว้นว่างได้ถ้าไม่ต้องการเปลี่ยนไฟล์เดิม)</span>
-                            </label>
-                            <div class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('release-file').click()">
-                                <input type="file" id="release-file" class="hidden" onchange="previewReleaseFile(event)">
-                                <div id="release-upload-idle">
-                                    <i class="fa-solid fa-file-zipper text-3xl text-brand mb-2"></i>
-                                    <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกไฟล์โปรแกรม</p>
-                                    <p class="text-xs text-gray-400 font-light mt-1">เช่น .exe, .zip, .msi</p>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">3. แหล่งไฟล์โปรแกรม</label>
+                            <div class="flex gap-2 mb-3">
+                                <button type="button" id="source-tab-file" onclick="setSourceType('file')" class="px-4 py-2 rounded-xl text-sm font-medium transition-colors bg-brand text-white">อัปโหลดไฟล์</button>
+                                <button type="button" id="source-tab-url" onclick="setSourceType('url')" class="px-4 py-2 rounded-xl text-sm font-medium transition-colors bg-gray-100 text-gray-600">GitHub Releases URL</button>
+                            </div>
+                            <div id="source-file-zone">
+                                <div class="mb-1.5 text-xs text-gray-400">
+                                    <span id="release-file-required-star" class="text-red-500">*</span>
+                                    <span id="release-file-optional-note" class="hidden text-gray-400 font-light">(เว้นว่างได้ถ้าไม่ต้องการเปลี่ยนไฟล์เดิม)</span>
                                 </div>
-                                <div id="release-upload-selected" class="hidden flex items-center justify-between p-3 bg-white rounded-xl border border-brand/30">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fa-solid fa-file-zipper text-2xl text-brand"></i>
-                                        <div class="text-left">
-                                            <p id="release-file-name" class="text-sm font-medium text-gray-800 truncate max-w-[250px] sm:max-w-[350px]"></p>
-                                            <p id="release-file-size" class="text-xs text-gray-400"></p>
-                                        </div>
+                                <div class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('release-file').click()">
+                                    <input type="file" id="release-file" class="hidden" onchange="previewReleaseFile(event)">
+                                    <div id="release-upload-idle">
+                                        <i class="fa-solid fa-file-zipper text-3xl text-brand mb-2"></i>
+                                        <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกไฟล์โปรแกรม</p>
+                                        <p class="text-xs text-gray-400 font-light mt-1">เช่น .exe, .zip, .msi</p>
                                     </div>
-                                    <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">พร้อมอัปโหลด</span>
+                                    <div id="release-upload-selected" class="hidden flex items-center justify-between p-3 bg-white rounded-xl border border-brand/30">
+                                        <div class="flex items-center gap-3">
+                                            <i class="fa-solid fa-file-zipper text-2xl text-brand"></i>
+                                            <div class="text-left">
+                                                <p id="release-file-name" class="text-sm font-medium text-gray-800 truncate max-w-[250px] sm:max-w-[350px]"></p>
+                                                <p id="release-file-size" class="text-xs text-gray-400"></p>
+                                            </div>
+                                        </div>
+                                        <span class="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-md font-medium">พร้อมอัปโหลด</span>
+                                    </div>
                                 </div>
+                            </div>
+                            <div id="source-url-zone" class="hidden">
+                                <input type="url" id="release-external-url" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="https://github.com/.../releases/download/v1.0.0/App.exe">
+                                <p class="text-xs text-gray-400 mt-1.5">ลิงก์ตรงดาวน์โหลดไฟล์จาก GitHub Releases</p>
                             </div>
                         </div>
 
@@ -1469,6 +1480,27 @@
             document.getElementById('release-file-size').innerText = dcbcFormatBytes(file.size);
         }
 
+        let currentSourceType = 'file';
+
+        function setSourceType(type) {
+            currentSourceType = type;
+            const fileZone = document.getElementById('source-file-zone');
+            const urlZone = document.getElementById('source-url-zone');
+            const tabFile = document.getElementById('source-tab-file');
+            const tabUrl = document.getElementById('source-tab-url');
+            if (type === 'url') {
+                fileZone.classList.add('hidden');
+                urlZone.classList.remove('hidden');
+                tabFile.className = 'px-4 py-2 rounded-xl text-sm font-medium transition-colors bg-gray-100 text-gray-600';
+                tabUrl.className = 'px-4 py-2 rounded-xl text-sm font-medium transition-colors bg-brand text-white';
+            } else {
+                urlZone.classList.add('hidden');
+                fileZone.classList.remove('hidden');
+                tabFile.className = 'px-4 py-2 rounded-xl text-sm font-medium transition-colors bg-brand text-white';
+                tabUrl.className = 'px-4 py-2 rounded-xl text-sm font-medium transition-colors bg-gray-100 text-gray-600';
+            }
+        }
+
         function resetReleaseForm() {
             document.getElementById('admin-release-form').reset();
             document.getElementById('editing-release-id').value = '';
@@ -1480,6 +1512,8 @@
             document.getElementById('release-upload-idle').classList.remove('hidden');
             document.getElementById('release-upload-selected').classList.add('hidden');
             document.getElementById('release-published').checked = true;
+            document.getElementById('release-external-url').value = '';
+            setSourceType('file');
         }
 
         function cancelEditRelease() { resetReleaseForm(); }
@@ -1498,6 +1532,13 @@
             document.getElementById('release-file-optional-note').classList.remove('hidden');
             document.getElementById('release-upload-idle').classList.remove('hidden');
             document.getElementById('release-upload-selected').classList.add('hidden');
+            if (r.external_url) {
+                setSourceType('url');
+                document.getElementById('release-external-url').value = r.external_url;
+            } else {
+                setSourceType('file');
+                document.getElementById('release-external-url').value = '';
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1513,11 +1554,20 @@
             const notes = document.getElementById('release-notes-input').value.trim();
             const isPublished = document.getElementById('release-published').checked;
             const file = document.getElementById('release-file').files[0];
+            const externalUrl = document.getElementById('release-external-url').value.trim();
 
-            if (!editingId && !file) {
-                errorMsg.textContent = 'กรุณาเลือกไฟล์โปรแกรมที่ต้องการอัปโหลด';
-                errorMsg.classList.remove('hidden');
-                return;
+            if (currentSourceType === 'url') {
+                if (!externalUrl) {
+                    errorMsg.textContent = 'กรุณาระบุ GitHub Releases URL';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
+            } else {
+                if (!editingId && !file) {
+                    errorMsg.textContent = 'กรุณาเลือกไฟล์โปรแกรมที่ต้องการอัปโหลด';
+                    errorMsg.classList.remove('hidden');
+                    return;
+                }
             }
 
             btn.disabled = true;
@@ -1525,7 +1575,7 @@
 
             try {
                 let filePath = null, fileName = null, fileSize = null;
-                if (file) {
+                if (currentSourceType === 'file' && file) {
                     filePath = dcbcStoragePath(file.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('app-releases').upload(filePath, file);
                     if (uploadError) throw uploadError;
@@ -1536,10 +1586,18 @@
                 if (editingId) {
                     const payload = { version, notes: notes || null, is_published: isPublished };
                     const existing = allReleasesCache.find(r => r.id === editingId);
-                    if (filePath) {
-                        payload.file_path = filePath;
-                        payload.file_name = fileName;
-                        payload.file_size = fileSize;
+                    if (currentSourceType === 'url') {
+                        payload.external_url = externalUrl;
+                        payload.file_path = null;
+                        payload.file_name = null;
+                        payload.file_size = null;
+                    } else {
+                        payload.external_url = null;
+                        if (filePath) {
+                            payload.file_path = filePath;
+                            payload.file_name = fileName;
+                            payload.file_size = fileSize;
+                        }
                     }
                     const { error } = await dcbcSupabase.from('app_releases').update(payload).eq('id', editingId);
                     if (error) throw error;
@@ -1547,10 +1605,11 @@
                         await dcbcSupabase.storage.from('app-releases').remove([existing.file_path]);
                     }
                 } else {
-                    const { error } = await dcbcSupabase.from('app_releases').insert({
-                        version, notes: notes || null, file_path: filePath,
-                        file_name: fileName, file_size: fileSize, is_published: isPublished
-                    });
+                    const { error } = await dcbcSupabase.from('app_releases').insert(
+                        currentSourceType === 'url'
+                            ? { version, notes: notes || null, external_url: externalUrl, file_path: null, file_name: null, file_size: null, is_published: isPublished }
+                            : { version, notes: notes || null, file_path: filePath, file_name: fileName, file_size: fileSize, external_url: null, is_published: isPublished }
+                    );
                     if (error) throw error;
                 }
 
@@ -1596,7 +1655,10 @@
                                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${r.is_published ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-500'}">${r.is_published ? 'เผยแพร่' : 'ยังไม่เผยแพร่'}</span>
                             </div>
                             ${r.notes ? `<p class="text-xs text-gray-500 font-light mt-1 whitespace-pre-line">${escapeHtml(r.notes)}</p>` : ''}
-                            <p class="text-[11px] text-gray-400 mt-1">${escapeHtml(r.file_name || '')} ${r.file_size ? '· ' + dcbcFormatBytes(r.file_size) : ''}</p>
+                            ${r.external_url
+                                ? `<p class="text-[11px] text-gray-400 mt-1 truncate"><i class="fa-brands fa-github mr-1"></i>${escapeHtml(r.external_url)}</p>`
+                                : `<p class="text-[11px] text-gray-400 mt-1">${escapeHtml(r.file_name || '')} ${r.file_size ? '· ' + dcbcFormatBytes(r.file_size) : ''}</p>`
+                            }
                         </div>
                     </div>
                     <div class="flex gap-2 self-end sm:self-center flex-shrink-0">
