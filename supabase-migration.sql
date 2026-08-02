@@ -14,6 +14,141 @@
 
 create extension if not exists pgcrypto; -- gen_random_uuid()
 
+-- ============================================================
+-- admin_users — who may log into the back office, and what each
+-- of them is allowed to touch.
+--
+-- IMPORTANT: these permissions are enforced here, in RLS, not in
+-- the browser. Hiding a tab in the admin page is only cosmetic —
+-- anyone who can log in could otherwise call the API directly. The
+-- policies further down all gate writes on has_perm(...), so a user
+-- without a permission is refused by Postgres itself.
+--
+-- Logins themselves are still created in Supabase Dashboard ->
+-- Authentication -> Users. The trigger below then adds the matching
+-- row here automatically, with every permission off, so a new
+-- account can see nothing until the owner grants it.
+-- ============================================================
+create table if not exists public.admin_users (
+  id              uuid primary key references auth.users(id) on delete cascade,
+  email           text not null,
+  display_name    text,
+  role            text not null default 'staff' check (role in ('owner', 'staff')),
+  perm_documents  boolean not null default false,
+  perm_reviews    boolean not null default false,
+  perm_codes      boolean not null default false,
+  perm_releases   boolean not null default false,
+  perm_articles   boolean not null default false,
+  is_active       boolean not null default true,
+  created_at      timestamptz not null default now()
+);
+
+-- Both helpers are SECURITY DEFINER so they can read admin_users
+-- without tripping that table's own RLS (which would recurse).
+create or replace function public.is_owner()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select role = 'owner' and is_active from public.admin_users where id = auth.uid()),
+    false
+  );
+$$;
+
+create or replace function public.has_perm(feature text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce((
+    select is_active and case feature
+      when 'documents' then perm_documents
+      when 'reviews'   then perm_reviews
+      when 'codes'     then perm_codes
+      when 'releases'  then perm_releases
+      when 'articles'  then perm_articles
+      else false
+    end
+    from public.admin_users
+    where id = auth.uid()
+  ), false);
+$$;
+
+revoke all on function public.is_owner() from public;
+revoke all on function public.has_perm(text) from public;
+grant execute on function public.is_owner() to authenticated;
+grant execute on function public.has_perm(text) to authenticated;
+
+alter table public.admin_users enable row level security;
+
+-- Every signed-in user may read their own row — the admin page needs
+-- it to know which tabs to show.
+drop policy if exists "admin_users_read_self" on public.admin_users;
+create policy "admin_users_read_self"
+  on public.admin_users for select
+  to authenticated
+  using (id = auth.uid());
+
+drop policy if exists "admin_users_owner_read_all" on public.admin_users;
+create policy "admin_users_owner_read_all"
+  on public.admin_users for select
+  to authenticated
+  using (public.is_owner());
+
+drop policy if exists "admin_users_owner_update" on public.admin_users;
+create policy "admin_users_owner_update"
+  on public.admin_users for update
+  to authenticated
+  using (public.is_owner())
+  with check (public.is_owner());
+
+-- An owner cannot delete their own row, which would otherwise leave
+-- the system with no one able to manage users.
+drop policy if exists "admin_users_owner_delete" on public.admin_users;
+create policy "admin_users_owner_delete"
+  on public.admin_users for delete
+  to authenticated
+  using (public.is_owner() and id <> auth.uid());
+
+-- New Supabase Auth users automatically get a locked-down row here.
+create or replace function public.handle_new_admin_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.admin_users (id, email)
+  values (new.id, new.email)
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_admin_user();
+
+-- Backfill accounts that already existed before this table did.
+insert into public.admin_users (id, email)
+select id, email from auth.users
+on conflict (id) do nothing;
+
+-- The very first account becomes the owner with every permission, so
+-- there is always someone who can grant access to everyone else.
+update public.admin_users set
+  role = 'owner', display_name = coalesce(display_name, 'ผู้ดูแลระบบ'),
+  perm_documents = true, perm_reviews = true, perm_codes = true,
+  perm_releases = true, perm_articles = true, is_active = true
+where id = (select id from public.admin_users order by created_at asc limit 1)
+  and not exists (select 1 from public.admin_users where role = 'owner');
+
 -- ---------- documents ----------
 create table if not exists public.documents (
   id           uuid primary key default gen_random_uuid(),
@@ -57,19 +192,19 @@ drop policy if exists "documents_admin_insert" on public.documents;
 create policy "documents_admin_insert"
   on public.documents for insert
   to authenticated
-  with check (true);
+  with check (public.has_perm('documents'));
 
 drop policy if exists "documents_admin_update" on public.documents;
 create policy "documents_admin_update"
   on public.documents for update
   to authenticated
-  using (true) with check (true);
+  using (public.has_perm('documents')) with check (public.has_perm('documents'));
 
 drop policy if exists "documents_admin_delete" on public.documents;
 create policy "documents_admin_delete"
   on public.documents for delete
   to authenticated
-  using (true);
+  using (public.has_perm('documents'));
 
 -- ---------- reviews ----------
 create table if not exists public.reviews (
@@ -97,7 +232,7 @@ drop policy if exists "reviews_admin_read_all" on public.reviews;
 create policy "reviews_admin_read_all"
   on public.reviews for select
   to authenticated
-  using (true);
+  using (public.has_perm('reviews'));
 
 -- Public can submit a NEW review, but the row is force-locked to
 -- 'pending' at the database level: WITH CHECK is evaluated against
@@ -116,13 +251,13 @@ drop policy if exists "reviews_admin_update" on public.reviews;
 create policy "reviews_admin_update"
   on public.reviews for update
   to authenticated
-  using (true) with check (true);
+  using (public.has_perm('reviews')) with check (public.has_perm('reviews'));
 
 drop policy if exists "reviews_admin_delete" on public.reviews;
 create policy "reviews_admin_delete"
   on public.reviews for delete
   to authenticated
-  using (true);
+  using (public.has_perm('reviews'));
 
 -- ---------- portal_codes ----------
 -- Access codes for the client document portal (/portal).
@@ -144,25 +279,25 @@ drop policy if exists "portal_codes_admin_select" on public.portal_codes;
 create policy "portal_codes_admin_select"
   on public.portal_codes for select
   to authenticated
-  using (true);
+  using (public.has_perm('codes'));
 
 drop policy if exists "portal_codes_admin_insert" on public.portal_codes;
 create policy "portal_codes_admin_insert"
   on public.portal_codes for insert
   to authenticated
-  with check (true);
+  with check (public.has_perm('codes'));
 
 drop policy if exists "portal_codes_admin_update" on public.portal_codes;
 create policy "portal_codes_admin_update"
   on public.portal_codes for update
   to authenticated
-  using (true) with check (true);
+  using (public.has_perm('codes')) with check (public.has_perm('codes'));
 
 drop policy if exists "portal_codes_admin_delete" on public.portal_codes;
 create policy "portal_codes_admin_delete"
   on public.portal_codes for delete
   to authenticated
-  using (true);
+  using (public.has_perm('codes'));
 
 -- Callable by anon (and authenticated) from the portal lock screen.
 -- SECURITY DEFINER lets it read the table despite anon having no
@@ -218,25 +353,25 @@ drop policy if exists "app_releases_admin_read_all" on public.app_releases;
 create policy "app_releases_admin_read_all"
   on public.app_releases for select
   to authenticated
-  using (true);
+  using (public.has_perm('releases'));
 
 drop policy if exists "app_releases_admin_insert" on public.app_releases;
 create policy "app_releases_admin_insert"
   on public.app_releases for insert
   to authenticated
-  with check (true);
+  with check (public.has_perm('releases'));
 
 drop policy if exists "app_releases_admin_update" on public.app_releases;
 create policy "app_releases_admin_update"
   on public.app_releases for update
   to authenticated
-  using (true) with check (true);
+  using (public.has_perm('releases')) with check (public.has_perm('releases'));
 
 drop policy if exists "app_releases_admin_delete" on public.app_releases;
 create policy "app_releases_admin_delete"
   on public.app_releases for delete
   to authenticated
-  using (true);
+  using (public.has_perm('releases'));
 
 -- The update-check endpoint the installed program calls. Returns the
 -- newest published release as JSON (or null if none), including a ready
@@ -297,44 +432,44 @@ drop policy if exists "articles_admin_read_all" on public.articles;
 create policy "articles_admin_read_all"
   on public.articles for select
   to authenticated
-  using (true);
+  using (public.has_perm('articles'));
 
 drop policy if exists "articles_admin_insert" on public.articles;
 create policy "articles_admin_insert"
   on public.articles for insert
   to authenticated
-  with check (true);
+  with check (public.has_perm('articles'));
 
 drop policy if exists "articles_admin_update" on public.articles;
 create policy "articles_admin_update"
   on public.articles for update
   to authenticated
-  using (true) with check (true);
+  using (public.has_perm('articles')) with check (public.has_perm('articles'));
 
 drop policy if exists "articles_admin_delete" on public.articles;
 create policy "articles_admin_delete"
   on public.articles for delete
   to authenticated
-  using (true);
+  using (public.has_perm('articles'));
 
 -- ---------- Storage: article-images bucket ----------
 drop policy if exists "article_images_bucket_admin_insert" on storage.objects;
 create policy "article_images_bucket_admin_insert"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id = 'article-images');
+  with check (bucket_id = 'article-images' and public.has_perm('articles'));
 
 drop policy if exists "article_images_bucket_admin_update" on storage.objects;
 create policy "article_images_bucket_admin_update"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'article-images') with check (bucket_id = 'article-images');
+  using (bucket_id = 'article-images' and public.has_perm('articles')) with check (bucket_id = 'article-images' and public.has_perm('articles'));
 
 drop policy if exists "article_images_bucket_admin_delete" on storage.objects;
 create policy "article_images_bucket_admin_delete"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'article-images');
+  using (bucket_id = 'article-images' and public.has_perm('articles'));
 
 -- ---------- Storage: app-releases bucket ----------
 -- Public bucket, so the installer downloads over its public URL with no
@@ -343,19 +478,19 @@ drop policy if exists "app_releases_bucket_admin_insert" on storage.objects;
 create policy "app_releases_bucket_admin_insert"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id = 'app-releases');
+  with check (bucket_id = 'app-releases' and public.has_perm('releases'));
 
 drop policy if exists "app_releases_bucket_admin_update" on storage.objects;
 create policy "app_releases_bucket_admin_update"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'app-releases') with check (bucket_id = 'app-releases');
+  using (bucket_id = 'app-releases' and public.has_perm('releases')) with check (bucket_id = 'app-releases' and public.has_perm('releases'));
 
 drop policy if exists "app_releases_bucket_admin_delete" on storage.objects;
 create policy "app_releases_bucket_admin_delete"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'app-releases');
+  using (bucket_id = 'app-releases' and public.has_perm('releases'));
 
 -- ---------- Storage: documents bucket ----------
 -- (bucket itself created via Dashboard, see manual steps)
@@ -373,19 +508,19 @@ drop policy if exists "documents_bucket_admin_insert" on storage.objects;
 create policy "documents_bucket_admin_insert"
   on storage.objects for insert
   to authenticated
-  with check (bucket_id = 'documents');
+  with check (bucket_id = 'documents' and public.has_perm('documents'));
 
 drop policy if exists "documents_bucket_admin_update" on storage.objects;
 create policy "documents_bucket_admin_update"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'documents') with check (bucket_id = 'documents');
+  using (bucket_id = 'documents' and public.has_perm('documents')) with check (bucket_id = 'documents' and public.has_perm('documents'));
 
 drop policy if exists "documents_bucket_admin_delete" on storage.objects;
 create policy "documents_bucket_admin_delete"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'documents');
+  using (bucket_id = 'documents' and public.has_perm('documents'));
 
 -- ---------- Storage: review-logos bucket ----------
 -- Public INSERT is intentional: a customer submitting a pending
@@ -407,10 +542,10 @@ drop policy if exists "review_logos_bucket_admin_update" on storage.objects;
 create policy "review_logos_bucket_admin_update"
   on storage.objects for update
   to authenticated
-  using (bucket_id = 'review-logos') with check (bucket_id = 'review-logos');
+  using (bucket_id = 'review-logos' and public.has_perm('reviews')) with check (bucket_id = 'review-logos' and public.has_perm('reviews'));
 
 drop policy if exists "review_logos_bucket_admin_delete" on storage.objects;
 create policy "review_logos_bucket_admin_delete"
   on storage.objects for delete
   to authenticated
-  using (bucket_id = 'review-logos');
+  using (bucket_id = 'review-logos' and public.has_perm('reviews'));

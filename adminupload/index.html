@@ -90,8 +90,12 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="hidden sm:flex items-center gap-2 text-xs bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full border border-amber-200">
-                        <i class="fa-solid fa-shield-halved"></i> หน้าระบบภายใน (ไม่แสดงในหน้าเว็บ)
+                    <div class="hidden sm:flex flex-col items-end leading-tight mr-1">
+                        <span id="current-user-label" class="text-xs font-semibold text-gray-700"></span>
+                        <span id="current-user-role" class="text-[10px] text-gray-400"></span>
+                    </div>
+                    <div class="hidden lg:flex items-center gap-2 text-xs bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full border border-amber-200">
+                        <i class="fa-solid fa-shield-halved"></i> หน้าระบบภายใน
                     </div>
                     <button id="admin-signout-btn" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-full font-medium flex items-center gap-1.5">
                         <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
@@ -119,7 +123,14 @@
             <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="articles-tab" onclick="switchTab('articles-tab', this)">
                 <i class="fa-regular fa-newspaper"></i> บทความ
             </button>
+            <button class="tab-btn px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 transition-colors flex items-center gap-2" data-tab="users-tab" onclick="switchTab('users-tab', this)">
+                <i class="fa-solid fa-users-gear"></i> ผู้ใช้
+            </button>
         </div>
+        <p id="no-permission-note" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+            <i class="fa-solid fa-triangle-exclamation mr-1.5"></i>
+            บัญชีของคุณยังไม่ได้รับสิทธิ์เข้าถึงส่วนใดเลย กรุณาติดต่อผู้ดูแลระบบเพื่อขอสิทธิ์
+        </p>
     </div>
 
     <!-- Main -->
@@ -539,6 +550,39 @@
                 </div>
             </div>
 
+            <!-- ============ USERS TAB (owner only) ============ -->
+            <div id="users-tab" class="tab-panel hidden space-y-8">
+
+                <div class="bg-white p-6 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <h2 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-info text-brand"></i> วิธีเพิ่มผู้ใช้ใหม่
+                    </h2>
+                    <ol class="text-xs text-gray-600 font-light space-y-1.5 list-decimal list-inside leading-relaxed">
+                        <li>เข้า Supabase Dashboard → <strong>Authentication</strong> → <strong>Users</strong> → <strong>Add user</strong></li>
+                        <li>ใส่อีเมลและรหัสผ่าน แล้วติ๊ก <strong>Auto Confirm User</strong> → กด Create</li>
+                        <li>กลับมาหน้านี้ กด <strong>รีเฟรชรายชื่อ</strong> — ผู้ใช้ใหม่จะขึ้นมาโดยยังไม่มีสิทธิ์ใดๆ</li>
+                        <li>ติ๊กสิทธิ์ที่ต้องการให้ แล้วกด <strong>บันทึก</strong></li>
+                    </ol>
+                    <p class="text-[11px] text-gray-400 font-light mt-3">
+                        การสร้างบัญชีต้องทำใน Supabase เพราะการสร้างผู้ใช้จากหน้าเว็บต้องใช้กุญแจระดับผู้ดูแลระบบ ซึ่งถ้าฝังไว้ในหน้าเว็บจะทำให้ใครก็ตามที่เปิดดูโค้ดหน้าเว็บยึดระบบทั้งหมดได้
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3">
+                            <i class="fa-solid fa-users-gear text-brand"></i> ผู้ใช้และสิทธิ์
+                        </h2>
+                        <button onclick="loadAdminUsers()" class="px-4 py-2.5 bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 text-xs font-medium rounded-xl transition-colors border border-gray-200 flex items-center gap-2">
+                            <i class="fa-solid fa-rotate"></i> รีเฟรชรายชื่อ
+                        </button>
+                    </div>
+                    <div id="user-management-list" class="space-y-4">
+                        <p class="text-center text-gray-400 text-sm py-8">กำลังโหลด...</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
 
@@ -574,13 +618,94 @@
         const lockError = document.getElementById('admin-lock-error');
         const lockSubmitBtn = document.getElementById('admin-lock-submit');
 
+        // Which permission each tab needs. The gating below only decides what
+        // is worth *showing* — the database refuses the actual reads and writes
+        // regardless, so a hidden tab is not the security boundary.
+        const TAB_PERMISSION = {
+            'documents-tab': 'perm_documents',
+            'reviews-tab': 'perm_reviews',
+            'codes-tab': 'perm_codes',
+            'releases-tab': 'perm_releases',
+            'articles-tab': 'perm_articles',
+            'users-tab': 'owner'
+        };
+        const TAB_LOADER = {
+            'documents-tab': () => loadDocuments(),
+            'reviews-tab': () => loadReviews(),
+            'codes-tab': () => loadPortalCodes(),
+            'releases-tab': () => loadReleases(),
+            'articles-tab': () => loadArticles(),
+            'users-tab': () => loadAdminUsers()
+        };
+
+        let currentUser = null;
+
+        function canAccess(tabId) {
+            if (!currentUser) return false;
+            const need = TAB_PERMISSION[tabId];
+            if (need === 'owner') return currentUser.role === 'owner';
+            return currentUser[need] === true;
+        }
+
         async function showAdminApp() {
             lockOverlay.style.display = 'none';
-            loadDocuments();
-            loadReviews();
-            loadPortalCodes();
-            loadReleases();
-            loadArticles();
+
+            const { data: { user } } = await dcbcSupabase.auth.getUser();
+            if (!user) return;
+
+            const { data, error } = await dcbcSupabase
+                .from('admin_users').select('*').eq('id', user.id).maybeSingle();
+
+            if (error || !data) {
+                // No profile row means the account exists in Auth but the
+                // migration hasn't run, or the row was removed.
+                currentUser = null;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('hidden'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+                const note = document.getElementById('no-permission-note');
+                note.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1.5"></i> ไม่พบข้อมูลสิทธิ์ของบัญชีนี้ กรุณาติดต่อผู้ดูแลระบบ';
+                note.classList.remove('hidden');
+                return;
+            }
+
+            currentUser = data;
+            document.getElementById('current-user-label').innerText = data.display_name || data.email;
+            document.getElementById('current-user-role').innerText = data.role === 'owner' ? 'เจ้าของระบบ' : 'ผู้ใช้งาน';
+
+            if (!data.is_active) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('hidden'));
+                const note = document.getElementById('no-permission-note');
+                note.innerHTML = '<i class="fa-solid fa-ban mr-1.5"></i> บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ';
+                note.classList.remove('hidden');
+                return;
+            }
+
+            // Show only the tabs this user may use, then open the first of them.
+            let firstVisibleBtn = null;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const tabId = btn.dataset.tab;
+                if (canAccess(tabId)) {
+                    btn.classList.remove('hidden');
+                    if (!firstVisibleBtn) firstVisibleBtn = btn;
+                } else {
+                    btn.classList.add('hidden');
+                }
+                btn.classList.remove('active');
+            });
+
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+
+            if (!firstVisibleBtn) {
+                document.getElementById('no-permission-note').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('no-permission-note').classList.add('hidden');
+            switchTab(firstVisibleBtn.dataset.tab, firstVisibleBtn);
+
+            // Only fetch data for sections this user can actually see.
+            Object.keys(TAB_LOADER).forEach(tabId => {
+                if (canAccess(tabId)) TAB_LOADER[tabId]();
+            });
         }
 
         dcbcSupabase.auth.getSession().then(({ data }) => {
@@ -617,8 +742,11 @@
 
         document.getElementById('admin-signout-btn').addEventListener('click', async function () {
             await dcbcSupabase.auth.signOut();
+            currentUser = null;
             lockEmail.value = '';
             lockPassword.value = '';
+            document.getElementById('current-user-label').innerText = '';
+            document.getElementById('current-user-role').innerText = '';
         });
 
         // ---------------- Documents: form + preview ----------------
@@ -1765,6 +1893,106 @@
                 }
             }
             return paths;
+        }
+
+        // ---------------- Admin users & permissions ----------------
+        const PERMISSION_FIELDS = [
+            { key: 'perm_documents', label: 'เอกสาร', icon: 'fa-folder-open' },
+            { key: 'perm_reviews', label: 'รีวิว', icon: 'fa-comment-dots' },
+            { key: 'perm_codes', label: 'รหัสลูกค้า', icon: 'fa-key' },
+            { key: 'perm_releases', label: 'โปรแกรม', icon: 'fa-cloud-arrow-down' },
+            { key: 'perm_articles', label: 'บทความ', icon: 'fa-newspaper' }
+        ];
+        let allAdminUsersCache = [];
+
+        async function loadAdminUsers() {
+            const wrap = document.getElementById('user-management-list');
+            const { data, error } = await dcbcSupabase.from('admin_users').select('*').order('created_at', { ascending: true });
+
+            if (error) {
+                wrap.innerHTML = `<p class="text-center text-red-500 text-sm py-8">โหลดรายชื่อไม่สำเร็จ: ${escapeHtml(error.message)}</p>`;
+                return;
+            }
+            allAdminUsersCache = data || [];
+            if (!allAdminUsersCache.length) {
+                wrap.innerHTML = `<p class="text-center text-gray-400 text-sm py-8">ยังไม่มีผู้ใช้ในระบบ</p>`;
+                return;
+            }
+
+            wrap.innerHTML = allAdminUsersCache.map(u => {
+                const isSelf = currentUser && u.id === currentUser.id;
+                const isOwner = u.role === 'owner';
+                return `
+                <div class="p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div class="flex items-start justify-between gap-3 flex-wrap mb-4">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-semibold text-gray-800 text-sm">${escapeHtml(u.display_name || u.email)}</h3>
+                                ${isOwner ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-light text-brand">เจ้าของระบบ</span>' : ''}
+                                ${isSelf ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">บัญชีของคุณ</span>' : ''}
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">${u.is_active ? 'ใช้งานอยู่' : 'ถูกระงับ'}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 font-light mt-0.5">${escapeHtml(u.email)}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-medium text-gray-600 mb-1.5">ชื่อที่แสดง</label>
+                        <input type="text" id="uname-${u.id}" value="${escapeHtml(u.display_name || '')}" placeholder="เช่น คุณสมชาย (ฝ่ายบัญชี)" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-light focus:border-brand outline-none">
+                    </div>
+
+                    <p class="block text-xs font-medium text-gray-600 mb-2">สิทธิ์การเข้าถึง</p>
+                    <div class="flex flex-wrap gap-x-5 gap-y-2.5 mb-4">
+                        ${PERMISSION_FIELDS.map(f => `
+                        <label class="flex items-center gap-2 cursor-pointer group ${isOwner ? 'opacity-50' : ''}">
+                            <input type="checkbox" id="uperm-${u.id}-${f.key}" ${u[f.key] ? 'checked' : ''} ${isOwner ? 'disabled' : ''} class="w-4 h-4 text-brand rounded focus:ring-brand">
+                            <span class="text-sm text-gray-600 group-hover:text-gray-900"><i class="fa-solid ${f.icon} text-xs text-gray-400 mr-1"></i>${f.label}</span>
+                        </label>`).join('')}
+                    </div>
+                    ${isOwner ? '<p class="text-[11px] text-gray-400 font-light mb-4">เจ้าของระบบมีสิทธิ์ทุกอย่างเสมอ ปรับไม่ได้</p>' : ''}
+
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="saveAdminUser('${u.id}')" class="text-brand hover:text-brand-dark bg-white border border-brand/20 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-floppy-disk"></i> บันทึก
+                        </button>
+                        ${!isSelf && !isOwner ? `
+                        <button onclick="toggleAdminUserActive('${u.id}', ${u.is_active})" class="text-gray-600 hover:text-gray-800 bg-white border border-gray-200 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-power-off"></i> ${u.is_active ? 'ระงับการใช้งาน' : 'เปิดใช้งาน'}
+                        </button>
+                        <button onclick="deleteAdminUser('${u.id}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-4 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-trash"></i> ลบสิทธิ์
+                        </button>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function saveAdminUser(id) {
+            const u = allAdminUsersCache.find(x => x.id === id);
+            if (!u) return;
+            const payload = { display_name: document.getElementById(`uname-${id}`).value.trim() || null };
+            if (u.role !== 'owner') {
+                PERMISSION_FIELDS.forEach(f => {
+                    payload[f.key] = document.getElementById(`uperm-${id}-${f.key}`).checked;
+                });
+            }
+            const { error } = await dcbcSupabase.from('admin_users').update(payload).eq('id', id);
+            if (error) { alert('บันทึกไม่สำเร็จ: ' + error.message); return; }
+            alert('บันทึกสิทธิ์เรียบร้อยแล้ว\n\nผู้ใช้ต้องออกจากระบบแล้วเข้าใหม่ สิทธิ์ที่เปลี่ยนจึงจะมีผลกับหน้าจอของเขา');
+            loadAdminUsers();
+        }
+
+        async function toggleAdminUserActive(id, currentlyActive) {
+            const { error } = await dcbcSupabase.from('admin_users').update({ is_active: !currentlyActive }).eq('id', id);
+            if (error) { alert('อัปเดตไม่สำเร็จ: ' + error.message); return; }
+            loadAdminUsers();
+        }
+
+        async function deleteAdminUser(id) {
+            if (!confirm('ลบสิทธิ์ของผู้ใช้นี้?\n\nหมายเหตุ: บัญชีล็อกอินยังอยู่ใน Supabase ต้องไปลบที่ Authentication → Users อีกที ถ้าต้องการลบถาวร')) return;
+            const { error } = await dcbcSupabase.from('admin_users').delete().eq('id', id);
+            if (error) { alert('ลบไม่สำเร็จ: ' + error.message); return; }
+            loadAdminUsers();
         }
 
         async function deleteArticle(id) {
