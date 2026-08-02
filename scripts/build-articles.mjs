@@ -49,6 +49,24 @@ function renderContent(raw) {
 
         if (!t) { flushParagraph(); closeList(); continue; }
 
+        // Block image on its own line: ![คำบรรยาย](url)
+        // Only http(s) is allowed through, so a javascript: or data: URL
+        // pasted into the editor can never become a live src.
+        const image = t.match(/^!\[([^\]]*)\]\(\s*([^)\s]+)\s*\)$/);
+        if (image) {
+            flushParagraph(); closeList();
+            const [, alt, url] = image;
+            if (/^https?:\/\//i.test(url)) {
+                out.push(
+                    `<figure>` +
+                    `<img src="${escapeAttr(url)}" alt="${escapeAttr(alt)}" loading="lazy">` +
+                    (alt ? `<figcaption>${escapeHtml(alt)}</figcaption>` : '') +
+                    `</figure>`
+                );
+            }
+            continue;
+        }
+
         const heading = t.match(/^(#{2,3})\s+(.*)$/);
         if (heading) {
             flushParagraph(); closeList();
@@ -129,6 +147,9 @@ function layout({ title, description, canonical, head = '', body }) {
         .article-body ul { margin: 0 0 1.1rem 1.25rem; list-style: disc; }
         .article-body li { margin-bottom: 0.5rem; line-height: 1.8; color: #4b5563; font-weight: 300; }
         .article-body strong { font-weight: 600; color: #1f2937; }
+        .article-body figure { margin: 1.75rem 0; }
+        .article-body figure img { width: 100%; height: auto; border-radius: 1rem; display: block; }
+        .article-body figcaption { margin-top: 0.6rem; font-size: 0.8rem; color: #9ca3af; text-align: center; font-weight: 300; }
     </style>
 ${head}
 </head>
