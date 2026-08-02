@@ -336,7 +336,7 @@
                     </h2>
                     <p class="text-[11px] text-gray-400 font-light mb-3">หน้านี้ไม่มีลิงก์จากหน้าใดในเว็บไซต์ ต้องส่งลิงก์นี้ให้ลูกค้าโดยตรงเท่านั้น</p>
                     <div class="flex items-center gap-2">
-                        <input type="text" id="download-link-display" readonly value="https://www.dcbc.co.th/download.html" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
+                        <input type="text" id="download-link-display" readonly value="https://www.dcbc.co.th/program/downloader" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
                         <button onclick="copyDownloadLink()" class="px-4 py-2.5 bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 text-xs font-medium rounded-xl transition-colors border border-gray-200 flex items-center gap-2 flex-shrink-0">
                             <i class="fa-regular fa-copy"></i> คัดลอก
                         </button>
@@ -1148,7 +1148,7 @@
         }
 
         // ---------------- App Releases ----------------
-        const DOWNLOAD_PAGE_URL = 'https://www.dcbc.co.th/download.html';
+        const DOWNLOAD_PAGE_URL = 'https://www.dcbc.co.th/program/downloader';
         let allReleasesCache = [];
 
         function copyDownloadLink() {
@@ -1289,7 +1289,7 @@
                 return;
             }
 
-            // The newest published row is what download.html and the update
+            // The newest published row is what the download page and the update
             // check both resolve to — mark it so it's obvious which is live.
             const liveId = (data.find(r => r.is_published) || {}).id;
 

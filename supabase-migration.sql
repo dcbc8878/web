@@ -191,7 +191,7 @@ on conflict (code) do nothing;
 
 -- ---------- app_releases ----------
 -- Versions of the downloadable helper program, served by the unlisted
--- download.html page and by the program's own update check.
+-- /program/downloader page and by the program's own update check.
 create table if not exists public.app_releases (
   id            uuid primary key default gen_random_uuid(),
   version       text not null,          -- e.g. '1.0.3'
