@@ -14,7 +14,7 @@ function escapeHtml(str) {
 }
 
 // Icon class + color pair based on file extension, used by both
-// portal.html (document list) and adminupload.html (document list).
+// the portal document list and the admin document list.
 function dcbcFileIcon(fileName) {
     const ext = (fileName || '').split('.').pop().toLowerCase();
     if (ext === 'pdf') return { icon: 'fa-regular fa-file-pdf', bg: 'bg-red-50', text: 'text-red-500' };

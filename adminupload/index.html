@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow"> <!-- ป้องกันไม่ให้ AI / Search Engine จัดเก็บหน้านี้ -->
     <title>ระบบจัดการหลังบ้าน | บริษัท เด็กชายบัญชี จำกัด</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
-    <link rel="shortcut icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
+    <link rel="shortcut icon" href="/favicon.ico">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -251,7 +251,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mt-3">
-                        <input type="text" id="review-link-display" readonly value="https://www.dcbc.co.th/review.html" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
+                        <input type="text" id="review-link-display" readonly value="https://www.dcbc.co.th/review" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
                     </div>
                     <p class="text-[11px] text-gray-400 mt-1.5">ถ้ากดปุ่ม "คัดลอกลิงก์" แล้วไม่ได้ผล ให้กดที่ช่องลิงก์ด้านบนเพื่อเลือกข้อความทั้งหมด แล้วกด Ctrl+C (หรือกดค้างแล้วเลือก "คัดลอก" บนมือถือ)</p>
                     <p id="copy-link-feedback" class="hidden text-green-600 text-xs font-medium mt-2">คัดลอกลิงก์แล้ว ✓</p>
@@ -287,7 +287,7 @@
                         </div>
                         <div>
                             <h1 id="code-form-title" class="text-2xl font-bold text-gray-900">เพิ่มรหัสลูกค้าใหม่</h1>
-                            <p class="text-xs text-gray-400 font-light mt-1">รหัสนี้ใช้ล็อกอินเข้าหน้า "ระบบเอกสารลูกค้า" (portal.html)</p>
+                            <p class="text-xs text-gray-400 font-light mt-1">รหัสนี้ใช้ล็อกอินเข้าหน้า "ระบบเอกสารลูกค้า" (/portal)</p>
                         </div>
                     </div>
 
@@ -431,11 +431,11 @@
 
     <!-- Supabase + QR Code libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="supabase-client.js?v=4"></script>
+    <script src="/supabase-client.js?v=4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
-        const REVIEW_LINK_URL = 'https://www.dcbc.co.th/review.html';
+        const REVIEW_LINK_URL = 'https://www.dcbc.co.th/review';
         const REQUIRED_APPROVED_REVIEWS = 5;
         let currentReviewFilter = 'all';
         let allReviewsCache = [];

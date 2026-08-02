@@ -8,7 +8,7 @@
 -- function uses "create or replace".
 --
 -- Prerequisite: create the two storage buckets first via
--- Dashboard -> Storage (documents, review-logos) so the
+-- Dashboard -> Storage (documents, review-logos, app-releases) so the
 -- bucket_id values referenced below already exist.
 -- ============================================================
 
@@ -85,7 +85,7 @@ create table if not exists public.reviews (
 
 alter table public.reviews enable row level security;
 
--- Public site (index.html) may only ever see approved reviews
+-- Public site (homepage) may only ever see approved reviews
 drop policy if exists "reviews_public_read_approved" on public.reviews;
 create policy "reviews_public_read_approved"
   on public.reviews for select
@@ -125,7 +125,7 @@ create policy "reviews_admin_delete"
   using (true);
 
 -- ---------- portal_codes ----------
--- Access codes for the client document portal (portal.html).
+-- Access codes for the client document portal (/portal).
 -- The codes themselves are NEVER exposed to anon — there is no
 -- anon select policy on this table at all. The public page instead
 -- calls the check_portal_code() function below, which only ever
@@ -164,7 +164,7 @@ create policy "portal_codes_admin_delete"
   to authenticated
   using (true);
 
--- Callable by anon (and authenticated) from portal.html's lock screen.
+-- Callable by anon (and authenticated) from the portal lock screen.
 -- SECURITY DEFINER lets it read the table despite anon having no
 -- select policy above; it only ever leaks a boolean, never the codes.
 create or replace function public.check_portal_code(input_code text)
@@ -182,7 +182,7 @@ $$;
 revoke all on function public.check_portal_code(text) from public;
 grant execute on function public.check_portal_code(text) to anon, authenticated;
 
--- Seed the codes that were previously hardcoded in portal.html, so
+-- Seed the codes that were previously hardcoded in the portal page, so
 -- access doesn't break the moment this migration runs. Safe to
 -- re-run; manage/replace these from the admin panel afterwards.
 insert into public.portal_codes (code) values
@@ -320,7 +320,7 @@ create policy "documents_bucket_admin_delete"
 
 -- ---------- Storage: review-logos bucket ----------
 -- Public INSERT is intentional: a customer submitting a pending
--- review from review.html uploads their own logo directly, before
+-- review from the review page uploads their own logo directly, before
 -- any admin has logged in. Only admin can UPDATE/DELETE (moderation
 -- cleanup); anon never gets those.
 -- As with the documents bucket, no public SELECT policy — the bucket is

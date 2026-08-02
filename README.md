@@ -1,25 +1,34 @@
 # บริษัท เด็กชายบัญชี จำกัด — เว็บไซต์
 
 เว็บไซต์ static (HTML / Tailwind CDN / JavaScript) สำหรับโดเมน **www.dcbc.co.th**
-รองรับมือถือ (responsive) มีโหมดมืดอัตโนมัติ ฟอนต์ Prompt ตามคู่มือแบรนด์
+ใช้ Supabase เป็นฐานข้อมูลและที่เก็บไฟล์ ไม่มี build step
 
 ## 📁 โครงสร้างไฟล์
 
+ทุกหน้าใช้ URL แบบ **ไม่มี .html** โดยวางไฟล์เป็น `<ชื่อ>/index.html`
+
 ```
 web/
-├── index.html          หน้าหลัก (บริการ, รีวิว, ฟอร์มติดต่อ)
-├── portal.html          ระบบเอกสารลูกค้า (ดาวน์โหลดฟอร์ม + อัปโหลดเอกสาร)
-├── review.html          ฟอร์มให้ลูกค้าส่งรีวิว
-├── adminupload.html      หน้าอัปโหลดเอกสารของแอดมิน (มีรหัสผ่านป้องกัน)
-├── logo.jpg             โลโก้บริษัท
-├── 404.html             หน้าเมื่อไม่พบ URL
-├── CNAME                ระบุโดเมน www.dcbc.co.th (สำหรับ GitHub Pages)
-├── robots.txt           กติกาสำหรับ search engine
-├── sitemap.xml          แผนผังเว็บไซต์
-├── .nojekyll            ปิดการประมวลผล Jekyll บน GitHub Pages
-└── .github/workflows/
-    └── deploy.yml       Deploy อัตโนมัติขึ้น GitHub Pages
+├── index.html                    หน้าหลัก           → /
+├── portal/index.html             ระบบเอกสารลูกค้า    → /portal
+├── review/index.html             ฟอร์มส่งรีวิว        → /review
+├── adminupload/index.html        ระบบจัดการหลังบ้าน   → /adminupload
+├── program/downloader/index.html หน้าดาวน์โหลดโปรแกรม → /program/downloader
+├── supabase-client.js            Supabase client + helper ที่ใช้ร่วมกันทุกหน้า
+├── supabase-migration.sql        สคริปต์สร้างตาราง/policy (รันใน Supabase SQL Editor)
+├── APP_UPDATE_API.md             เอกสาร API ตรวจสอบอัปเดตสำหรับตัวโปรแกรม
+├── logo.png                      โลโก้บริษัท
+├── favicon-*.png / favicon.ico   ไอคอนเว็บ
+├── 404.html                      หน้าเมื่อไม่พบ URL (GitHub Pages บังคับชื่อนี้ที่ root)
+├── CNAME                         ระบุโดเมน www.dcbc.co.th
+├── robots.txt / sitemap.xml      สำหรับ search engine
+├── .nojekyll                     ปิดการประมวลผล Jekyll
+└── .github/workflows/deploy.yml  Deploy อัตโนมัติขึ้น GitHub Pages
 ```
+
+> **เพิ่มหน้าใหม่ในอนาคต:** สร้างเป็นโฟลเดอร์ `ชื่อหน้า/index.html` เสมอ ไม่ใช่ `ชื่อหน้า.html`
+> และภายในไฟล์ให้อ้าง asset แบบ root-absolute (`/logo.png`, `/supabase-client.js`)
+> เพราะไฟล์อยู่ลึกลงไปหนึ่งชั้น
 
 ## 🖥️ ดูเว็บบนเครื่อง (Local Preview)
 
@@ -28,53 +37,54 @@ python3 -m http.server 8000
 # แล้วเปิด http://localhost:8000
 ```
 
-## ✉️ ฟอร์มต่างๆ
+## 🗄️ Supabase
 
-ฟอร์มทั้ง 3 จุด (ติดต่อในหน้าแรก, อัปโหลดเอกสารใน portal.html, รีวิวใน review.html,
-และอัปโหลดของแอดมิน) ส่งเข้าอีเมล **contact@dcbc.co.th** ผ่านบริการ [FormSubmit](https://formsubmit.co)
-(ฟรี ไม่ต้องมี backend)
+ตาราง (ทุกตารางเปิด Row Level Security):
 
-> **สำคัญ:** การส่งฟอร์มครั้งแรกหลัง deploy จะมีอีเมลยืนยัน (one-time activation)
-> ส่งไปที่ `contact@dcbc.co.th` ต้องกดยืนยันในอีเมลนั้นก่อน ฟอร์มถึงจะส่งข้อมูลมาถึงจริง
+| ตาราง | ใช้ทำอะไร |
+|---|---|
+| `documents` | คลังเอกสารให้ลูกค้าดาวน์โหลด เรียงลำดับเองได้ด้วย `sort_order` |
+| `reviews` | รีวิวลูกค้า ต้องผ่านการอนุมัติก่อนขึ้นเว็บ (ต้องมีอย่างน้อย 5 รายการ) |
+| `portal_codes` | รหัส 4 หลักสำหรับเข้าหน้า /portal |
+| `app_releases` | เวอร์ชันของโปรแกรมช่วยดาวน์โหลด |
+
+Storage buckets (ตั้งเป็น Public ทั้งหมด): `documents`, `review-logos`, `app-releases`
+
+ฟังก์ชันที่เรียกได้จากภายนอก:
+- `check_portal_code(input_code)` → คืน true/false เท่านั้น ไม่เปิดเผยรายการรหัส
+- `get_latest_app_release()` → คืนเวอร์ชันล่าสุดเป็น JSON (ดู `APP_UPDATE_API.md`)
+
+**การแก้ไขฐานข้อมูล:** แก้ที่ `supabase-migration.sql` แล้วรันทั้งไฟล์ใน Supabase SQL Editor
+สคริปต์เขียนให้รันซ้ำได้ปลอดภัย (policy ทุกตัว drop ก่อน create)
 
 ## 🔒 หน้าแอดมิน
 
-`adminupload.html` มีหน้าจอถามรหัสผ่านก่อนเข้าใช้งาน (ป้องกันแบบพื้นฐาน ไม่ใช่ระบบความปลอดภัยระดับสูง)
-รหัสผ่านตั้งต้น: `dekchai2026` — แก้ไขได้ที่ตัวแปร `ADMIN_PANEL_PASSWORD` ในไฟล์ `adminupload.html`
+`/adminupload` ใช้ **Supabase Auth จริง** (อีเมล + รหัสผ่าน) ไม่ใช่รหัสผ่านฝังในหน้าเว็บ
+บัญชีแอดมินสร้างจาก Supabase Dashboard → Authentication → Users
 
-## 🚀 นำขึ้นโดเมน www.dcbc.co.th
+> **สำคัญ:** ต้องปิด "Allow new users to sign up" ใน Auth settings
+> ไม่อย่างนั้นใครก็สมัครบัญชีเองแล้วเข้าหลังบ้านได้
 
-ไฟล์ `CNAME` ตั้งค่าเป็น `www.dcbc.co.th` ไว้แล้ว ใช้ GitHub Pages (ฟรี):
+แท็บในหน้าแอดมิน: เอกสาร · รีวิว · รหัสลูกค้า · โปรแกรม
 
-1. **เปิด GitHub Pages:** ไปที่ repo → **Settings → Pages**
-   - Source: เลือก **GitHub Actions** (workflow `deploy.yml` จะ deploy อัตโนมัติทุกครั้งที่ push)
-   - Custom domain: ใส่ `www.dcbc.co.th` แล้วกด Save
+## ✉️ ฟอร์มติดต่อ
 
-2. **ตั้งค่า DNS** ที่หน้าจัดการโดเมนของผู้รับจด `.co.th` (เช่น T.H.NIC หรือผู้ให้บริการที่คุณจดไว้):
+ฟอร์มติดต่อในหน้าแรกส่งเข้าอีเมล **contact@dcbc.co.th** ผ่าน [FormSubmit](https://formsubmit.co)
+ส่วนฟอร์มรีวิวบันทึกลง Supabase เป็นหลัก และส่งอีเมลแจ้งเตือนควบคู่ไปด้วย
 
-   **Record สำหรับ www (โดเมนหลักที่จะใช้งานจริง):**
-   ```
-   CNAME   www   dcbc8878.github.io.
-   ```
+## 🚀 Deploy
 
-   **Record สำหรับ apex/root (dcbc.co.th ไม่มี www)** — ใส่ไว้ด้วยเพื่อให้ GitHub Pages
-   รีไดเรกต์จาก `dcbc.co.th` ไป `www.dcbc.co.th` ให้อัตโนมัติ:
-   ```
-   A   @   185.199.108.153
-   A   @   185.199.109.153
-   A   @   185.199.110.153
-   A   @   185.199.111.153
-   ```
+push ขึ้น branch แล้ว workflow `deploy.yml` จะ deploy ขึ้น GitHub Pages อัตโนมัติ
 
-3. รอ DNS propagate (ปกติไม่กี่นาที บางที่นานถึง 24 ชม.)
+DNS ที่ตั้งไว้แล้ว:
 
-4. กลับไปที่ **Settings → Pages** อีกครั้ง รอสถานะ DNS ขึ้นเป็นถูกต้อง (✓) แล้วเปิด
-   **Enforce HTTPS** เพื่อบังคับใช้ HTTPS
-
-## 📝 หมายเหตุเรื่องโดเมน .co.th
-
-โดเมน `.co.th` จดทะเบียนผ่าน **T.H.NIC** และต้องมีเอกสารนิติบุคคล (เช่น หนังสือรับรองบริษัท)
-การตั้งค่า DNS ทำได้ที่หน้าจัดการโดเมนของผู้รับจดที่คุณใช้บริการอยู่
+```
+CNAME   www   dcbc8878.github.io.
+A       @     185.199.108.153
+A       @     185.199.109.153
+A       @     185.199.110.153
+A       @     185.199.111.153
+```
 
 ---
 

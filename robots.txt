@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dcbc.co.th/sitemap.xml
+Sitemap: https://www.dcbc.co.th/sitemap.xml
