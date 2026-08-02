@@ -553,19 +553,62 @@
             <!-- ============ USERS TAB (owner only) ============ -->
             <div id="users-tab" class="tab-panel hidden space-y-8">
 
-                <div class="bg-white p-6 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
-                    <h2 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-info text-brand"></i> วิธีเพิ่มผู้ใช้ใหม่
-                    </h2>
-                    <ol class="text-xs text-gray-600 font-light space-y-1.5 list-decimal list-inside leading-relaxed">
-                        <li>เข้า Supabase Dashboard → <strong>Authentication</strong> → <strong>Users</strong> → <strong>Add user</strong></li>
-                        <li>ใส่อีเมลและรหัสผ่าน แล้วติ๊ก <strong>Auto Confirm User</strong> → กด Create</li>
-                        <li>กลับมาหน้านี้ กด <strong>รีเฟรชรายชื่อ</strong> — ผู้ใช้ใหม่จะขึ้นมาโดยยังไม่มีสิทธิ์ใดๆ</li>
-                        <li>ติ๊กสิทธิ์ที่ต้องการให้ แล้วกด <strong>บันทึก</strong></li>
-                    </ol>
-                    <p class="text-[11px] text-gray-400 font-light mt-3">
-                        การสร้างบัญชีต้องทำใน Supabase เพราะการสร้างผู้ใช้จากหน้าเว็บต้องใช้กุญแจระดับผู้ดูแลระบบ ซึ่งถ้าฝังไว้ในหน้าเว็บจะทำให้ใครก็ตามที่เปิดดูโค้ดหน้าเว็บยึดระบบทั้งหมดได้
-                    </p>
+                <!-- Invite -->
+                <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
+                    <div class="flex items-center gap-4 border-b border-gray-100 pb-6 mb-6">
+                        <div class="w-14 h-14 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">เชิญผู้ใช้ใหม่</h1>
+                            <p class="text-xs text-gray-400 font-light mt-1">กำหนดสิทธิ์ล่วงหน้า แล้วส่งคำเชิญทางอีเมล — ผู้ถูกเชิญตั้งรหัสผ่านเอง</p>
+                        </div>
+                    </div>
+
+                    <form id="admin-invite-form" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">อีเมล <span class="text-red-500">*</span></label>
+                            <input type="email" id="invite-email" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="ชื่อ@dcbc.co.th">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">ชื่อที่แสดง <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
+                            <input type="text" id="invite-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น คุณสมชาย (ฝ่ายบัญชี)">
+                        </div>
+
+                        <div>
+                            <p class="block text-sm font-medium text-gray-700 mb-2">สิทธิ์ที่จะได้รับ</p>
+                            <div id="invite-perms" class="flex flex-wrap gap-x-5 gap-y-2.5"></div>
+                        </div>
+
+                        <button type="submit" id="invite-submit-btn" class="w-full py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] flex items-center justify-center gap-2 disabled:opacity-60">
+                            <i class="fa-solid fa-paper-plane"></i> <span id="invite-submit-label">บันทึกคำเชิญ</span>
+                        </button>
+                        <p id="invite-error" class="hidden text-red-500 text-xs text-center"></p>
+                        <p id="invite-success" class="hidden text-green-600 text-xs text-center font-medium"></p>
+                    </form>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <h3 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-envelope text-brand"></i> ขั้นตอนที่ 2 — ส่งอีเมลคำเชิญ
+                        </h3>
+                        <ol class="text-xs text-gray-600 font-light space-y-1.5 list-decimal list-inside leading-relaxed">
+                            <li>เข้า Supabase Dashboard → <strong>Authentication</strong> → <strong>Users</strong></li>
+                            <li>กด <strong>Invite user</strong> → ใส่อีเมลเดียวกับที่บันทึกคำเชิญไว้ด้านบน → ส่ง</li>
+                            <li>ผู้ถูกเชิญจะได้อีเมล กดลิงก์แล้ว <strong>ตั้งรหัสผ่านของตัวเอง</strong></li>
+                            <li>เมื่อตั้งเสร็จ บัญชีจะขึ้นในรายชื่อด้านล่างพร้อมสิทธิ์ที่กำหนดไว้ทันที</li>
+                        </ol>
+                        <p class="text-[11px] text-gray-400 font-light mt-3">
+                            การส่งอีเมลต้องทำจาก Supabase เพราะต้องใช้กุญแจระดับผู้ดูแลระบบ ถ้าฝังกุญแจนั้นไว้ในหน้าเว็บ ใครที่เปิดดูโค้ดหน้าเว็บจะยึดระบบทั้งหมดได้
+                        </p>
+                    </div>
+
+                    <div id="pending-invite-wrap" class="hidden mt-6 pt-6 border-t border-gray-100">
+                        <h3 class="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <i class="fa-regular fa-clock text-brand"></i> คำเชิญที่รอผู้ใช้ตอบรับ
+                        </h3>
+                        <div id="pending-invite-list" class="space-y-2"></div>
+                    </div>
                 </div>
 
                 <div class="bg-white p-8 rounded-3xl shadow-[0_10px_30px_rgb(0,0,0,0.04)] border border-gray-200">
@@ -1905,7 +1948,86 @@
         ];
         let allAdminUsersCache = [];
 
+        // ---- Invites ----
+        function renderInvitePermCheckboxes() {
+            document.getElementById('invite-perms').innerHTML = PERMISSION_FIELDS.map(f => `
+                <label class="flex items-center gap-2 cursor-pointer group">
+                    <input type="checkbox" id="invperm-${f.key}" class="w-4 h-4 text-brand rounded focus:ring-brand">
+                    <span class="text-sm text-gray-600 group-hover:text-gray-900"><i class="fa-solid ${f.icon} text-xs text-gray-400 mr-1"></i>${f.label}</span>
+                </label>`).join('');
+        }
+
+        document.getElementById('admin-invite-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('invite-submit-btn');
+            const err = document.getElementById('invite-error');
+            const ok = document.getElementById('invite-success');
+            err.classList.add('hidden');
+            ok.classList.add('hidden');
+
+            const email = document.getElementById('invite-email').value.trim().toLowerCase();
+            const payload = {
+                email,
+                display_name: document.getElementById('invite-name').value.trim() || null
+            };
+            PERMISSION_FIELDS.forEach(f => {
+                payload[f.key] = document.getElementById(`invperm-${f.key}`).checked;
+            });
+
+            btn.disabled = true;
+            document.getElementById('invite-submit-label').innerText = 'กำลังบันทึก...';
+
+            // upsert so re-inviting the same address just updates the permissions
+            const { error } = await dcbcSupabase.from('admin_invites').upsert(payload, { onConflict: 'email' });
+
+            btn.disabled = false;
+            document.getElementById('invite-submit-label').innerText = 'บันทึกคำเชิญ';
+
+            if (error) {
+                err.textContent = 'บันทึกไม่สำเร็จ: ' + error.message;
+                err.classList.remove('hidden');
+                return;
+            }
+            this.reset();
+            renderInvitePermCheckboxes();
+            ok.textContent = `บันทึกคำเชิญ ${email} แล้ว — ขั้นต่อไปส่งอีเมลคำเชิญจาก Supabase ตามขั้นตอนด้านล่าง`;
+            ok.classList.remove('hidden');
+            loadPendingInvites();
+        });
+
+        async function loadPendingInvites() {
+            const wrap = document.getElementById('pending-invite-wrap');
+            const list = document.getElementById('pending-invite-list');
+            const { data, error } = await dcbcSupabase.from('admin_invites').select('*').order('created_at', { ascending: true });
+
+            if (error || !data || !data.length) { wrap.classList.add('hidden'); return; }
+
+            wrap.classList.remove('hidden');
+            list.innerHTML = data.map(inv => {
+                const perms = PERMISSION_FIELDS.filter(f => inv[f.key]).map(f => f.label).join(' · ') || 'ยังไม่ได้ให้สิทธิ์';
+                return `
+                <div class="flex items-center justify-between gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate">${escapeHtml(inv.email)}</p>
+                        <p class="text-[11px] text-gray-400 font-light">${escapeHtml(inv.display_name || 'ไม่ระบุชื่อ')} · ${escapeHtml(perms)}</p>
+                    </div>
+                    <button onclick="deleteInvite('${escapeHtml(inv.email)}')" class="text-red-500 hover:text-red-600 bg-white border border-red-200 px-3 py-1.5 rounded-lg text-[11px] font-medium flex-shrink-0">
+                        <i class="fa-solid fa-xmark"></i> ยกเลิก
+                    </button>
+                </div>`;
+            }).join('');
+        }
+
+        async function deleteInvite(email) {
+            if (!confirm(`ยกเลิกคำเชิญของ ${email}?`)) return;
+            const { error } = await dcbcSupabase.from('admin_invites').delete().eq('email', email);
+            if (error) { alert('ยกเลิกไม่สำเร็จ: ' + error.message); return; }
+            loadPendingInvites();
+        }
+
         async function loadAdminUsers() {
+            renderInvitePermCheckboxes();
+            loadPendingInvites();
             const wrap = document.getElementById('user-management-list');
             const { data, error } = await dcbcSupabase.from('admin_users').select('*').order('created_at', { ascending: true });
 

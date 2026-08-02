@@ -115,17 +115,70 @@ create policy "admin_users_owner_delete"
   to authenticated
   using (public.is_owner() and id <> auth.uid());
 
--- New Supabase Auth users automatically get a locked-down row here.
+-- ---------- admin_invites ----------
+-- The owner records who may join and what they'll be allowed to do
+-- BEFORE the account exists. The invite email itself is sent from the
+-- Supabase dashboard (that needs a service-role key, which must never
+-- be put in a web page). When the invited person accepts and their
+-- account is created, the trigger below applies these permissions and
+-- clears the invite.
+create table if not exists public.admin_invites (
+  email           text primary key,
+  display_name    text,
+  perm_documents  boolean not null default false,
+  perm_reviews    boolean not null default false,
+  perm_codes      boolean not null default false,
+  perm_releases   boolean not null default false,
+  perm_articles   boolean not null default false,
+  created_at      timestamptz not null default now()
+);
+
+alter table public.admin_invites enable row level security;
+
+drop policy if exists "admin_invites_owner_all" on public.admin_invites;
+create policy "admin_invites_owner_all"
+  on public.admin_invites for all
+  to authenticated
+  using (public.is_owner())
+  with check (public.is_owner());
+
+-- Pre-approved company accounts, so they arrive with permissions already
+-- set instead of an owner having to grant them afterwards.
+insert into public.admin_invites (email, display_name, perm_documents, perm_reviews, perm_codes, perm_releases, perm_articles)
+values
+  ('center@dcbc.co.th', 'ศูนย์กลาง', true, true, true, true, true),
+  ('tepmongkon.s@dcbc.co.th', 'คุณเทพมงคล ศรีคมศักดิ์', true, true, true, true, true)
+on conflict (email) do nothing;
+
+-- New Supabase Auth users automatically get a row here. An invited
+-- address arrives with its permissions already applied; anyone else
+-- lands with nothing enabled and has to be granted access explicitly.
 create or replace function public.handle_new_admin_user()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  inv public.admin_invites%rowtype;
 begin
-  insert into public.admin_users (id, email)
-  values (new.id, new.email)
+  select * into inv from public.admin_invites where lower(email) = lower(new.email);
+
+  insert into public.admin_users (
+    id, email, display_name,
+    perm_documents, perm_reviews, perm_codes, perm_releases, perm_articles
+  )
+  values (
+    new.id, new.email, inv.display_name,
+    coalesce(inv.perm_documents, false),
+    coalesce(inv.perm_reviews, false),
+    coalesce(inv.perm_codes, false),
+    coalesce(inv.perm_releases, false),
+    coalesce(inv.perm_articles, false)
+  )
   on conflict (id) do nothing;
+
+  delete from public.admin_invites where lower(email) = lower(new.email);
   return new;
 end;
 $$;
