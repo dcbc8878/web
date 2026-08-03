@@ -2,8 +2,8 @@
 <html lang="th" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <!-- viewport-fit=cover keeps the layout clear of the notch / home bar
-         on iPhones, since this page is opened almost entirely by phone -->
+    <!-- viewport-fit=cover keeps content clear of the notch / home bar,
+         since this page is opened almost entirely from a phone -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="นามบัตรดิจิทัล บริษัท เด็กชายบัญชี จำกัด — รับทำบัญชี วางแผนภาษี จดทะเบียนบริษัท โทร 088-878-8648">
     <title>นามบัตร | เด็กชายบัญชี</title>
@@ -12,6 +12,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
     <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="theme-color" content="#FDF4E3">
 
     <meta property="og:type" content="profile">
     <meta property="og:title" content="บริษัท เด็กชายบัญชี จำกัด">
@@ -24,139 +25,166 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: {
-                fontFamily: { sans: ['Prompt', 'sans-serif'] },
-                colors: { brand: { light: '#FFF2E8', DEFAULT: '#FFB88C', dark: '#E5976A', text: '#4A4A4A' } }
-            } }
-        }
-    </script>
-
     <style>
-        /* Fill the phone screen exactly, including when the browser chrome
-           collapses on scroll — dvh handles that, vh is the fallback. */
-        .screen { min-height: 100vh; min-height: 100dvh; }
+        :root {
+            --cream: #FDF4E3;
+            --btn: #C9B3A6;
+            --btn-press: #B79F91;
+            --ink: #1A1A1A;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
 
         body {
+            font-family: 'Prompt', sans-serif;
+            background: var(--cream);
+            color: var(--ink);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
+            overflow-x: hidden;
         }
 
-        /* Big, thumb-friendly rows. 56px+ tall so they're easy to hit
-           one-handed, which is how a tapped NFC card gets used. */
-        .action-row {
-            display: flex; align-items: center; gap: 0.9rem;
-            padding: 0.85rem 1rem;
-            background: #fff; border: 1px solid #f3f4f6; border-radius: 1rem;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        .card {
+            flex: 1;
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 2.2rem 1.6rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand {
+            font-size: clamp(2.1rem, 11vw, 3rem);
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 300;
+            color: #8a7d73;
+            margin-bottom: 1.9rem;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Slab buttons matching the mock: full width, deeply rounded,
+           tall enough to hit comfortably one-handed. */
+        .slab {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.7rem;
+            width: 100%;
+            min-height: 5.1rem;
+            padding: 0.9rem 1.2rem;
+            background: var(--btn);
+            color: #fff;
+            border-radius: 1.15rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.14s ease, background 0.14s ease;
             -webkit-tap-highlight-color: transparent;
         }
-        .action-row:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
-        .action-icon {
-            width: 2.75rem; height: 2.75rem; border-radius: 0.85rem;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.15rem; color: #fff; flex-shrink: 0;
+        .slab:active { transform: scale(0.975); background: var(--btn-press); }
+        .slab i { font-size: 1.2rem; }
+
+        /* Footer sits as a row so the mascot anchors bottom-right without
+           ever covering the company details on its left. */
+        .bottom {
+            margin-top: auto;
+            padding-top: 1.25rem;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 0.75rem;
         }
 
-        @keyframes pop-in {
-            0% { transform: scale(0.6); opacity: 0; }
-            60% { transform: scale(1.08); opacity: 1; }
-            100% { transform: scale(1); }
+        .footnote {
+            font-size: 0.62rem;
+            font-weight: 300;
+            color: #a2958a;
+            line-height: 1.7;
+            padding-bottom: 0.2rem;
         }
-        .animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+        .mascot {
+            width: 150px;
+            max-width: 42vw;
+            height: auto;
+            display: block;
+            flex-shrink: 0;
+            margin-right: -0.5rem;
+        }
+
+        /* Shorter phones (iPhone SE and similar) would otherwise need
+           scrolling. A business card should fit in one look, so the
+           layout tightens rather than spilling over. */
+        @media (max-height: 750px) {
+            .card { padding-top: 1.3rem; }
+            .brand { font-size: clamp(1.8rem, 9vw, 2.3rem); }
+            .tagline { font-size: 0.72rem; margin-bottom: 1.1rem; }
+            .actions { gap: 0.7rem; }
+            .slab { min-height: 3.9rem; font-size: 0.97rem; border-radius: 1rem; }
+            .bottom { padding-top: 0.6rem; }
+            .mascot { width: 118px; }
+            .footnote { font-size: 0.58rem; line-height: 1.6; }
+        }
 
         @media (prefers-reduced-motion: reduce) {
-            .animate-pop-in { animation: none !important; }
-            .action-row { transition: none !important; }
+            .slab { transition: none !important; }
         }
     </style>
 </head>
-<body class="bg-brand-light text-brand-text antialiased">
+<body>
 
-    <div class="screen flex flex-col items-center justify-center px-5 py-8">
-        <div class="w-full max-w-sm">
+    <main class="card">
+        <h1 class="brand">เด็กชายบัญชี</h1>
+        <p class="tagline">รับทำบัญชี · วางแผนภาษี · จดทะเบียนบริษัท</p>
 
-            <!-- Identity -->
-            <div class="text-center mb-6">
-                <img src="/logo.png" alt="เด็กชายบัญชี" class="w-24 h-24 mx-auto object-contain drop-shadow-md animate-pop-in mb-3">
-                <h1 class="text-2xl font-bold text-gray-900 leading-tight">บริษัท เด็กชายบัญชี จำกัด</h1>
-                <p class="text-[11px] text-gray-500 font-light tracking-wide mt-1">DEKCHAIBUNCHEE CO.,LTD.</p>
-                <p class="text-sm text-brand font-medium mt-2.5">รับทำบัญชี · วางแผนภาษี · จดทะเบียนบริษัท</p>
-            </div>
-
-            <!-- Save to phone contacts. The primary action for a tapped
-                 NFC card, so it sits above the individual channels. -->
-            <a href="/contact.vcf" download="dcbc-contact.vcf"
-               class="flex items-center justify-center gap-2.5 w-full py-4 bg-brand text-white rounded-2xl font-bold shadow-[0_4px_15px_rgb(255,184,140,0.5)] active:scale-[0.98] transition-transform mb-5">
-                <i class="fa-solid fa-address-book"></i> บันทึกลงรายชื่อติดต่อ
+        <div class="actions">
+            <a href="tel:0888788648" class="slab">
+                <i class="fa-solid fa-phone"></i> โทรหาเรา
             </a>
 
-            <!-- Channels -->
-            <div class="space-y-2.5">
-                <a href="tel:0888788648" class="action-row">
-                    <div class="action-icon bg-brand"><i class="fa-solid fa-phone"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">โทรศัพท์</p>
-                        <p class="text-sm font-semibold text-gray-800">088-878-8648</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
+            <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="slab">
+                <i class="fa-brands fa-line"></i> เพิ่มเพื่อนใน LINE
+            </a>
 
-                <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="action-row">
-                    <div class="action-icon bg-green-500"><i class="fa-brands fa-line text-xl"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE Official</p>
-                        <p class="text-sm font-semibold text-gray-800">@dcbc</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
+            <a href="https://www.facebook.com/profile.php?id=61576885766816" target="_blank" rel="noopener" class="slab">
+                <i class="fa-brands fa-facebook-f"></i> ติดตามเพจ Facebook
+            </a>
 
-                <a href="mailto:contact@dcbc.co.th" class="action-row">
-                    <div class="action-icon bg-gray-700"><i class="fa-regular fa-envelope"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">อีเมล</p>
-                        <p class="text-sm font-semibold text-gray-800 truncate">contact@dcbc.co.th</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
-
-                <a href="https://www.facebook.com/profile.php?id=61576885766816" target="_blank" rel="noopener" class="action-row">
-                    <div class="action-icon bg-[#1877F2]"><i class="fa-brands fa-facebook-f"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">Facebook</p>
-                        <p class="text-sm font-semibold text-gray-800">เด็กชายบัญชี</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
-
-                <a href="https://maps.google.com/?q=เลขที่+2+ซอยทุ่งเศรษฐี+แยก+22+แขวงดอกไม้+เขตประเวศ+กรุงเทพมหานคร" target="_blank" rel="noopener" class="action-row">
-                    <div class="action-icon bg-red-500"><i class="fa-solid fa-location-dot"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">ที่ตั้งสำนักงาน</p>
-                        <p class="text-xs font-medium text-gray-700 leading-snug">เลขที่ 2 ซอยทุ่งเศรษฐี แยก 22<br>แขวงดอกไม้ เขตประเวศ กรุงเทพฯ</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
-
-                <a href="/" class="action-row">
-                    <div class="action-icon bg-gray-800"><i class="fa-solid fa-globe"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">เว็บไซต์</p>
-                        <p class="text-sm font-semibold text-gray-800">www.dcbc.co.th</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
-            </div>
-
-            <p class="text-center text-[10px] text-gray-400 font-light mt-6 leading-relaxed">
-                เลขประจำตัวผู้เสียภาษีอากร 0555569000181<br>
-                จันทร์ - ศุกร์ 08:00 - 19:00 น.
-            </p>
-
+            <a href="/contact.vcf" download="dcbc-contact.vcf" class="slab">
+                <i class="fa-solid fa-address-book"></i> บันทึกลงรายชื่อติดต่อ
+            </a>
         </div>
-    </div>
+
+        <div class="bottom">
+            <p class="footnote">
+                www.dcbc.co.th<br>
+                contact@dcbc.co.th<br>
+                เลขประจำตัวผู้เสียภาษีอากร<br>0555569000181
+            </p>
+            <img src="/mascot.png" alt="" aria-hidden="true" class="mascot">
+        </div>
+    </main>
 
 </body>
 </html>

@@ -190,7 +190,7 @@ ${body}
                     <p class="text-gray-400 text-sm font-light leading-relaxed">
                         โทร. <a href="tel:0888788648" class="hover:text-brand">088-878-8648</a><br>
                         <a href="mailto:contact@dcbc.co.th" class="hover:text-brand">contact@dcbc.co.th</a><br>
-                        เลขที่ 2 ซอยทุ่งเศรษฐี แยก 22<br>แขวงดอกไม้ เขตประเวศ กรุงเทพมหานคร
+                        เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพมหานคร 10250
                     </p>
                 </div>
             </div>
