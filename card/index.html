@@ -66,12 +66,43 @@
            ~2.4s. Someone who tapped an NFC card to get a phone number
            should never have to wait out an animation to dial. */
 
-        @keyframes pop-in {
-            0%   { transform: scale(0.5) rotate(-8deg); opacity: 0; }
-            60%  { transform: scale(1.12) rotate(3deg); opacity: 1; }
-            100% { transform: scale(1) rotate(0); }
+        /* The logo opens large and centred like a splash screen, holds for
+           a beat, then shrinks up into its place in the card. Because it is
+           the real logo being transformed — not a separate overlay — there
+           is nothing to hand off at the end and nothing can land misaligned.
+           The 43vh drop puts it near the middle of the screen at any phone
+           height, since the card itself is vertically centred. */
+        @keyframes logo-intro {
+            0%   { opacity: 0; transform: translateY(43vh) scale(3.4) rotate(-7deg); }
+            14%  { opacity: 1; transform: translateY(43vh) scale(3.4) rotate(0deg); }
+            40%  { opacity: 1; transform: translateY(43vh) scale(3.4) rotate(0deg); }
+            100% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
         }
-        .animate-pop-in { animation: pop-in 0.85s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+        .animate-pop-in {
+            animation: logo-intro 2.4s cubic-bezier(0.72, 0, 0.24, 1) both;
+        }
+
+        /* Glow behind the logo while it is large, fading as it settles. */
+        .identity { position: relative; }
+        .identity::before {
+            content: '';
+            position: absolute;
+            left: 50%; top: 2.2rem;
+            width: 15rem; height: 15rem;
+            margin: -7.5rem 0 0 -7.5rem;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,184,140,0.55) 0%, rgba(255,184,140,0) 70%);
+            transform: translateY(43vh);
+            animation: logo-glow 2.4s ease-out both;
+            pointer-events: none;
+            z-index: -1;
+        }
+        @keyframes logo-glow {
+            0%   { opacity: 0; }
+            20%  { opacity: 1; }
+            45%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
 
         @keyframes rise {
             from { opacity: 0; transform: translateY(14px); }
@@ -83,20 +114,23 @@
             to   { opacity: 1; transform: translateX(0); }
         }
 
-        .identity h1     { animation: rise 0.6s ease-out 0.45s both; }
-        .identity .latin-name { animation: rise 0.6s ease-out 0.62s both; }
-        .identity .tagline    { animation: rise 0.6s ease-out 0.78s both; }
-        .save-btn        { animation: rise 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) 0.95s both; }
+        /* Everything else waits for the logo to finish settling at 2.4s,
+           then arrives quickly — the first phone number is tappable about
+           a second later rather than at the end of the sequence. */
+        .identity h1          { animation: rise 0.55s ease-out 2.25s both; }
+        .identity .latin-name { animation: rise 0.55s ease-out 2.40s both; }
+        .identity .tagline    { animation: rise 0.55s ease-out 2.55s both; }
+        .save-btn             { animation: rise 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) 2.75s both; }
 
-        .channels .action-row { animation: slide-in 0.5s ease-out both; }
-        .channels .action-row:nth-child(1) { animation-delay: 1.20s; }
-        .channels .action-row:nth-child(2) { animation-delay: 1.40s; }
-        .channels .action-row:nth-child(3) { animation-delay: 1.60s; }
-        .channels .action-row:nth-child(4) { animation-delay: 1.80s; }
-        .channels .action-row:nth-child(5) { animation-delay: 2.00s; }
-        .channels .action-row:nth-child(6) { animation-delay: 2.20s; }
+        .channels .action-row { animation: slide-in 0.45s ease-out both; }
+        .channels .action-row:nth-child(1) { animation-delay: 3.00s; }
+        .channels .action-row:nth-child(2) { animation-delay: 3.17s; }
+        .channels .action-row:nth-child(3) { animation-delay: 3.34s; }
+        .channels .action-row:nth-child(4) { animation-delay: 3.51s; }
+        .channels .action-row:nth-child(5) { animation-delay: 3.68s; }
+        .channels .action-row:nth-child(6) { animation-delay: 3.85s; }
 
-        .footnote { animation: rise 0.7s ease-out 2.5s both; }
+        .footnote { animation: rise 0.7s ease-out 4.15s both; }
 
         /* The mascot arrives last, waves, then keeps a slow idle float so
            the card still feels alive after the intro finishes. */
@@ -121,9 +155,9 @@
             flex-shrink: 0; margin-right: -0.35rem;
             transform-origin: bottom center;
             animation:
-                mascot-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) 2.7s both,
-                mascot-wave  1.1s ease-in-out 3.6s 1 both,
-                mascot-idle  3.4s ease-in-out 4.9s infinite;
+                mascot-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) 4.35s both,
+                mascot-wave  1.1s ease-in-out 5.25s 1 both,
+                mascot-idle  3.4s ease-in-out 6.5s infinite;
         }
 
         /* Six channels plus a logo and the save button run past a phone
@@ -158,13 +192,14 @@
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
         @media (prefers-reduced-motion: reduce) {
-            .animate-pop-in, .identity h1, .identity .latin-name, .identity .tagline,
-            .save-btn, .channels .action-row, .footnote, .mascot {
+            .animate-pop-in, .identity::before, .identity h1, .identity .latin-name,
+            .identity .tagline, .save-btn, .channels .action-row, .footnote, .mascot {
                 animation: none !important;
                 opacity: 1 !important;
                 transform: none !important;
             }
             .action-row { transition: none !important; }
+            .identity::before { display: none; }
         }
     </style>
 </head>
@@ -250,8 +285,10 @@
                  short phones this page has to fit. -->
             <div class="flex items-end justify-between gap-3 mt-3">
                 <p class="footnote text-[10px] text-gray-400 font-light leading-relaxed pb-1">
-                    เลขประจำตัวผู้เสียภาษีอากร<br>0555569000181<br>
-                    จันทร์ - ศุกร์ 08:00 - 19:00 น.
+                    Tax ID : 0555569000181<br>
+                    เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>
+                    แขวงดอกไม้ เขตประเวศ<br>
+                    กรุงเทพมหานคร 10250
                 </p>
                 <img src="/mascot.png" alt="" aria-hidden="true" class="mascot">
             </div>
