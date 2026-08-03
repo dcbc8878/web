@@ -184,10 +184,12 @@
 
         .screen { padding-block: 1.25rem; }
 
-        /* Smallest phones (iPhone SE) need one more notch tighter. The
-           English company name goes first — it is the one line that adds
-           no information a Thai reader needs. */
-        @media (max-height: 700px) {
+        /* The comfortable layout needs ~834px of height, which almost no
+           phone gives a web page once Safari's bars are on screen. So the
+           compact pass covers everything up to 860px, not just small
+           phones — a 700-834px viewport previously flipped back to the
+           full layout and overflowed by ~114px. */
+        @media (max-height: 860px) {
             .screen { padding-block: 0.75rem; }
             .card-logo { width: 3rem; height: 3rem; }
             .identity { margin-bottom: 0.6rem; }
@@ -199,6 +201,27 @@
             .action-icon { width: 2rem; height: 2rem; font-size: 0.85rem; border-radius: 0.7rem; }
             .channels > * + * { margin-top: 0.38rem; }
             .mascot { width: 112px; margin-top: -3.4rem; }
+        }
+
+        /* Very short viewports — small Android phones, or Safari with every
+           bar on screen — need one more squeeze to stay on one screen. */
+        @media (max-height: 660px) {
+            .card-logo { width: 2.4rem; height: 2.4rem; }
+            .identity { margin-bottom: 0.4rem; }
+            .identity h1 { font-size: 1.1rem; }
+            .save-btn { padding-top: 0.55rem; padding-bottom: 0.55rem; margin-bottom: 0.5rem; font-size: 0.9rem; }
+            .action-row { padding: 0.32rem 0.7rem; }
+            .action-icon { width: 1.85rem; height: 1.85rem; font-size: 0.78rem; }
+            .channels > * + * { margin-top: 0.3rem; }
+            .mascot { width: 96px; margin-top: -3rem; }
+        }
+
+        /* Compact, but with enough headroom to keep the English name. */
+        @media (min-height: 730px) and (max-height: 860px) {
+            .identity .latin-name { display: block; }
+            .card-logo { width: 3.6rem; height: 3.6rem; }
+            .identity h1 { font-size: 1.35rem; }
+            .mascot { width: 132px; margin-top: -4.3rem; }
         }
 
         /* Anyone who has asked their phone to reduce motion gets the card
@@ -297,10 +320,8 @@
                  short phones this page has to fit. -->
             <div class="flex items-end justify-between gap-3 mt-3">
                 <p class="footnote text-[10px] text-gray-400 font-light leading-relaxed pb-1">
-                    Tax ID : 0555569000181<br>
-                    เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>
-                    แขวงดอกไม้ เขตประเวศ<br>
-                    กรุงเทพมหานคร 10250
+                    &copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>
+                    All Rights Reserved.
                 </p>
                 <img src="/mascot.png" alt="" aria-hidden="true" class="mascot">
             </div>
