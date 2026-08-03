@@ -150,9 +150,21 @@
             50%      { transform: translateY(-6px) rotate(-1.5deg); }
         }
 
+        /* Sized up and pulled upward with a negative margin, so the head
+           rides over the last contact row instead of the figure being
+           squeezed into the strip below it. The negative margin also
+           shrinks what the flex row reserves, which is what keeps the
+           card from growing past the screen. pointer-events: none means
+           the row underneath is still fully tappable through the artwork. */
         .mascot {
-            width: 96px; max-width: 30vw; height: auto;
-            flex-shrink: 0; margin-right: -0.35rem;
+            width: 148px; max-width: 42vw; height: auto;
+            flex-shrink: 0;
+            margin-right: -0.5rem;
+            margin-top: -5.4rem;
+            margin-bottom: 0.35rem;
+            position: relative;
+            z-index: 3;
+            pointer-events: none;
             transform-origin: bottom center;
             animation:
                 mascot-enter 0.9s cubic-bezier(0.22, 1, 0.36, 1) 4.35s both,
@@ -186,7 +198,7 @@
             .action-row { padding: 0.42rem 0.75rem; }
             .action-icon { width: 2rem; height: 2rem; font-size: 0.85rem; border-radius: 0.7rem; }
             .channels > * + * { margin-top: 0.38rem; }
-            .mascot { width: 68px; }
+            .mascot { width: 112px; margin-top: -3.4rem; }
         }
 
         /* Anyone who has asked their phone to reduce motion gets the card
