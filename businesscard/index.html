@@ -556,16 +556,13 @@
             try { localStorage.setItem('dcbc_card_lang', lang); } catch (e) {}
         }
 
-        // Remembered choice wins; otherwise follow the phone's language so a
-        // foreign visitor who taps the card lands on something readable.
+        // Thai is always the default. A visitor who has picked another
+        // language before gets their choice back; everyone else sees Thai
+        // regardless of what language their phone is set to.
         (function () {
             let lang = null;
             try { lang = localStorage.getItem('dcbc_card_lang'); } catch (e) {}
-            if (!I18N[lang]) {
-                const nav = (navigator.language || '').toLowerCase();
-                lang = nav.startsWith('th') ? 'th' : nav.startsWith('zh') ? 'zh' : nav ? 'en' : 'th';
-            }
-            setLang(lang);
+            setLang(I18N[lang] ? lang : 'th');
         })();
     </script>
 
