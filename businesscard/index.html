@@ -37,7 +37,69 @@
     <style>
         /* Fill the phone screen exactly, including when the browser chrome
            collapses on scroll — dvh handles that, vh is the fallback. */
-        .screen { min-height: 100vh; min-height: 100dvh; }
+        .screen { min-height: 100vh; min-height: 100dvh; position: relative; z-index: 1; }
+
+        /* ---------- Ambient background ----------
+           Soft drifting light behind the card. Everything here is
+           position: fixed and pointer-events: none, so it adds no height
+           to a layout that is measured to the pixel and never intercepts
+           a tap meant for a contact row. */
+        .bg-fx {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .bg-fx i {
+            position: absolute;
+            display: block;
+            border-radius: 50%;
+            filter: blur(70px);
+            will-change: transform;
+        }
+        .glow-1 {
+            width: 78vw; height: 78vw; max-width: 420px; max-height: 420px;
+            top: -18vh; left: -26vw;
+            background: radial-gradient(circle, rgba(255,168,120,0.62) 0%, rgba(255,168,120,0) 70%);
+            animation: drift-1 17s ease-in-out infinite;
+        }
+        .glow-2 {
+            width: 88vw; height: 88vw; max-width: 470px; max-height: 470px;
+            bottom: -22vh; right: -30vw;
+            background: radial-gradient(circle, rgba(255,190,150,0.58) 0%, rgba(255,190,150,0) 70%);
+            animation: drift-2 21s ease-in-out infinite;
+        }
+        .glow-3 {
+            width: 54vw; height: 54vw; max-width: 300px; max-height: 300px;
+            top: 42%; left: 55%;
+            background: radial-gradient(circle, rgba(255,214,183,0.55) 0%, rgba(255,214,183,0) 70%);
+            animation: drift-3 25s ease-in-out infinite;
+        }
+
+        @keyframes drift-1 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50%      { transform: translate(9vw, 6vh) scale(1.12); }
+        }
+        @keyframes drift-2 {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50%      { transform: translate(-8vw, -7vh) scale(1.1); }
+        }
+        @keyframes drift-3 {
+            0%, 100% { transform: translate(0, 0) scale(0.95); }
+            50%      { transform: translate(-11vw, 5vh) scale(1.15); }
+        }
+
+        /* A light source from the top and a soft vignette at the edges,
+           which together give the flat cream a sense of depth. */
+        .bg-fx::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 42%),
+                radial-gradient(120% 78% at 50% 42%, rgba(255,255,255,0) 55%, rgba(190,150,120,0.16) 100%);
+        }
 
         body {
             padding-top: env(safe-area-inset-top);
@@ -235,10 +297,17 @@
             }
             .action-row { transition: none !important; }
             .identity::before { display: none; }
+            .bg-fx i { animation: none !important; }
         }
     </style>
 </head>
 <body class="bg-brand-light text-brand-text antialiased">
+
+    <div class="bg-fx" aria-hidden="true">
+        <i class="glow-1"></i>
+        <i class="glow-2"></i>
+        <i class="glow-3"></i>
+    </div>
 
     <div class="screen flex flex-col items-center justify-center px-5">
         <div class="w-full max-w-sm">
