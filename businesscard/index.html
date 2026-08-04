@@ -138,25 +138,30 @@
             pointer-events: none;
             background: linear-gradient(100deg,
                 rgba(255,255,255,0) 0%,
-                rgba(255,255,255,0.9) 50%,
+                rgba(255,255,255,0.72) 50%,
                 rgba(255,255,255,0) 100%);
         }
 
+        /* The sweep itself takes about a second; the long tail of the cycle
+           is the button sitting quiet. With seven buttons on screen, short
+           cycles meant something was always glinting, which read as busy
+           rather than as an occasional catch of light. */
         @keyframes glint {
             0%   { left: -65%; }
-            22%  { left: 135%; }
+            5%   { left: 135%; }
             100% { left: 135%; }
         }
 
-        /* Delays are offset past the entrance sequence so the first glint
-           lands on a button that has already arrived. */
-        .save-btn::after                   { animation: glint 6.1s ease-in-out 4.6s infinite; }
-        .action-row:nth-child(1)::after    { animation: glint 5.3s ease-in-out 5.2s infinite; }
-        .action-row:nth-child(2)::after    { animation: glint 6.7s ease-in-out 6.1s infinite; }
-        .action-row:nth-child(3)::after    { animation: glint 4.9s ease-in-out 7.4s infinite; }
-        .action-row:nth-child(4)::after    { animation: glint 7.3s ease-in-out 5.8s infinite; }
-        .action-row:nth-child(5)::after    { animation: glint 5.8s ease-in-out 8.3s infinite; }
-        .action-row:nth-child(6)::after    { animation: glint 6.4s ease-in-out 6.9s infinite; }
+        /* Cycle lengths are spread and non-harmonic, and the delays are
+           offset past the entrance sequence so the first glint lands on a
+           button that has already arrived. */
+        .save-btn::after                   { animation: glint 33s ease-in-out  5s infinite; }
+        .action-row:nth-child(1)::after    { animation: glint 21s ease-in-out  9s infinite; }
+        .action-row:nth-child(2)::after    { animation: glint 27.5s ease-in-out 14s infinite; }
+        .action-row:nth-child(3)::after    { animation: glint 18.5s ease-in-out 20s infinite; }
+        .action-row:nth-child(4)::after    { animation: glint 30.5s ease-in-out 25s infinite; }
+        .action-row:nth-child(5)::after    { animation: glint 23s ease-in-out  31s infinite; }
+        .action-row:nth-child(6)::after    { animation: glint 26.5s ease-in-out 37s infinite; }
         .action-icon {
             width: 2.75rem; height: 2.75rem; border-radius: 0.85rem;
             display: flex; align-items: center; justify-content: center;
