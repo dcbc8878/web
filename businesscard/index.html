@@ -286,8 +286,14 @@
             font-weight: 600;
         }
 
+        /* Sized by height, not width: the pose pool ranges from a narrow
+           standing figure to a wide one on a bicycle, and matching their
+           heights is what keeps the character the same apparent size from
+           one visit to the next. max-width catches the widest poses, and
+           the browser drops the height to match rather than squashing. */
         .mascot {
-            width: 148px; max-width: 42vw; height: auto;
+            height: 214px; width: auto;
+            max-width: min(200px, 52vw);
             flex-shrink: 0;
             margin-right: -0.5rem;
             margin-top: -5.4rem;
@@ -330,7 +336,7 @@
             .action-row { padding: 0.42rem 0.75rem; }
             .action-icon { width: 2rem; height: 2rem; font-size: 0.85rem; border-radius: 0.7rem; }
             .channels > * + * { margin-top: 0.38rem; }
-            .mascot { width: 112px; margin-top: -3.4rem; }
+            .mascot { height: 162px; max-width: min(152px, 44vw); margin-top: -3.4rem; }
         }
 
         /* Very short viewports — small Android phones, or Safari with every
@@ -343,7 +349,7 @@
             .action-row { padding: 0.32rem 0.7rem; }
             .action-icon { width: 1.85rem; height: 1.85rem; font-size: 0.78rem; }
             .channels > * + * { margin-top: 0.3rem; }
-            .mascot { width: 96px; margin-top: -3rem; }
+            .mascot { height: 139px; max-width: min(130px, 40vw); margin-top: -3rem; }
         }
 
         /* Compact, but with enough headroom to keep the English name. */
@@ -351,7 +357,7 @@
             .identity .latin-name { display: block; }
             .card-logo { width: 3.6rem; height: 3.6rem; }
             .identity h1 { font-size: 1.35rem; }
-            .mascot { width: 132px; margin-top: -4.3rem; }
+            .mascot { height: 191px; max-width: min(178px, 48vw); margin-top: -4.3rem; }
         }
 
         /* Anyone who has asked their phone to reduce motion gets the card
@@ -470,8 +476,26 @@
                         &copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>All Rights Reserved.
                     </p>
                 </div>
-                <img src="/mascot.png" alt="" aria-hidden="true" class="mascot">
+                <img id="mascot" alt="" aria-hidden="true" class="mascot">
             </div>
+            <script>
+                // A different pose every time the card is opened. Picked here,
+                // inline and immediately after the element, so the browser
+                // starts fetching the image during parse rather than waiting
+                // for the scripts at the end of the document.
+                (function () {
+                    var POSES = ['wai', 'salute', 'megaphone', 'desk', 'envelope',
+                                 'tablet', 'present', 'bicycle', 'documents', 'running'];
+                    var last = null;
+                    try { last = sessionStorage.getItem('dcbc_card_pose'); } catch (e) {}
+                    // Reroll once if we land on the pose just shown, so a repeat
+                    // never makes the card look like it failed to change.
+                    var pose = POSES[Math.floor(Math.random() * POSES.length)];
+                    if (pose === last) pose = POSES[Math.floor(Math.random() * POSES.length)];
+                    try { sessionStorage.setItem('dcbc_card_pose', pose); } catch (e) {}
+                    document.getElementById('mascot').src = '/mascots/' + pose + '.png';
+                })();
+            </script>
 
         </div>
     </div>
