@@ -310,6 +310,20 @@
                 mascot-idle  3.4s ease-in-out 6.5s infinite;
         }
 
+        /* A full-body standing pose spends its height on the whole figure,
+           so at the same box height its head lands about half the size of
+           the seated poses' and the character reads as small. Those poses
+           get a taller box.
+
+           The extra height is left to push the card downward into its own
+           spare room rather than being clawed back through a deeper top
+           margin: the card is vertically centred, so growing it raises the
+           figure by only half the growth, and the arms stay clear of the
+           address line. How much room there is depends entirely on the
+           phone, so every height tier sets its own ceiling -- measured, not
+           scaled. Short screens have none to give and keep the base size. */
+        .mascot.tall { max-height: 244px; }
+
         /* Six channels plus a logo and the save button run past a phone
            screen at comfortable spacing, so the whole card is measured to
            fit instead: the point of an NFC tap is to see it all at once. */
@@ -339,6 +353,7 @@
             .action-icon { width: 2rem; height: 2rem; font-size: 0.85rem; border-radius: 0.7rem; }
             .channels > * + * { margin-top: 0.38rem; }
             .mascot { max-height: 162px; max-width: min(152px, 44vw); margin-top: -3.4rem; }
+            .mascot.tall { max-height: 162px; }   /* no room to grow at this height */
         }
 
         /* Very short viewports — small Android phones, or Safari with every
@@ -352,6 +367,13 @@
             .action-icon { width: 1.85rem; height: 1.85rem; font-size: 0.78rem; }
             .channels > * + * { margin-top: 0.3rem; }
             .mascot { max-height: 139px; max-width: min(130px, 40vw); margin-top: -3rem; }
+            .mascot.tall { max-height: 153px; }
+        }
+
+        /* Between the cramped short phones and the 730px tier there is some
+           spare vertical room, but only enough for a modest boost. */
+        @media (min-height: 690px) and (max-height: 729px) {
+            .mascot.tall { max-height: 194px; }
         }
 
         /* Compact, but with enough headroom to keep the English name. */
@@ -360,6 +382,7 @@
             .card-logo { width: 3.6rem; height: 3.6rem; }
             .identity h1 { font-size: 1.35rem; }
             .mascot { max-height: 191px; max-width: min(178px, 48vw); margin-top: -4.3rem; }
+            .mascot.tall { max-height: 258px; }
         }
 
         /* Anyone who has asked their phone to reduce motion gets the card
@@ -488,6 +511,10 @@
                 (function () {
                     var POSES = ['wai', 'salute', 'megaphone', 'desk', 'envelope',
                                  'tablet', 'present', 'bicycle', 'documents', 'running'];
+                    // Full-body standing poses. They spend their height on the
+                    // whole figure, so they need the taller box to read at the
+                    // same size as the seated and riding poses.
+                    var STANDING = ['wai', 'salute', 'megaphone', 'tablet', 'present', 'documents'];
                     var last = null;
                     try { last = sessionStorage.getItem('dcbc_card_pose'); } catch (e) {}
                     // Reroll once if we land on the pose just shown, so a repeat
@@ -495,7 +522,9 @@
                     var pose = POSES[Math.floor(Math.random() * POSES.length)];
                     if (pose === last) pose = POSES[Math.floor(Math.random() * POSES.length)];
                     try { sessionStorage.setItem('dcbc_card_pose', pose); } catch (e) {}
-                    document.getElementById('mascot').src = '/mascots/' + pose + '.png';
+                    var img = document.getElementById('mascot');
+                    img.classList.toggle('tall', STANDING.indexOf(pose) !== -1);
+                    img.src = '/mascots/' + pose + '.png';
                 })();
             </script>
 
