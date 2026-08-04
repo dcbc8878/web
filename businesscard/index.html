@@ -286,13 +286,15 @@
             font-weight: 600;
         }
 
-        /* Sized by height, not width: the pose pool ranges from a narrow
-           standing figure to a wide one on a bicycle, and matching their
-           heights is what keeps the character the same apparent size from
-           one visit to the next. max-width catches the widest poses, and
-           the browser drops the height to match rather than squashing. */
+        /* The pose pool runs from a narrow standing figure to a wide one on
+           a bicycle, so the mascot is fitted into a box rather than given a
+           size: height decides it for the tall poses, width for the wide
+           ones. Both limits have to be maxima. A fixed height plus a
+           max-width does NOT preserve the aspect ratio -- the width clamps
+           while the height stays put, and the wide poses come out squashed. */
         .mascot {
-            height: 214px; width: auto;
+            width: auto; height: auto;
+            max-height: 214px;
             max-width: min(200px, 52vw);
             flex-shrink: 0;
             margin-right: -0.5rem;
@@ -336,7 +338,7 @@
             .action-row { padding: 0.42rem 0.75rem; }
             .action-icon { width: 2rem; height: 2rem; font-size: 0.85rem; border-radius: 0.7rem; }
             .channels > * + * { margin-top: 0.38rem; }
-            .mascot { height: 162px; max-width: min(152px, 44vw); margin-top: -3.4rem; }
+            .mascot { max-height: 162px; max-width: min(152px, 44vw); margin-top: -3.4rem; }
         }
 
         /* Very short viewports — small Android phones, or Safari with every
@@ -349,7 +351,7 @@
             .action-row { padding: 0.32rem 0.7rem; }
             .action-icon { width: 1.85rem; height: 1.85rem; font-size: 0.78rem; }
             .channels > * + * { margin-top: 0.3rem; }
-            .mascot { height: 139px; max-width: min(130px, 40vw); margin-top: -3rem; }
+            .mascot { max-height: 139px; max-width: min(130px, 40vw); margin-top: -3rem; }
         }
 
         /* Compact, but with enough headroom to keep the English name. */
@@ -357,7 +359,7 @@
             .identity .latin-name { display: block; }
             .card-logo { width: 3.6rem; height: 3.6rem; }
             .identity h1 { font-size: 1.35rem; }
-            .mascot { height: 191px; max-width: min(178px, 48vw); margin-top: -4.3rem; }
+            .mascot { max-height: 191px; max-width: min(178px, 48vw); margin-top: -4.3rem; }
         }
 
         /* Anyone who has asked their phone to reduce motion gets the card
