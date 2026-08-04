@@ -122,6 +122,41 @@
             -webkit-tap-highlight-color: transparent;
         }
         .action-row:active { transform: scale(0.98); box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+
+        /* ---------- Glint ----------
+           A light sweeps across each button, then rests. The rest is what
+           makes it read as an occasional sparkle rather than a conveyor
+           belt. Durations and delays are deliberately uneven so no two
+           buttons ever fire together or settle into a shared beat. */
+        .action-row, .save-btn { position: relative; overflow: hidden; }
+        .action-row::after, .save-btn::after {
+            content: '';
+            position: absolute;
+            top: -20%; left: -65%;
+            width: 42%; height: 140%;
+            transform: skewX(-18deg);
+            pointer-events: none;
+            background: linear-gradient(100deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.9) 50%,
+                rgba(255,255,255,0) 100%);
+        }
+
+        @keyframes glint {
+            0%   { left: -65%; }
+            22%  { left: 135%; }
+            100% { left: 135%; }
+        }
+
+        /* Delays are offset past the entrance sequence so the first glint
+           lands on a button that has already arrived. */
+        .save-btn::after                   { animation: glint 6.1s ease-in-out 4.6s infinite; }
+        .action-row:nth-child(1)::after    { animation: glint 5.3s ease-in-out 5.2s infinite; }
+        .action-row:nth-child(2)::after    { animation: glint 6.7s ease-in-out 6.1s infinite; }
+        .action-row:nth-child(3)::after    { animation: glint 4.9s ease-in-out 7.4s infinite; }
+        .action-row:nth-child(4)::after    { animation: glint 7.3s ease-in-out 5.8s infinite; }
+        .action-row:nth-child(5)::after    { animation: glint 5.8s ease-in-out 8.3s infinite; }
+        .action-row:nth-child(6)::after    { animation: glint 6.4s ease-in-out 6.9s infinite; }
         .action-icon {
             width: 2.75rem; height: 2.75rem; border-radius: 0.85rem;
             display: flex; align-items: center; justify-content: center;
@@ -304,6 +339,7 @@
             .action-row { transition: none !important; }
             .identity::before { display: none; }
             .bg-fx i { animation: none !important; }
+            .action-row::after, .save-btn::after { display: none; }
         }
     </style>
 </head>
