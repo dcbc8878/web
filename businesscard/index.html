@@ -55,39 +55,45 @@
             position: absolute;
             display: block;
             border-radius: 50%;
-            filter: blur(70px);
+            filter: blur(58px);
             will-change: transform;
         }
         .glow-1 {
             width: 78vw; height: 78vw; max-width: 420px; max-height: 420px;
             top: -18vh; left: -26vw;
-            background: radial-gradient(circle, rgba(255,168,120,0.62) 0%, rgba(255,168,120,0) 70%);
-            animation: drift-1 17s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(255,158,105,0.80) 0%, rgba(255,158,105,0) 70%);
+            animation: drift-1 9s ease-in-out infinite;
         }
         .glow-2 {
             width: 88vw; height: 88vw; max-width: 470px; max-height: 470px;
             bottom: -22vh; right: -30vw;
-            background: radial-gradient(circle, rgba(255,190,150,0.58) 0%, rgba(255,190,150,0) 70%);
-            animation: drift-2 21s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(255,182,138,0.76) 0%, rgba(255,182,138,0) 70%);
+            animation: drift-2 11s ease-in-out infinite;
         }
         .glow-3 {
             width: 54vw; height: 54vw; max-width: 300px; max-height: 300px;
             top: 42%; left: 55%;
-            background: radial-gradient(circle, rgba(255,214,183,0.55) 0%, rgba(255,214,183,0) 70%);
-            animation: drift-3 25s ease-in-out infinite;
+            background: radial-gradient(circle, rgba(255,205,168,0.74) 0%, rgba(255,205,168,0) 70%);
+            animation: drift-3 13s ease-in-out infinite;
         }
 
+        /* Travel far enough to actually read as movement. The earlier
+           version only shifted ~9vw under a 70px blur, which averaged out
+           to looking completely still. */
         @keyframes drift-1 {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            50%      { transform: translate(9vw, 6vh) scale(1.12); }
+            33%      { transform: translate(34vw, 16vh) scale(1.2); }
+            66%      { transform: translate(14vw, 34vh) scale(0.9); }
         }
         @keyframes drift-2 {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            50%      { transform: translate(-8vw, -7vh) scale(1.1); }
+            33%      { transform: translate(-30vw, -20vh) scale(0.88); }
+            66%      { transform: translate(-10vw, -38vh) scale(1.22); }
         }
         @keyframes drift-3 {
-            0%, 100% { transform: translate(0, 0) scale(0.95); }
-            50%      { transform: translate(-11vw, 5vh) scale(1.15); }
+            0%, 100% { transform: translate(0, 0) scale(0.9); }
+            33%      { transform: translate(-38vw, 14vh) scale(1.25); }
+            66%      { transform: translate(-16vw, -22vh) scale(1); }
         }
 
         /* A light source from the top and a soft vignette at the edges,
