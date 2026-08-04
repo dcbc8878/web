@@ -28,7 +28,7 @@
     <script>
         tailwind.config = {
             theme: { extend: {
-                fontFamily: { sans: ['Prompt', 'sans-serif'] },
+                fontFamily: { sans: ['Prompt', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'] },
                 colors: { brand: { light: '#FFF2E8', DEFAULT: '#FFB88C', dark: '#E5976A', text: '#4A4A4A' } }
             } }
         }
@@ -264,6 +264,28 @@
            shrinks what the flex row reserves, which is what keeps the
            card from growing past the screen. pointer-events: none means
            the row underneath is still fully tappable through the artwork. */
+        /* Language switcher */
+        .lang-switch { display: flex; gap: 0.3rem; margin-bottom: 0.45rem; }
+        .lang-switch button {
+            font-family: inherit;
+            font-size: 0.62rem;
+            line-height: 1;
+            padding: 0.3rem 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(180,150,130,0.32);
+            background: rgba(255,255,255,0.72);
+            color: #9a8b80;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .lang-switch button.active {
+            background: #FFB88C;
+            border-color: #FFB88C;
+            color: #fff;
+            font-weight: 600;
+        }
+
         .mascot {
             width: 148px; max-width: 42vw; height: auto;
             flex-shrink: 0;
@@ -362,16 +384,16 @@
             <!-- Identity -->
             <div class="identity text-center">
                 <img src="/logo.png" alt="เด็กชายบัญชี" class="card-logo mx-auto object-contain drop-shadow-md animate-pop-in mb-2">
-                <h1 class="text-2xl font-bold text-gray-900 leading-tight">บริษัท เด็กชายบัญชี จำกัด</h1>
-                <p class="latin-name text-[11px] text-gray-500 font-light tracking-wide mt-1">DEKCHAIBUNCHEE CO.,LTD.</p>
-                <p class="tagline text-sm text-brand font-medium mt-2.5">รับทำบัญชี · วางแผนภาษี · จดทะเบียนบริษัท</p>
+                <h1 data-i18n="name" class="text-2xl font-bold text-gray-900 leading-tight">บริษัท เด็กชายบัญชี จำกัด</h1>
+                <p data-i18n="sub" class="latin-name text-[11px] text-gray-500 font-light tracking-wide mt-1">DEKCHAIBUNCHEE CO.,LTD.</p>
+                <p data-i18n="tagline" class="tagline text-sm text-brand font-medium mt-2.5">รับทำบัญชี · วางแผนภาษี · จดทะเบียนบริษัท</p>
             </div>
 
             <!-- Save to phone contacts. The primary action for a tapped
                  NFC card, so it sits above the individual channels. -->
-            <a href="/contact.vcf" download="dcbc-contact.vcf"
+            <a id="save-vcard" href="/contact.vcf" download="dcbc-contact.vcf"
                class="save-btn flex items-center justify-center gap-2.5 w-full bg-brand text-white rounded-2xl font-bold shadow-[0_4px_15px_rgb(255,184,140,0.5)] active:scale-[0.98] transition-transform">
-                <i class="fa-solid fa-address-book"></i> บันทึกลงรายชื่อติดต่อ
+                <i class="fa-solid fa-address-book"></i> <span data-i18n="save">บันทึกลงรายชื่อติดต่อ</span>
             </a>
 
             <!-- Channels -->
@@ -379,7 +401,7 @@
                 <a href="tel:0888788648" class="action-row">
                     <div class="action-icon bg-brand"><i class="fa-solid fa-phone"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">โทรศัพท์</p>
+                        <p data-i18n="phone" class="text-[11px] text-gray-400 font-light leading-none mb-1">โทรศัพท์</p>
                         <p class="text-sm font-semibold text-gray-800">088-878-8648</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
@@ -388,7 +410,7 @@
                 <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="action-row">
                     <div class="action-icon bg-green-500"><i class="fa-brands fa-line text-xl"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE Official</p>
+                        <p data-i18n="line" class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE Official</p>
                         <p class="text-sm font-semibold text-gray-800">@dcbc</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
@@ -397,7 +419,7 @@
                 <a href="mailto:contact@dcbc.co.th" class="action-row">
                     <div class="action-icon bg-gray-700"><i class="fa-regular fa-envelope"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">อีเมล</p>
+                        <p data-i18n="email" class="text-[11px] text-gray-400 font-light leading-none mb-1">อีเมล</p>
                         <p class="text-sm font-semibold text-gray-800 truncate">contact@dcbc.co.th</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
@@ -407,7 +429,7 @@
                     <div class="action-icon bg-[#1877F2]"><i class="fa-brands fa-facebook-f"></i></div>
                     <div class="min-w-0 flex-1">
                         <p class="text-[11px] text-gray-400 font-light leading-none mb-1">Facebook</p>
-                        <p class="text-sm font-semibold text-gray-800">เด็กชายบัญชี</p>
+                        <p data-i18n="fbname" class="text-sm font-semibold text-gray-800">เด็กชายบัญชี</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
                 </a>
@@ -415,8 +437,8 @@
                 <a href="https://maps.google.com/?q=เลขที่+2+ซอยทุ่งเศรษฐี+แยก+21+แขวงดอกไม้+เขตประเวศ+กรุงเทพมหานคร+10250" target="_blank" rel="noopener" class="action-row">
                     <div class="action-icon bg-red-500"><i class="fa-solid fa-location-dot"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">ที่ตั้งสำนักงาน</p>
-                        <p class="text-xs font-medium text-gray-700 leading-snug">เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพฯ 10250</p>
+                        <p data-i18n="office" class="text-[11px] text-gray-400 font-light leading-none mb-1">ที่ตั้งสำนักงาน</p>
+                        <p data-i18n-html="address" class="text-xs font-medium text-gray-700 leading-snug">เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพฯ 10250</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
                 </a>
@@ -424,7 +446,7 @@
                 <a href="/" class="action-row">
                     <div class="action-icon bg-gray-800"><i class="fa-solid fa-globe"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[11px] text-gray-400 font-light leading-none mb-1">เว็บไซต์</p>
+                        <p data-i18n="website" class="text-[11px] text-gray-400 font-light leading-none mb-1">เว็บไซต์</p>
                         <p class="text-sm font-semibold text-gray-800">www.dcbc.co.th</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
@@ -435,15 +457,117 @@
                  its own row, so it costs almost no extra height on the
                  short phones this page has to fit. -->
             <div class="flex items-end justify-between gap-3 mt-3">
-                <p class="footnote text-[10px] text-gray-400 font-light leading-relaxed pb-1">
-                    &copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>
-                    All Rights Reserved.
-                </p>
+                <div class="footnote">
+                    <!-- The mascot column is far taller than this text, so the
+                         switcher tucks into space the layout already had and
+                         costs the card no extra height. -->
+                    <div class="lang-switch" role="group" aria-label="Language">
+                        <button type="button" data-lang="th" onclick="setLang('th')">ไทย</button>
+                        <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
+                        <button type="button" data-lang="zh" onclick="setLang('zh')">中文</button>
+                    </div>
+                    <p data-i18n-html="copyright" class="text-[10px] text-gray-400 font-light leading-relaxed">
+                        &copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>All Rights Reserved.
+                    </p>
+                </div>
                 <img src="/mascot.png" alt="" aria-hidden="true" class="mascot">
             </div>
 
         </div>
     </div>
+
+
+    <script>
+        // Every string below is authored here, never user input, so the few
+        // entries rendered as HTML (they carry <br>) are safe by construction.
+        const I18N = {
+            th: {
+                title: 'นามบัตร | เด็กชายบัญชี',
+                name: 'บริษัท เด็กชายบัญชี จำกัด',
+                sub: 'DEKCHAIBUNCHEE CO.,LTD.',
+                tagline: 'รับทำบัญชี · วางแผนภาษี · จดทะเบียนบริษัท',
+                save: 'บันทึกลงรายชื่อติดต่อ',
+                phone: 'โทรศัพท์',
+                line: 'LINE Official',
+                email: 'อีเมล',
+                fbname: 'เด็กชายบัญชี',
+                office: 'ที่ตั้งสำนักงาน',
+                address: 'เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพฯ 10250',
+                website: 'เว็บไซต์',
+                copyright: '&copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>All Rights Reserved.'
+            },
+            en: {
+                title: 'Business Card | DEKCHAIBUNCHEE',
+                name: 'DEKCHAIBUNCHEE CO., LTD.',
+                sub: 'บริษัท เด็กชายบัญชี จำกัด',
+                tagline: 'Accounting · Tax Planning · Company Registration',
+                save: 'Save to Contacts',
+                phone: 'Phone',
+                line: 'LINE Official',
+                email: 'Email',
+                fbname: 'Dekchaibunchee',
+                office: 'Office',
+                // Kept in Thai as well — a visitor showing this to a taxi
+                // driver in Bangkok needs the Thai, not the romanisation.
+                address: '2 Soi Thung Setthi 21, Dokmai, Prawet,<br>Bangkok 10250, Thailand',
+                website: 'Website',
+                copyright: '&copy; 2026 DEKCHAIBUNCHEE CO., LTD.<br>All Rights Reserved.'
+            },
+            zh: {
+                title: '电子名片 | DEKCHAIBUNCHEE',
+                name: 'DEKCHAIBUNCHEE CO., LTD.',
+                sub: 'บริษัท เด็กชายบัญชี จำกัด',
+                tagline: '会计服务 · 税务规划 · 公司注册',
+                save: '保存到通讯录',
+                phone: '电话',
+                line: 'LINE 官方账号',
+                email: '电子邮件',
+                fbname: 'Dekchaibunchee',
+                office: '办公地址',
+                address: '泰国曼谷 Prawet 区 Dokmai<br>Thung Setthi 21 巷 2 号，10250',
+                website: '网站',
+                copyright: '&copy; 2026 DEKCHAIBUNCHEE CO., LTD.<br>版权所有'
+            }
+        };
+
+        function setLang(lang) {
+            const dict = I18N[lang] || I18N.th;
+            document.documentElement.lang = lang === 'zh' ? 'zh-Hans' : lang;
+            document.title = dict.title;
+
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const v = dict[el.dataset.i18n];
+                if (v != null) el.textContent = v;
+            });
+            document.querySelectorAll('[data-i18n-html]').forEach(el => {
+                const v = dict[el.dataset.i18nHtml];
+                if (v != null) el.innerHTML = v;
+            });
+
+            document.querySelectorAll('.lang-switch button').forEach(b => {
+                b.classList.toggle('active', b.dataset.lang === lang);
+            });
+
+            // Thai speakers want the Thai-script contact card; everyone else
+            // gets the Latin one, which is legible in any phone's contact list.
+            document.getElementById('save-vcard')
+                .setAttribute('href', lang === 'th' ? '/contact.vcf' : '/contact-en.vcf');
+
+            try { localStorage.setItem('dcbc_card_lang', lang); } catch (e) {}
+        }
+
+        // Remembered choice wins; otherwise follow the phone's language so a
+        // foreign visitor who taps the card lands on something readable.
+        (function () {
+            let lang = null;
+            try { lang = localStorage.getItem('dcbc_card_lang'); } catch (e) {}
+            if (!I18N[lang]) {
+                const nav = (navigator.language || '').toLowerCase();
+                lang = nav.startsWith('th') ? 'th' : nav.startsWith('zh') ? 'zh' : nav ? 'en' : 'th';
+            }
+            setLang(lang);
+        })();
+    </script>
 
 </body>
 </html>
