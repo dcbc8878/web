@@ -163,6 +163,7 @@
         .action-row:nth-child(4)::after    { animation: glint 30.5s ease-in-out 25s infinite; }
         .action-row:nth-child(5)::after    { animation: glint 23s ease-in-out  31s infinite; }
         .action-row:nth-child(6)::after    { animation: glint 26.5s ease-in-out 37s infinite; }
+        .action-row:nth-child(7)::after    { animation: glint 19.5s ease-in-out 43s infinite; }
         .action-icon {
             width: 2.75rem; height: 2.75rem; border-radius: 0.85rem;
             display: flex; align-items: center; justify-content: center;
@@ -238,6 +239,7 @@
         .channels .action-row:nth-child(4) { animation-delay: 3.51s; }
         .channels .action-row:nth-child(5) { animation-delay: 3.68s; }
         .channels .action-row:nth-child(6) { animation-delay: 3.85s; }
+        .channels .action-row:nth-child(7) { animation-delay: 4.02s; }
 
         .footnote { animation: rise 0.7s ease-out 4.15s both; }
 
@@ -386,6 +388,36 @@
             .mascot.tall { max-height: 258px; }
         }
 
+        /* ---- seven-row adjustments, this card only ----
+           The personal LINE row makes seven, and the six-row spacing this
+           layout was measured for has no room for it below about 730px of
+           viewport height. Measured per tier on the real page: the rows
+           give back their padding first, and the standing poses' ceiling
+           gives up whatever is still missing after that -- in that order,
+           because a slightly tighter row costs less than a smaller mascot.
+           Above 860px nothing changes; the seventh row already fits. */
+        @media (max-height: 729px) {
+            .action-row { padding-top: 0.24rem; padding-bottom: 0.24rem; }
+            .channels > * + * { margin-top: 0.3rem; }
+        }
+        /* Bounded below as well as above: an open-ended max-height here
+           would sit after the 660px tier and quietly overrule it. */
+        @media (min-height: 661px) and (max-height: 689px) {
+            /* the tallest seated poses run a few px over here even at the
+               base size, so this tier's ceiling comes down for every pose */
+            .mascot { max-height: 153px; }
+            .mascot.tall { max-height: 151px; }
+        }
+        @media (max-height: 660px) {
+            .action-row { padding-top: 0.2rem; padding-bottom: 0.2rem; }
+            /* same story as the 661-689 tier: the seated poses need the
+               base ceiling down a little too, not just the standing ones */
+            .mascot { max-height: 131px; }
+            .mascot.tall { max-height: 129px; }
+        }
+        @media (min-height: 690px) and (max-height: 729px) { .mascot.tall { max-height: 184px; } }
+        @media (min-height: 730px) and (max-height: 860px) { .mascot.tall { max-height: 217px; } }
+
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
         @media (prefers-reduced-motion: reduce) {
@@ -442,8 +474,17 @@
                 <a href="https://line.me/ti/p/ji_-I6M6NW" target="_blank" rel="noopener" class="action-row">
                     <div class="action-icon bg-green-500"><i class="fa-brands fa-line text-xl"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p data-i18n="line" class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE</p>
+                        <p data-i18n="line" class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE ส่วนตัว</p>
                         <p class="text-sm font-semibold text-gray-800">opaj120</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+                </a>
+
+                <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="action-row">
+                    <div class="action-icon bg-green-600"><i class="fa-brands fa-line text-xl"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <p data-i18n="line_official" class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE Official</p>
+                        <p class="text-sm font-semibold text-gray-800">@dcbc</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
                 </a>
@@ -548,7 +589,8 @@
                 tagline: 'ผู้ก่อตั้ง · บริษัท เด็กชายบัญชี จำกัด',
                 save: 'บันทึกลงรายชื่อติดต่อ',
                 phone: 'มือถือ',
-                line: 'LINE',
+                line: 'LINE ส่วนตัว',
+                line_official: 'LINE Official',
                 email: 'อีเมล',
                 fbname: 'เด็กชายบัญชี',
                 office: 'ที่ตั้งสำนักงาน',
@@ -563,7 +605,8 @@
                 tagline: 'Founder · DEKCHAIBUNCHEE CO., LTD.',
                 save: 'Save to Contacts',
                 phone: 'Mobile',
-                line: 'LINE',
+                line: 'LINE (Personal)',
+                line_official: 'LINE Official',
                 email: 'Email',
                 fbname: 'Dekchaibunchee',
                 office: 'Office',
@@ -580,7 +623,8 @@
                 tagline: '创始人 · DEKCHAIBUNCHEE CO., LTD.',
                 save: '保存到通讯录',
                 phone: '手机',
-                line: 'LINE',
+                line: 'LINE 个人号',
+                line_official: 'LINE 官方账号',
                 email: '电子邮件',
                 fbname: 'Dekchaibunchee',
                 office: '办公地址',
