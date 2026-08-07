@@ -384,6 +384,61 @@
             .mascot.tall { max-height: 258px; }
         }
 
+        /* ---- five-row proportions, this card only ----
+           Dropping three rows left the card short and the middle of it
+           empty. The space goes back as a larger logo, roomier rows and
+           wider gaps, which carries the whole stack lower down the screen.
+
+           The mascot keeps its place at the bottom right: its extra height
+           is taken straight back out of the top margin, so its feet stay
+           where they were and it grows upward instead, far enough to reach
+           over the Facebook row. Each tier spends only part of the slack it
+           actually has, measured on the page, so nothing starts scrolling.
+
+           These come after every tier above and so override them all. */
+        @media (min-height: 861px) {
+            .card-logo { width: 7rem; height: 7rem; }
+            .identity { margin-bottom: 1.6rem; }
+            .save-btn { padding-top: 0.85rem; padding-bottom: 0.85rem; margin-bottom: 1.3rem; }
+            .channels > * + * { margin-top: 0.7rem; }
+            .action-row { padding: 0.85rem 0.85rem; }
+            .mascot { max-height: 268px; margin-top: -8.8rem; }
+            .mascot.tall { max-height: 300px; }
+        }
+        @media (min-height: 730px) and (max-height: 860px) {
+            .card-logo { width: 5rem; height: 5rem; }
+            .identity { margin-bottom: 0.95rem; }
+            .save-btn { padding-top: 0.7rem; padding-bottom: 0.7rem; margin-bottom: 0.85rem; }
+            .channels > * + * { margin-top: 0.52rem; }
+            .action-row { padding: 0.6rem 0.75rem; }
+            .mascot { max-height: 235px; margin-top: -7rem; }
+            .mascot.tall { max-height: 300px; }
+        }
+        @media (min-height: 661px) and (max-height: 729px) {
+            .card-logo { width: 4.2rem; height: 4.2rem; }
+            .identity { margin-bottom: 0.9rem; }
+            .save-btn { padding-top: 0.7rem; padding-bottom: 0.7rem; margin-bottom: 0.8rem; }
+            .channels > * + * { margin-top: 0.5rem; }
+            .action-row { padding: 0.58rem 0.75rem; }
+            .mascot { max-height: 200px; margin-top: -5.8rem; }
+            .mascot.tall { max-height: 232px; }
+        }
+        /* The bottom of that band has ~30px less to give than the top of
+           it, and only the standing poses notice, so they get their own
+           ceiling rather than the whole band losing height. */
+        @media (min-height: 661px) and (max-height: 689px) {
+            .mascot.tall { max-height: 205px; }
+        }
+        @media (max-height: 660px) {
+            .card-logo { width: 3.4rem; height: 3.4rem; }
+            .identity { margin-bottom: 0.7rem; }
+            .save-btn { padding-top: 0.55rem; padding-bottom: 0.55rem; margin-bottom: 0.75rem; }
+            .channels > * + * { margin-top: 0.4rem; }
+            .action-row { padding: 0.46rem 0.7rem; }
+            .mascot { max-height: 175px; margin-top: -5.25rem; }
+            .mascot.tall { max-height: 189px; }
+        }
+
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
         @media (prefers-reduced-motion: reduce) {
