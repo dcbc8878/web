@@ -162,8 +162,6 @@
         .action-row:nth-child(3)::after    { animation: glint 18.5s ease-in-out 20s infinite; }
         .action-row:nth-child(4)::after    { animation: glint 30.5s ease-in-out 25s infinite; }
         .action-row:nth-child(5)::after    { animation: glint 23s ease-in-out  31s infinite; }
-        .action-row:nth-child(6)::after    { animation: glint 26.5s ease-in-out 37s infinite; }
-        .action-row:nth-child(7)::after    { animation: glint 19.5s ease-in-out 43s infinite; }
         .action-icon {
             width: 2.75rem; height: 2.75rem; border-radius: 0.85rem;
             display: flex; align-items: center; justify-content: center;
@@ -238,8 +236,6 @@
         .channels .action-row:nth-child(3) { animation-delay: 3.34s; }
         .channels .action-row:nth-child(4) { animation-delay: 3.51s; }
         .channels .action-row:nth-child(5) { animation-delay: 3.68s; }
-        .channels .action-row:nth-child(6) { animation-delay: 3.85s; }
-        .channels .action-row:nth-child(7) { animation-delay: 4.02s; }
 
         .footnote { animation: rise 0.7s ease-out 4.15s both; }
 
@@ -388,36 +384,6 @@
             .mascot.tall { max-height: 258px; }
         }
 
-        /* ---- seven-row adjustments, this card only ----
-           The personal LINE row makes seven, and the six-row spacing this
-           layout was measured for has no room for it below about 730px of
-           viewport height. Measured per tier on the real page: the rows
-           give back their padding first, and the standing poses' ceiling
-           gives up whatever is still missing after that -- in that order,
-           because a slightly tighter row costs less than a smaller mascot.
-           Above 860px nothing changes; the seventh row already fits. */
-        @media (max-height: 729px) {
-            .action-row { padding-top: 0.24rem; padding-bottom: 0.24rem; }
-            .channels > * + * { margin-top: 0.3rem; }
-        }
-        /* Bounded below as well as above: an open-ended max-height here
-           would sit after the 660px tier and quietly overrule it. */
-        @media (min-height: 661px) and (max-height: 689px) {
-            /* the tallest seated poses run a few px over here even at the
-               base size, so this tier's ceiling comes down for every pose */
-            .mascot { max-height: 153px; }
-            .mascot.tall { max-height: 151px; }
-        }
-        @media (max-height: 660px) {
-            .action-row { padding-top: 0.2rem; padding-bottom: 0.2rem; }
-            /* same story as the 661-689 tier: the seated poses need the
-               base ceiling down a little too, not just the standing ones */
-            .mascot { max-height: 131px; }
-            .mascot.tall { max-height: 129px; }
-        }
-        @media (min-height: 690px) and (max-height: 729px) { .mascot.tall { max-height: 184px; } }
-        @media (min-height: 730px) and (max-height: 860px) { .mascot.tall { max-height: 217px; } }
-
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
         @media (prefers-reduced-motion: reduce) {
@@ -480,15 +446,6 @@
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
                 </a>
 
-                <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="action-row">
-                    <div class="action-icon bg-green-600"><i class="fa-brands fa-line text-xl"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p data-i18n="line_official" class="text-[11px] text-gray-400 font-light leading-none mb-1">LINE Official</p>
-                        <p class="text-sm font-semibold text-gray-800">@dcbc</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
-
                 <a id="row-email" href="mailto:tepmongkon.s@dcbc.co.th" class="action-row">
                     <div class="action-icon bg-gray-700"><i class="fa-regular fa-envelope"></i></div>
                     <div class="min-w-0 flex-1">
@@ -507,20 +464,13 @@
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
                 </a>
 
-                <a href="https://maps.google.com/?q=เลขที่+2+ซอยทุ่งเศรษฐี+แยก+21+แขวงดอกไม้+เขตประเวศ+กรุงเทพมหานคร+10250" target="_blank" rel="noopener" class="action-row">
-                    <div class="action-icon bg-red-500"><i class="fa-solid fa-location-dot"></i></div>
+                <!-- The way back to the company's own card, which carries the
+                     office address, the LINE Official account and the site. -->
+                <a href="/businesscard" class="action-row">
+                    <div class="action-icon bg-brand-dark"><i class="fa-regular fa-address-card"></i></div>
                     <div class="min-w-0 flex-1">
-                        <p data-i18n="office" class="text-[11px] text-gray-400 font-light leading-none mb-1">ที่ตั้งสำนักงาน</p>
-                        <p data-i18n-html="address" class="text-xs font-medium text-gray-700 leading-snug">เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพฯ 10250</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
-                </a>
-
-                <a href="/" class="action-row">
-                    <div class="action-icon bg-gray-800"><i class="fa-solid fa-globe"></i></div>
-                    <div class="min-w-0 flex-1">
-                        <p data-i18n="website" class="text-[11px] text-gray-400 font-light leading-none mb-1">เว็บไซต์</p>
-                        <p class="text-sm font-semibold text-gray-800">www.dcbc.co.th</p>
+                        <p data-i18n="company_card" class="text-[11px] text-gray-400 font-light leading-none mb-1">ดูเพิ่มเติม</p>
+                        <p data-i18n="company_name" class="text-sm font-semibold text-gray-800">นามบัตรบริษัท</p>
                     </div>
                     <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
                 </a>
@@ -590,12 +540,10 @@
                 save: 'บันทึกลงรายชื่อติดต่อ',
                 phone: 'มือถือ',
                 line: 'LINE ส่วนตัว',
-                line_official: 'LINE Official',
                 email: 'อีเมล',
                 fbname: 'เด็กชายบัญชี',
-                office: 'ที่ตั้งสำนักงาน',
-                address: 'เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพฯ 10250',
-                website: 'เว็บไซต์',
+                company_card: 'ดูเพิ่มเติม',
+                company_name: 'นามบัตรบริษัท',
                 copyright: '&copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>All Rights Reserved.'
             },
             en: {
@@ -606,14 +554,10 @@
                 save: 'Save to Contacts',
                 phone: 'Mobile',
                 line: 'LINE (Personal)',
-                line_official: 'LINE Official',
                 email: 'Email',
                 fbname: 'Dekchaibunchee',
-                office: 'Office',
-                // Kept in Thai as well — a visitor showing this to a taxi
-                // driver in Bangkok needs the Thai, not the romanisation.
-                address: '2 Soi Thung Setthi 21, Dokmai, Prawet,<br>Bangkok 10250, Thailand',
-                website: 'Website',
+                company_card: 'More',
+                company_name: 'Company Card',
                 copyright: '&copy; 2026 DEKCHAIBUNCHEE CO., LTD.<br>All Rights Reserved.'
             },
             zh: {
@@ -624,12 +568,10 @@
                 save: '保存到通讯录',
                 phone: '手机',
                 line: 'LINE 个人号',
-                line_official: 'LINE 官方账号',
                 email: '电子邮件',
                 fbname: 'Dekchaibunchee',
-                office: '办公地址',
-                address: '泰国曼谷 Prawet 区 Dokmai<br>Thung Setthi 21 巷 2 号，10250',
-                website: '网站',
+                company_card: '更多',
+                company_name: '公司名片',
                 copyright: '&copy; 2026 DEKCHAIBUNCHEE CO., LTD.<br>版权所有'
             }
         };
