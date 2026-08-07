@@ -14,9 +14,16 @@ permissions:
   pages: write
   id-token: write
 
+# A newer push supersedes an older deploy rather than queueing behind it.
+# With cancel-in-progress: false, one run that stalls on GitHub's side --
+# which happened, sitting in deployment_queued until it timed out -- leaves
+# every later run queued behind it and then cancelled, so the site silently
+# stops updating while every push still reports success locally. The site is
+# static and every deploy publishes the whole tree, so losing a superseded
+# run costs nothing: the newest content is what should be live.
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
