@@ -462,7 +462,12 @@
            The five-second opening still belongs to a cold NFC tap. Playing
            it again one tap into the same site would read as the page having
            reloaded rather than moved, so the handoff replaces it. */
-        .handoff .animate-pop-in { animation: none !important; }
+        /* Held invisible until the placing script below has put it in the
+           middle of the screen. If the logo is not in cache the script has
+           to wait for its load event, which can land after the first paint,
+           and without this the logo would flash at its resting size before
+           jumping to the centre to start the move. */
+        .handoff .animate-pop-in { animation: none !important; opacity: 0; }
         .handoff .identity::before { display: none; }
         @keyframes card-settle {
             from { opacity: 0; transform: translateY(10px); }
@@ -522,6 +527,7 @@
                             var r = logo.getBoundingClientRect();
                             var target = Math.min(window.innerWidth * 0.6, window.innerHeight * 0.42, 280);
                             logo.style.transition = 'none';
+                            logo.style.opacity = '1';
                             logo.style.transform =
                                 'translate(' + ((window.innerWidth / 2) - (r.left + r.width / 2)) + 'px,'
                                 + ((window.innerHeight / 2) - (r.top + r.height / 2)) + 'px) '
@@ -535,7 +541,10 @@
                         };
                         // the rect is only right once layout knows the logo's size
                         if (logo.complete) place();
-                        else logo.addEventListener('load', place, { once: true });
+                        else {
+                            logo.addEventListener('load', place, { once: true });
+                            logo.addEventListener('error', function () { logo.style.opacity = '1'; }, { once: true });
+                        }
                     })();
                 </script>
                 <h1 data-i18n="name" class="text-2xl font-bold text-gray-900 leading-tight">บริษัท เด็กชายบัญชี จำกัด</h1>
