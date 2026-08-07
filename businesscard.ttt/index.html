@@ -462,6 +462,17 @@
             .mascot { max-width: calc(100vw - 218px); }
         }
 
+        /* Narrower than about 335px and still tall — the smallest folding
+           cover screens — two things give at once: the romanised name wraps
+           to a second line and the copyright to a fourth, while the mascot,
+           now width-limited, grows taller than its tier ever intended. Both
+           have to come down. Bounded to tall screens so the short tiers,
+           which already cap far lower, keep their own numbers. */
+        @media (max-width: 335px) and (min-height: 730px) {
+            .identity h1 { font-size: 1.15rem; }
+            .mascot, .mascot.tall { max-height: 200px; }
+        }
+
         /* ---- leaving for the company card ----
            The logo grows to the middle of the screen while everything else
            falls away, and the company card picks it up from exactly there
