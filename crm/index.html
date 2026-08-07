@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เด็กชายบัญชี CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Noto Sans Thai', system-ui, sans-serif; font-size: 14px; }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; border-radius: 8px; cursor: pointer;
+      color: #475569; font-weight: 500; transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .nav-item:hover  { background: #f1f5f9; color: #1e293b; }
+    .nav-item.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+    .nav-item svg    { flex-shrink: 0; }
+
+    .dot {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 700;
+    }
+    .dot.done { background: #dcfce7; color: #16a34a; }
+    .dot.todo { background: #f1f5f9; color: #94a3b8; border: 2px dashed #cbd5e1; font-size: 9px; }
+    .dot.na   { background: #e2e8f0; color: #94a3b8; font-size: 11px; }
+
+    .status-td.clickable { cursor: pointer; }
+    .status-td.clickable:hover { background: #f0f9ff !important; }
+    .status-td.saving { opacity: .45; pointer-events: none; }
+
+    .prog-wrap { display: flex; align-items: center; gap: 8px; }
+    .prog-bar  { flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; min-width: 55px; }
+    .prog-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+    .prog-pct  { font-size: 11px; font-weight: 700; color: #64748b; min-width: 30px; text-align: right; }
+
+    #client-panel { transform: translateX(100%); transition: transform .25s cubic-bezier(.4,0,.2,1); }
+    #client-panel.open { transform: translateX(0); }
+
+    .tab-btn {
+      padding: 8px 14px; font-size: 13px; font-weight: 600;
+      border-bottom: 2px solid transparent;
+      color: #64748b; cursor: pointer; transition: color .15s, border-color .15s;
+      white-space: nowrap; flex-shrink: 0;
+    }
+    .tab-btn.active { color: #2563eb; border-color: #2563eb; }
+    .tab-btn.hidden { display: none; }
+
+    table { border-collapse: separate; border-spacing: 0; }
+    thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
+    tbody tr:hover td { background: #fafbff; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 100;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .editable-field {
+      border: 1px solid transparent; border-radius: 6px; padding: 4px 8px;
+      transition: border-color .15s;
+    }
+    .editable-field:hover  { border-color: #cbd5e1; background: #f8fafc; }
+    .editable-field:focus  { outline: none; border-color: #3b82f6; background: white; }
+    .editable-field[readonly] { cursor: default; }
+    .editable-field[readonly]:hover { border-color: transparent; background: transparent; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.35);
+      display: flex; align-items: center; justify-content: center; z-index: 50;
+    }
+    .modal-box {
+      background: white; border-radius: 16px; padding: 28px;
+      width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .inv-badge {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 9999px;
+    }
+    .inv-badge.draft    { background:#f1f5f9; color:#64748b; }
+    .inv-badge.sent     { background:#dbeafe; color:#1d4ed8; }
+    .inv-badge.paid     { background:#dcfce7; color:#15803d; }
+    .inv-badge.cancelled{ background:#fee2e2; color:#dc2626; }
+
+    .select-field {
+      border: 1px solid transparent; border-radius: 6px; padding: 4px 8px;
+      transition: border-color .15s; background: transparent; width: 100%;
+      font-size: 14px; font-family: inherit;
+    }
+    .select-field:hover { border-color: #cbd5e1; background: #f8fafc; }
+    .select-field:focus { outline: none; border-color: #3b82f6; background: white; }
+    .select-field:disabled { cursor: default; }
+    .select-field:disabled:hover { border-color: transparent; background: transparent; }
+  </style>
+</head>
+<body class="bg-slate-50 flex h-screen overflow-hidden">
+
+<!-- LOADING -->
+<div id="loading" class="fixed inset-0 bg-slate-50 flex items-center justify-center z-50">
+  <div class="text-center">
+    <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+    <p class="text-sm text-slate-500">กำลังโหลด…</p>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="hidden fixed inset-0 bg-slate-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 w-full max-w-sm mx-4">
+    <div class="flex items-center gap-3 mb-8">
+      <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+        <span class="text-white text-sm font-bold">ดช</span>
+      </div>
+      <div>
+        <div class="text-base font-bold text-gray-900">เด็กชายบัญชี</div>
+        <div class="text-xs text-gray-400">CRM Portal</div>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">อีเมล</label>
+        <input id="login-email" type="email" autocomplete="email" placeholder="staff@example.com"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">รหัสผ่าน</label>
+        <input id="login-pass" type="password" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')doLogin()"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div id="login-err" class="hidden text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg"></div>
+      <button id="login-btn" onclick="doLogin()"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
+        เข้าสู่ระบบ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden flex h-screen w-full overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="w-56 flex-shrink-0 flex flex-col bg-white border-r border-gray-200 overflow-y-auto">
+    <div class="px-5 py-5 border-b border-gray-100">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+          <span class="text-white text-xs font-bold">ดช</span>
+        </div>
+        <div>
+          <div class="text-sm font-bold text-gray-900">เด็กชายบัญชี</div>
+          <div class="text-xs text-gray-400">CRM Portal</div>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <div class="nav-item active" data-page="tracking" onclick="navigate('tracking')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        งานภาษีรายเดือน
+      </div>
+      <div class="nav-item" data-page="yearend" onclick="navigate('yearend')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        งานปลายปี
+      </div>
+      <div class="nav-item" data-page="clients" onclick="navigate('clients')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7H3l2-4h14l2 4"/></svg>
+        ข้อมูลลูกค้า
+      </div>
+      <div class="nav-item hidden" id="nav-staff" data-page="staff" onclick="navigate('staff')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        จัดการทีมงาน
+      </div>
+    </nav>
+    <div class="border-t border-gray-100 px-4 py-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <span id="user-initial" class="text-blue-700 text-xs font-bold">?</span>
+        </div>
+        <div class="min-w-0">
+          <div id="user-name" class="text-sm font-semibold text-gray-900 truncate">—</div>
+          <div id="user-role-badge" class="text-xs text-gray-400">—</div>
+        </div>
+      </div>
+      <button onclick="signOut()" class="mt-3 w-full text-xs text-gray-400 hover:text-red-500 text-left transition-colors">ออกจากระบบ</button>
+      <button onclick="navigate('settings')" class="mt-1 w-full text-xs text-gray-400 hover:text-gray-600 text-left transition-colors">เปลี่ยนรหัสผ่าน</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 overflow-auto">
+
+    <!-- PAGE: tracking -->
+    <div id="page-tracking">
+      <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div>
+          <h2 class="text-base font-bold text-gray-900">สถานะงานภาษีรายเดือน</h2>
+          <p class="text-xs text-gray-400 mt-0.5">คลิกสถานะเพื่อเปลี่ยน (เจ้าของ/อาวุโสเท่านั้น)</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="batch-inv-btn" onclick="openBatchInvoice()"
+            class="hidden items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors mr-2">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            ใบแจ้งหนี้
+          </button>
+          <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div id="month-display" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-bold text-sm rounded-full border border-blue-100 min-w-[130px] text-center"></div>
+          <button onclick="changeMonth(1)" class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="grid grid-cols-4 gap-4 px-6 py-4">
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ลูกค้าทั้งหมด</div>
+          <div id="sv-total" class="text-3xl font-black text-gray-900 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">บริษัท</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">งานที่เสร็จแล้ว</div>
+          <div id="sv-done" class="text-3xl font-black text-green-600 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">รายการ</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ใบแจ้งหนี้</div>
+          <div id="sv-inv" class="text-3xl font-black text-emerald-600 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">ชำระแล้ว / ทั้งหมด</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">งานที่เหลือ</div>
+          <div id="sv-todo" class="text-3xl font-black text-slate-400 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">รายการ</div>
+        </div>
+      </div>
+      <div class="px-6 pb-8 overflow-x-auto">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden" style="min-width:960px">
+          <table class="w-full text-center">
+            <thead>
+              <tr>
+                <th rowspan="2" class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:210px;vertical-align:middle">ลูกค้า</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle;min-width:80px">รับเอกสาร</th>
+                <th colspan="4" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ภ.ง.ด.</th>
+                <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ภ.พ.36</th>
+                <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ประกันสังคม</th>
+                <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ภ.พ.30</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">RD<br>Keyed</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">Acct<br>Fee</th>
+                <th rowspan="2" class="px-3 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="vertical-align:middle;min-width:110px">ความคืบหน้า</th>
+              </tr>
+              <tr>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">STM</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.1</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.3</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.53</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">PP.36</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">SSO</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">PP.30</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
+              </tr>
+            </thead>
+            <tbody id="tracking-tbody">
+              <tr><td colspan="15" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center gap-5 mt-3 px-1">
+          <span class="text-xs font-semibold text-gray-400">สัญลักษณ์:</span>
+          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot done" style="width:16px;height:16px;font-size:9px">✓</span> เสร็จแล้ว</div>
+          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot todo" style="width:16px;height:16px"></span> ยังไม่ได้ทำ</div>
+          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot na" style="width:16px;height:16px;font-size:9px">—</span> N/A</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: yearend -->
+    <div id="page-yearend" class="hidden">
+      <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div>
+          <h2 class="text-base font-bold text-gray-900">งานปลายปี</h2>
+          <p class="text-xs text-gray-400 mt-0.5">ภ.ง.ด.50/51 · งบการเงิน · ส่ง DBD</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="changeYearEnd(-1)" class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div id="yearend-display" class="px-4 py-1.5 bg-purple-50 text-purple-700 font-bold text-sm rounded-full border border-purple-100 min-w-[90px] text-center"></div>
+          <button onclick="changeYearEnd(1)" class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-4 px-6 py-4">
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">เสร็จครบ</div>
+          <div id="ye-done" class="text-3xl font-black text-green-600 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">บริษัท</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">กำลังดำเนินการ</div>
+          <div id="ye-inprog" class="text-3xl font-black text-blue-600 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">บริษัท</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ยังไม่เริ่ม</div>
+          <div id="ye-pending" class="text-3xl font-black text-slate-400 mt-1">—</div>
+          <div class="text-xs text-gray-400 mt-1">บริษัท</div>
+        </div>
+      </div>
+      <div class="px-6 pb-8 overflow-x-auto">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden" style="min-width:700px">
+          <table class="w-full text-center">
+            <thead>
+              <tr>
+                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:210px">ลูกค้า</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">ภ.ง.ด.51</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ภ.ง.ด.50</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">งบการเงิน</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ผู้สอบฯ</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ส่ง DBD</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:110px">ความคืบหน้า</th>
+              </tr>
+            </thead>
+            <tbody id="yearend-tbody">
+              <tr><td colspan="7" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: clients -->
+    <div id="page-clients" class="hidden">
+      <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <h2 class="text-base font-bold text-gray-900">ข้อมูลลูกค้า</h2>
+        <div class="flex items-center gap-3">
+          <input id="client-search" type="text" placeholder="ค้นหา…" oninput="renderClientList()"
+            class="px-3.5 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
+          <button id="add-client-btn" onclick="openAddClient()"
+            class="hidden bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+            + เพิ่มลูกค้า
+          </button>
+        </div>
+      </div>
+      <div id="client-list" class="p-6 grid grid-cols-1 gap-3 max-w-4xl"></div>
+    </div>
+
+    <!-- PAGE: staff -->
+    <div id="page-staff" class="hidden">
+      <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <h2 class="text-base font-bold text-gray-900">จัดการทีมงาน</h2>
+        <button onclick="showAddStaffGuide()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">+ เพิ่มพนักงาน</button>
+      </div>
+      <div id="staff-list" class="p-6 max-w-3xl space-y-3"></div>
+    </div>
+
+    <!-- PAGE: settings -->
+    <div id="page-settings" class="hidden">
+      <div class="bg-white border-b border-gray-200 px-6 py-4">
+        <h2 class="text-base font-bold text-gray-900">ตั้งค่า</h2>
+      </div>
+      <div class="p-6 max-w-md">
+        <div class="bg-white border border-gray-200 rounded-xl p-6">
+          <h3 class="font-bold text-gray-900 mb-4">เปลี่ยนรหัสผ่าน</h3>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">รหัสผ่านใหม่</label>
+              <input id="new-pass" type="password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1.5">ยืนยันรหัสผ่านใหม่</label>
+              <input id="new-pass2" type="password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div id="pass-err" class="hidden text-sm text-red-600"></div>
+            <button onclick="changePassword()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">บันทึก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CLIENT PANEL -->
+<div id="panel-overlay" class="hidden fixed inset-0 bg-black/30 z-20" onclick="closePanel()"></div>
+<div id="client-panel" class="fixed right-0 top-0 h-full bg-white shadow-2xl z-30 flex flex-col" style="width:500px">
+
+  <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+    <div>
+      <div id="panel-code" class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-2 py-0.5 rounded mb-1"></div>
+      <div id="panel-name" class="font-bold text-gray-900 text-base"></div>
+    </div>
+    <button onclick="closePanel()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="flex border-b border-gray-200 px-4 flex-shrink-0 overflow-x-auto">
+    <button class="tab-btn active" data-tab="info"    onclick="switchTab('info')">ข้อมูลบริษัท</button>
+    <button class="tab-btn hidden" data-tab="billing" onclick="switchTab('billing')" id="tab-btn-billing">ใบแจ้งหนี้</button>
+    <button class="tab-btn hidden" data-tab="creds"   onclick="switchTab('creds')"   id="tab-btn-creds">ล็อกอิน/รหัสผ่าน</button>
+    <button class="tab-btn"        data-tab="history" onclick="switchTab('history')">ประวัติงาน</button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-6 py-5">
+    <div class="tab-pane" data-pane="info"></div>
+    <div class="tab-pane hidden" data-pane="billing"></div>
+    <div class="tab-pane hidden" data-pane="creds"></div>
+    <div class="tab-pane hidden" data-pane="history"></div>
+  </div>
+
+  <div id="panel-save-bar" class="hidden border-t border-gray-200 px-6 py-3 flex justify-end gap-2 flex-shrink-0">
+    <button onclick="discardPanelEdits()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 font-medium">ยกเลิก</button>
+    <button onclick="savePanelEdits()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors">บันทึก</button>
+  </div>
+</div>
+
+<div id="modal-area"></div>
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────
+const SB_URL  = 'https://dqegkyobclqqichhnxfm.supabase.co';
+const SB_ANON = 'sb_publishable_4U_v9BIrQjKppfchaevA6Q_zWj3zkxE';
+const sb = supabase.createClient(SB_URL, SB_ANON);
+
+const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
+  'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const ROLE_LABEL = { owner:'เจ้าของ', senior:'พนักงานอาวุโส', staff:'พนักงาน' };
+const FIELDS = ['stm','pnd1','pnd3','pnd53','pp36','pp36_paid','sso','sso_paid','pp30','pp30_paid','rd_keyed','acct_fee'];
+const YE_FIELDS = ['pnd51','pnd50','fin_stmt','audit','dbd_submit'];
+const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', paid:'ชำระแล้ว', cancelled:'ยกเลิก' };
+const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
+
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let profile      = null;
+let clients      = [];
+let taskMap      = {};
+let credMap      = {};
+let invoiceMap   = {};
+let yearEndMap   = {};
+let staffList    = [];
+let curPage      = 'tracking';
+let curYear      = new Date().getFullYear();
+let curMonth     = new Date().getMonth() + 1;
+let yearEndYear  = new Date().getFullYear();
+let yearEndLoaded = false;
+let panelClientId = null;
+let panelTab     = 'info';
+let panelDirty   = false;
+
+const role    = () => profile?.role || 'staff';
+const canEdit = () => role() !== 'staff';
+const canCred = () => role() !== 'staff';
+const isOwner = () => role() === 'owner';
+
+// ─────────────────────────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────────────────────────
+function e(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? '#ef4444' : '#16a34a';
+  t.style.color = 'white';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function statusDot(v) {
+  if (v === 'done') return '<span class="dot done">✓</span>';
+  if (v === 'na')   return '<span class="dot na">—</span>';
+  return '<span class="dot todo">○</span>';
+}
+function calcPct(task, fields) {
+  const f = fields || FIELDS;
+  const vals   = f.map(fld => task[fld] || 'todo');
+  const active = vals.filter(v => v !== 'na').length;
+  const done   = vals.filter(v => v === 'done').length;
+  return active ? Math.round(done / active * 100) : 0;
+}
+function progressBar(pct) {
+  const col = pct === 100 ? '#16a34a' : pct > 50 ? '#2563eb' : '#d97706';
+  return `<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div><span class="prog-pct">${pct}%</span></div>`;
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
+}
+function fmtMoney(n) {
+  if (!n && n !== 0) return '—';
+  return Number(n).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' ฿';
+}
+function invBadge(status) {
+  const cls = { draft:'draft', sent:'sent', paid:'paid', cancelled:'cancelled' }[status] || 'draft';
+  return `<span class="inv-badge ${cls}">${INV_STATUS_LABEL[status] || status}</span>`;
+}
+function paneEl(name) {
+  return document.querySelector(`.tab-pane[data-pane="${name}"]`);
+}
+
+// ─────────────────────────────────────────────────────────────
+// AUTH — LOGIN
+// ─────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-err');
+  const btn   = document.getElementById('login-btn');
+  errEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'กำลังเข้า…';
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    errEl.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+    errEl.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = 'เข้าสู่ระบบ';
+    return;
+  }
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('loading').classList.remove('hidden');
+  await init();
+}
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    return;
+  }
+
+  const { data: prof, error: profErr } = await sb.from('crm_staff').select('*').eq('id', session.user.id).single();
+  if (profErr || !prof || !prof.is_active) { await sb.auth.signOut(); location.reload(); return; }
+  profile = prof;
+
+  document.getElementById('user-name').textContent        = prof.display_name;
+  document.getElementById('user-initial').textContent     = prof.display_name[0] || '?';
+  document.getElementById('user-role-badge').textContent  = ROLE_LABEL[prof.role] || prof.role;
+  if (isOwner()) document.getElementById('nav-staff').classList.remove('hidden');
+  if (canEdit()) {
+    document.getElementById('add-client-btn').classList.remove('hidden');
+    const bib = document.getElementById('batch-inv-btn');
+    bib.classList.remove('hidden');
+    bib.classList.add('flex');
+  }
+
+  await Promise.all([
+    loadClients(),
+    loadTasks(),
+    canCred() ? loadCreds() : Promise.resolve(),
+    canEdit() ? loadInvoices() : Promise.resolve(),
+  ]);
+
+  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  navigate('tracking');
+}
+
+// ─────────────────────────────────────────────────────────────
+// DATA LOADING
+// ─────────────────────────────────────────────────────────────
+async function loadClients() {
+  const { data } = await sb.from('crm_clients').select('*').eq('is_active', true).order('code');
+  clients = data || [];
+}
+async function loadTasks() {
+  const { data } = await sb.from('crm_tax_tasks').select('*').eq('year', curYear).eq('month', curMonth);
+  taskMap = {};
+  (data || []).forEach(t => { taskMap[t.client_id] = t; });
+}
+async function loadCreds() {
+  const { data } = await sb.from('crm_client_credentials').select('*');
+  credMap = {};
+  (data || []).forEach(c => { credMap[c.client_id] = c; });
+}
+async function loadInvoices() {
+  const { data } = await sb.from('crm_invoices').select('*').eq('year', curYear).eq('month', curMonth);
+  invoiceMap = {};
+  (data || []).forEach(inv => { invoiceMap[inv.client_id] = inv; });
+}
+async function loadYearEndTasks() {
+  const { data } = await sb.from('crm_year_end_tasks').select('*').eq('year', yearEndYear);
+  yearEndMap = {};
+  (data || []).forEach(t => { yearEndMap[t.client_id] = t; });
+  yearEndLoaded = true;
+}
+async function loadStaff() {
+  const { data } = await sb.from('crm_staff').select('*').order('display_name');
+  staffList = data || [];
+}
+
+// ─────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function navigate(p) {
+  curPage = p;
+  ['tracking','yearend','clients','staff','settings'].forEach(pg => {
+    document.getElementById(`page-${pg}`).classList.toggle('hidden', pg !== p);
+  });
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === p);
+  });
+  if (p === 'tracking') renderTracking();
+  else if (p === 'yearend') { if (!yearEndLoaded) loadYearEndTasks().then(renderYearEnd); else renderYearEnd(); }
+  else if (p === 'clients') renderClientList();
+  else if (p === 'staff') loadStaff().then(renderStaff);
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGE: TRACKING
+// ─────────────────────────────────────────────────────────────
+function renderTracking() {
+  const thYear = curYear + 543;
+  document.getElementById('month-display').textContent = `${THAI_MONTHS[curMonth]} ${thYear}`;
+
+  let totalDone = 0, totalTodo = 0;
+  let invPaid = 0, invTotal = 0;
+  clients.forEach(c => {
+    const t = taskMap[c.id] || {};
+    FIELDS.forEach(f => {
+      const v = t[f] || 'todo';
+      if (v === 'done') totalDone++;
+      else if (v === 'todo') totalTodo++;
+    });
+    if (invoiceMap[c.id]) {
+      invTotal++;
+      if (invoiceMap[c.id].status === 'paid') invPaid++;
+    }
+  });
+  document.getElementById('sv-total').textContent = clients.length;
+  document.getElementById('sv-done').textContent  = totalDone;
+  document.getElementById('sv-inv').textContent   = canEdit() ? `${invPaid}/${invTotal}` : '—';
+  document.getElementById('sv-todo').textContent  = totalTodo;
+
+  const gb = 'border-l border-gray-200';
+  let rows = '';
+  clients.forEach(c => {
+    const t   = taskMap[c.id] || {};
+    const pct = calcPct(t);
+    const docCell = t.doc_date
+      ? `<span onclick="editDocDate(${c.id})" title="คลิกเพื่อแก้ไข"
+           class="inline-block bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-0.5 rounded cursor-pointer hover:bg-green-100">
+           📄 ${e(t.doc_date)}</span>`
+      : (canEdit()
+          ? `<button onclick="editDocDate(${c.id})"
+               class="text-xs text-gray-300 hover:text-blue-500 border border-dashed border-gray-200 hover:border-blue-300 px-2 py-0.5 rounded transition-colors">
+               + เพิ่ม</button>`
+          : '<span class="text-gray-300 text-xs">—</span>');
+
+    const mkCell = (f, bc = '') => {
+      const v = t[f] || 'todo';
+      return `<td class="status-td px-1 py-2.5 ${bc} ${canEdit() ? 'clickable' : ''}"
+                  data-cid="${c.id}" data-field="${f}"
+                  ${canEdit() ? `onclick="toggleField(${c.id},'${f}',this)"` : ''}>
+                ${statusDot(v)}</td>`;
+    };
+
+    rows += `<tr class="border-b border-gray-100">
+      <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
+        <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(c.code)}</span>
+        <div class="text-sm text-gray-800 mt-0.5 max-w-[190px] leading-tight">${e(c.thai_name)}</div>
+      </td>
+      <td class="px-2 py-2.5 ${gb}">${docCell}</td>
+      ${mkCell('stm',gb)}${mkCell('pnd1')}${mkCell('pnd3')}${mkCell('pnd53')}
+      ${mkCell('pp36',gb)}${mkCell('pp36_paid')}
+      ${mkCell('sso',gb)}${mkCell('sso_paid')}
+      ${mkCell('pp30',gb)}${mkCell('pp30_paid')}
+      ${mkCell('rd_keyed',gb)}
+      ${mkCell('acct_fee',gb)}
+      <td class="px-3 py-2.5">${progressBar(pct)}</td>
+    </tr>`;
+  });
+
+  if (!rows) rows = `<tr><td colspan="15" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  document.getElementById('tracking-tbody').innerHTML = rows;
+}
+
+async function changeMonth(delta) {
+  curMonth += delta;
+  if (curMonth > 12) { curMonth = 1;  curYear++; }
+  if (curMonth <  1) { curMonth = 12; curYear--; }
+  await Promise.all([loadTasks(), canEdit() ? loadInvoices() : Promise.resolve()]);
+  renderTracking();
+}
+
+async function toggleField(clientId, field, cell) {
+  if (!canEdit()) return;
+  const cur  = taskMap[clientId]?.[field] || 'todo';
+  const next = cur === 'todo' ? 'done' : cur === 'done' ? 'na' : 'todo';
+  if (!taskMap[clientId]) {
+    taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
+    FIELDS.forEach(f => { taskMap[clientId][f] = 'todo'; });
+  }
+  taskMap[clientId][field] = next;
+  cell.innerHTML = statusDot(next);
+  cell.classList.add('saving');
+  const row   = cell.closest('tr');
+  const lastTd = row.querySelector('td:last-child');
+  if (lastTd) lastTd.innerHTML = progressBar(calcPct(taskMap[clientId]));
+
+  const { data, error } = await sb.from('crm_tax_tasks')
+    .upsert({ client_id: clientId, year: curYear, month: curMonth, [field]: next }, { onConflict: 'client_id,year,month' })
+    .select().single();
+  cell.classList.remove('saving');
+  if (error) {
+    taskMap[clientId][field] = cur;
+    cell.innerHTML = statusDot(cur);
+    if (lastTd) lastTd.innerHTML = progressBar(calcPct(taskMap[clientId]));
+    showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error');
+  } else if (data) { taskMap[clientId] = data; }
+  renderTrackingSummary();
+}
+
+function renderTrackingSummary() {
+  let totalDone = 0, totalTodo = 0, invPaid = 0, invTotal = 0;
+  clients.forEach(c => {
+    const t = taskMap[c.id] || {};
+    FIELDS.forEach(f => {
+      const v = t[f] || 'todo';
+      if (v === 'done') totalDone++; else if (v === 'todo') totalTodo++;
+    });
+    if (invoiceMap[c.id]) {
+      invTotal++;
+      if (invoiceMap[c.id].status === 'paid') invPaid++;
+    }
+  });
+  document.getElementById('sv-done').textContent = totalDone;
+  document.getElementById('sv-todo').textContent = totalTodo;
+  document.getElementById('sv-inv').textContent  = canEdit() ? `${invPaid}/${invTotal}` : '—';
+}
+
+async function editDocDate(clientId) {
+  if (!canEdit()) return;
+  const cur = taskMap[clientId]?.doc_date || '';
+  const val = prompt('วันที่รับเอกสาร (เช่น 3 ส.ค.) หรือเว้นว่างเพื่อลบ:', cur);
+  if (val === null) return;
+  if (!taskMap[clientId]) {
+    taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
+    FIELDS.forEach(f => { taskMap[clientId][f] = 'todo'; });
+  }
+  taskMap[clientId].doc_date = val.trim();
+  const { data, error } = await sb.from('crm_tax_tasks')
+    .upsert({ client_id: clientId, year: curYear, month: curMonth, doc_date: val.trim() }, { onConflict: 'client_id,year,month' })
+    .select().single();
+  if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
+  if (data) taskMap[clientId] = data;
+  renderTracking();
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGE: YEAR-END
+// ─────────────────────────────────────────────────────────────
+function renderYearEnd() {
+  document.getElementById('yearend-display').textContent = `พ.ศ. ${yearEndYear + 543}`;
+
+  let allDone = 0, inProg = 0, pending = 0;
+  clients.forEach(c => {
+    const t = yearEndMap[c.id] || {};
+    const pct = calcPct(t, YE_FIELDS);
+    if (pct === 100) allDone++;
+    else if (pct > 0) inProg++;
+    else pending++;
+  });
+  document.getElementById('ye-done').textContent    = allDone;
+  document.getElementById('ye-inprog').textContent  = inProg;
+  document.getElementById('ye-pending').textContent = pending;
+
+  let rows = '';
+  clients.forEach(c => {
+    const t   = yearEndMap[c.id] || {};
+    const pct = calcPct(t, YE_FIELDS);
+
+    const mkYeCell = (f, bc = '') => {
+      const v = t[f] || (f === 'pnd51' || f === 'audit' ? 'na' : 'todo');
+      return `<td class="status-td px-2 py-2.5 ${bc} ${canEdit() ? 'clickable' : ''}"
+                  ${canEdit() ? `onclick="toggleYearEndField(${c.id},'${f}',this)"` : ''}>
+                ${statusDot(v)}</td>`;
+    };
+
+    rows += `<tr class="border-b border-gray-100">
+      <td class="px-4 py-3 text-left cursor-pointer hover:bg-purple-50 transition-colors" onclick="openPanel(${c.id})">
+        <span class="inline-block bg-purple-50 text-purple-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(c.code)}</span>
+        <div class="text-sm text-gray-800 mt-0.5 max-w-[190px] leading-tight">${e(c.thai_name)}</div>
+      </td>
+      ${mkYeCell('pnd51','border-l border-gray-200')}
+      ${mkYeCell('pnd50')}${mkYeCell('fin_stmt')}${mkYeCell('audit')}${mkYeCell('dbd_submit')}
+      <td class="px-3 py-2.5">${progressBar(pct)}</td>
+    </tr>`;
+  });
+
+  if (!rows) rows = `<tr><td colspan="7" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  document.getElementById('yearend-tbody').innerHTML = rows;
+}
+
+async function changeYearEnd(delta) {
+  yearEndYear += delta;
+  yearEndLoaded = false;
+  await loadYearEndTasks();
+  renderYearEnd();
+}
+
+async function toggleYearEndField(clientId, field, cell) {
+  if (!canEdit()) return;
+  const defaultVal = (field === 'pnd51' || field === 'audit') ? 'na' : 'todo';
+  const cur  = yearEndMap[clientId]?.[field] || defaultVal;
+  const next = cur === 'todo' ? 'done' : cur === 'done' ? 'na' : 'todo';
+  if (!yearEndMap[clientId]) {
+    yearEndMap[clientId] = { client_id: clientId, year: yearEndYear };
+    YE_FIELDS.forEach(f => { yearEndMap[clientId][f] = f === 'pnd51' || f === 'audit' ? 'na' : 'todo'; });
+  }
+  yearEndMap[clientId][field] = next;
+  cell.innerHTML = statusDot(next);
+  cell.classList.add('saving');
+  const row = cell.closest('tr');
+  const lastTd = row.querySelector('td:last-child');
+  if (lastTd) lastTd.innerHTML = progressBar(calcPct(yearEndMap[clientId], YE_FIELDS));
+
+  const { data, error } = await sb.from('crm_year_end_tasks')
+    .upsert({ client_id: clientId, year: yearEndYear, [field]: next }, { onConflict: 'client_id,year' })
+    .select().single();
+  cell.classList.remove('saving');
+  if (error) {
+    yearEndMap[clientId][field] = cur;
+    cell.innerHTML = statusDot(cur);
+    if (lastTd) lastTd.innerHTML = progressBar(calcPct(yearEndMap[clientId], YE_FIELDS));
+    showToast('บันทึกไม่สำเร็จ', 'error');
+  } else if (data) { yearEndMap[clientId] = data; }
+
+  let allDone = 0, inProg = 0, pending = 0;
+  clients.forEach(c => {
+    const t = yearEndMap[c.id] || {};
+    const p = calcPct(t, YE_FIELDS);
+    if (p === 100) allDone++; else if (p > 0) inProg++; else pending++;
+  });
+  document.getElementById('ye-done').textContent    = allDone;
+  document.getElementById('ye-inprog').textContent  = inProg;
+  document.getElementById('ye-pending').textContent = pending;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGE: CLIENTS
+// ─────────────────────────────────────────────────────────────
+function renderClientList() {
+  const q = (document.getElementById('client-search')?.value || '').toLowerCase();
+  const filtered = q
+    ? clients.filter(c =>
+        c.code.toLowerCase().includes(q) ||
+        c.thai_name.toLowerCase().includes(q) ||
+        (c.eng_name || '').toLowerCase().includes(q) ||
+        (c.tax_number || '').includes(q))
+    : clients;
+
+  const container = document.getElementById('client-list');
+  if (!container) return;
+  if (!filtered.length) {
+    container.innerHTML = '<div class="text-gray-400 text-sm py-8 text-center col-span-full">ไม่พบลูกค้า</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(c => {
+    const task = taskMap[c.id] || {};
+    const pct  = calcPct(task);
+    const bar  = pct === 100 ? '#16a34a' : pct > 50 ? '#2563eb' : '#d97706';
+    const inv  = invoiceMap[c.id];
+    const feeStr = c.monthly_fee > 0 ? fmtMoney(c.monthly_fee) : '';
+    return `<div onclick="openPanel(${c.id})"
+      class="bg-white border border-gray-200 rounded-xl px-5 py-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-4">
+      <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+        <span class="text-blue-700 text-sm font-bold">${e(c.code)}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-gray-900 truncate">${e(c.thai_name)}</div>
+        <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
+          ${c.tax_number ? `<span>เลขภาษี: ${e(c.tax_number)}</span>` : ''}
+          ${c.category   ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.category)}</span>` : ''}
+          ${feeStr ? `<span class="text-emerald-700 font-semibold">${feeStr}</span>` : ''}
+          ${inv && canEdit() ? invBadge(inv.status) : ''}
+        </div>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="w-20">
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${bar}"></div></div>
+          <div class="text-xs text-gray-400 mt-0.5 text-right">${pct}%</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGE: STAFF
+// ─────────────────────────────────────────────────────────────
+function renderStaff() {
+  const el = document.getElementById('staff-list');
+  if (!el) return;
+  if (!staffList.length) { el.innerHTML = '<div class="text-gray-400 text-sm">ยังไม่มีพนักงานในระบบ</div>'; return; }
+  el.innerHTML = staffList.map(s => `
+    <div class="bg-white border border-gray-200 rounded-xl px-5 py-4 flex items-center gap-4">
+      <div class="w-10 h-10 bg-${s.role==='owner'?'amber':s.role==='senior'?'blue':'slate'}-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <span class="text-${s.role==='owner'?'amber':s.role==='senior'?'blue':'slate'}-700 text-sm font-bold">${(s.display_name||'?')[0]}</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-gray-900">${e(s.display_name)}</div>
+        <div class="text-xs text-gray-400">@${e(s.username)}</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${s.role==='owner'?'bg-amber-50 text-amber-700':s.role==='senior'?'bg-blue-50 text-blue-700':'bg-gray-100 text-gray-600'}">
+          ${ROLE_LABEL[s.role]||s.role}
+        </span>
+        ${!s.is_active ? '<span class="text-xs bg-red-50 text-red-500 px-2.5 py-1 rounded-full font-semibold">ปิดใช้งาน</span>' : ''}
+        <button onclick="editStaff(${JSON.stringify(s).replace(/"/g,'&quot;')})"
+          class="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors">แก้ไข</button>
+      </div>
+    </div>`).join('');
+}
+
+function showAddStaffGuide() {
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-3">เพิ่มพนักงานใหม่</h3>
+    <div class="space-y-3 text-sm text-gray-700">
+      <p>เพื่อเพิ่มพนักงาน ให้สร้างบัญชีผู้ใช้ใน <strong>Supabase Dashboard</strong> ก่อน:</p>
+      <ol class="list-decimal ml-5 space-y-1.5 text-gray-600">
+        <li>เข้า Supabase Dashboard → Authentication → Users</li>
+        <li>คลิก <strong>Add User</strong></li>
+        <li>Email: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-blue-700">{ชื่อผู้ใช้}@staff.dcbc.co.th</code></li>
+        <li>ตั้งรหัสผ่านให้พนักงาน</li>
+        <li>ระบบจะสร้างข้อมูลพนักงานอัตโนมัติ</li>
+        <li>กลับมาตั้งสิทธิ์ใน CRM ได้เลย</li>
+      </ol>
+    </div>
+    <div class="flex justify-end mt-6">
+      <button onclick="closeModal()" class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เข้าใจแล้ว</button>
+    </div>`);
+}
+
+function editStaff(s) {
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขพนักงาน: ${e(s.display_name)}</h3>
+    <div class="space-y-4">
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อแสดง</label>
+        <input id="edit-staff-name" type="text" value="${e(s.display_name)}"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">สิทธิ์</label>
+        <select id="edit-staff-role" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="owner"  ${s.role==='owner'?'selected':''}>เจ้าของ</option>
+          <option value="senior" ${s.role==='senior'?'selected':''}>พนักงานอาวุโส</option>
+          <option value="staff"  ${s.role==='staff'?'selected':''}>พนักงาน</option>
+        </select></div>
+      <div class="flex items-center gap-2">
+        <input id="edit-staff-active" type="checkbox" ${s.is_active?'checked':''} class="w-4 h-4 rounded text-blue-600">
+        <label class="text-sm text-gray-700">ใช้งานอยู่</label>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="saveStaff('${s.id}')" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">บันทึก</button>
+    </div>`);
+}
+
+async function saveStaff(staffId) {
+  const name   = document.getElementById('edit-staff-name').value.trim();
+  const role2  = document.getElementById('edit-staff-role').value;
+  const active = document.getElementById('edit-staff-active').checked;
+  if (!name) { showToast('กรุณากรอกชื่อ', 'error'); return; }
+  const { error } = await sb.from('crm_staff').update({ display_name: name, role: role2, is_active: active }).eq('id', staffId);
+  if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
+  closeModal(); showToast('บันทึกสำเร็จ');
+  await loadStaff(); renderStaff();
+}
+
+// ─────────────────────────────────────────────────────────────
+// CLIENT PANEL
+// ─────────────────────────────────────────────────────────────
+async function openPanel(clientId) {
+  panelClientId = clientId;
+  panelTab = 'info';
+  const c = clients.find(x => x.id === clientId);
+  if (!c) return;
+
+  document.getElementById('panel-code').textContent = c.code;
+  document.getElementById('panel-name').textContent = c.thai_name;
+  document.getElementById('panel-overlay').classList.remove('hidden');
+  document.getElementById('client-panel').style.transform = 'translateX(0)';
+
+  document.getElementById('tab-btn-billing').classList.toggle('hidden', !canEdit());
+  document.getElementById('tab-btn-creds').classList.toggle('hidden', !canCred());
+
+  switchTab('info');
+}
+
+function closePanel() {
+  document.getElementById('client-panel').style.transform = 'translateX(100%)';
+  document.getElementById('panel-overlay').classList.add('hidden');
+  panelClientId = null;
+  panelDirty = false;
+}
+
+function switchTab(tab) {
+  panelTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('hidden', p.dataset.pane !== tab));
+  document.getElementById('panel-save-bar').classList.add('hidden');
+  panelDirty = false;
+  if (tab === 'info')    renderPanelInfo();
+  if (tab === 'billing') renderPanelBilling();
+  if (tab === 'creds')   renderPanelCreds();
+  if (tab === 'history') renderPanelHistory();
+}
+
+// ── Info Tab ──
+function renderPanelInfo() {
+  const c = clients.find(x => x.id === panelClientId);
+  if (!c) return;
+  const ro = !canEdit();
+
+  const textField = (label, key, val, opts = '') => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <input type="text" value="${e(val)}" ${ro ? 'readonly' : ''} data-key="${key}" ${opts}
+        class="editable-field w-full text-sm text-gray-800"
+        ${ro ? '' : 'oninput="markDirty()"'}>
+    </div>`;
+
+  const selectField = (label, key, val, options) => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <select data-key="${key}" ${ro ? 'disabled' : ''} onchange="markDirty()"
+        class="select-field text-sm text-gray-800 ${ro?'':'hover:border-gray-300'}">
+        ${options.map(([v,l]) => `<option value="${v}" ${val===v?'selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>`;
+
+  const numField = (label, key, val) => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <input type="number" value="${val || 0}" min="0" step="100" ${ro ? 'readonly' : ''} data-key="${key}"
+        class="editable-field w-full text-sm text-gray-800"
+        ${ro ? '' : 'oninput="markDirty()"'}>
+    </div>`;
+
+  const chkField = (label, key, val) => `
+    <div class="flex items-center gap-2 pt-5">
+      <input type="checkbox" data-key="${key}" ${val ? 'checked' : ''} ${ro ? 'disabled' : ''}
+        onchange="markDirty()" class="w-4 h-4 rounded text-blue-600 flex-shrink-0">
+      <div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">${label}</div>
+      </div>
+    </div>`;
+
+  paneEl('info').innerHTML = `
+    <div id="panel-info-fields">
+      <div class="grid grid-cols-2 gap-4">
+        ${textField('โค้ด (CODE)', 'code', c.code)}
+        ${textField('เลขภาษี', 'tax_number', c.tax_number)}
+        <div class="col-span-2">${textField('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
+        <div class="col-span-2">${textField('ชื่อบริษัท (อังกฤษ)', 'eng_name', c.eng_name)}</div>
+        ${textField('ประเภทธุรกิจ', 'category', c.category)}
+        ${textField('รูปแบบนิติบุคคล', 'type', c.type)}
+        ${textField('วันที่เริ่มต้น', 'start_date', c.start_date || '')}
+        ${textField('วันที่สิ้นสุด', 'end_date', c.end_date || '')}
+        <div class="col-span-2">${textField('หมายเหตุ', 'notes', c.notes)}</div>
+      </div>
+      <div class="border-t border-gray-100 pt-4 mt-5">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ค่าบริการ</div>
+        <div class="grid grid-cols-2 gap-4">
+          ${selectField('ประเภทการเรียกเก็บ','billing_type', c.billing_type||'monthly', [
+              ['monthly','รายเดือน'],['annual','รายปี'],['filing','ยื่นแบบ (filing only)']
+            ])}
+          ${numField('ค่าบริการ (บาท/เดือน)', 'monthly_fee', c.monthly_fee)}
+          ${chkField('หัก ณ ที่จ่าย 3%', 'has_wht', c.has_wht !== false)}
+        </div>
+      </div>
+      <div class="border-t border-gray-100 pt-4 mt-4">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ช่องทางติดต่อ</div>
+        <div class="grid grid-cols-1 gap-4">
+          ${textField('อีเมล (สำหรับใบเสร็จ)', 'client_email', c.client_email||'')}
+          ${textField('LINE Group ID', 'line_group_id', c.line_group_id||'')}
+          ${textField('FlowAccount Contact ID', 'fa_contact_id', c.fa_contact_id||'')}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function savePanelInfo() {
+  const oldClient = clients.find(x => x.id === panelClientId);
+  const fields = {};
+  document.querySelectorAll('#panel-info-fields [data-key]').forEach(el => {
+    if (el.tagName === 'SELECT') {
+      fields[el.dataset.key] = el.value;
+    } else if (el.type === 'checkbox') {
+      fields[el.dataset.key] = el.checked;
+    } else if (el.type === 'number') {
+      fields[el.dataset.key] = parseFloat(el.value) || 0;
+    } else {
+      fields[el.dataset.key] = el.value.trim();
+    }
+  });
+
+  const { error } = await sb.from('crm_clients').update(fields).eq('id', panelClientId);
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+
+  if (oldClient && fields.monthly_fee !== oldClient.monthly_fee && fields.monthly_fee > 0) {
+    const today = new Date().toISOString().split('T')[0];
+    await sb.from('crm_billing_contracts')
+      .update({ effective_to: today })
+      .eq('client_id', panelClientId).is('effective_to', null);
+    await sb.from('crm_billing_contracts').insert({
+      client_id: panelClientId,
+      billing_type: fields.billing_type || 'monthly',
+      fee_amount: fields.monthly_fee,
+      has_wht: fields.has_wht !== false,
+      notes: `เปลี่ยนจาก ${oldClient.monthly_fee} → ${fields.monthly_fee} บาท`
+    });
+  }
+
+  const idx = clients.findIndex(x => x.id === panelClientId);
+  if (idx !== -1) Object.assign(clients[idx], fields);
+  document.getElementById('panel-name').textContent = fields.thai_name || '';
+  panelDirty = false;
+  document.getElementById('panel-save-bar').classList.add('hidden');
+  showToast('บันทึกสำเร็จ');
+}
+
+// ── Billing Tab ──
+async function renderPanelBilling() {
+  const el = paneEl('billing');
+  const c = clients.find(x => x.id === panelClientId);
+  if (!c) return;
+
+  const inv = invoiceMap[panelClientId];
+  const fee = c.monthly_fee || 0;
+  const wht = c.has_wht !== false ? Math.round(fee * 0.03 * 100) / 100 : 0;
+  const expected = fee - wht;
+
+  let invBox = '';
+  if (!inv) {
+    invBox = `
+      <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+        <p class="text-sm text-gray-400 mb-3">ยังไม่มีใบแจ้งหนี้เดือนนี้</p>
+        ${canEdit() ? `<button onclick="createSingleInvoice(${c.id})"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+          สร้างใบแจ้งหนี้
+        </button>` : ''}
+      </div>`;
+  } else {
+    const actions = [];
+    if (inv.status === 'draft' && canEdit()) {
+      actions.push(`<button onclick="updateInvStatus(${c.id},'sent')" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">✓ ส่งแล้ว</button>`);
+      actions.push(`<button onclick="updateInvStatus(${c.id},'cancelled')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">ยกเลิก</button>`);
+    }
+    if (inv.status === 'sent' && canEdit()) {
+      actions.push(`<button onclick="openMarkPaid(${c.id})" class="text-xs bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">💰 บันทึกรับเงิน</button>`);
+      actions.push(`<button onclick="updateInvStatus(${c.id},'cancelled')" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-3 py-1.5 rounded-lg transition-colors">ยกเลิก</button>`);
+    }
+    invBox = `
+      <div class="bg-white border border-gray-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-sm font-semibold text-gray-700">${THAI_MONTHS[curMonth]} ${curYear + 543}</span>
+          ${invBadge(inv.status)}
+        </div>
+        <div class="grid grid-cols-3 gap-3 text-center mb-3">
+          <div class="bg-gray-50 rounded-lg p-2">
+            <div class="text-xs text-gray-400 mb-0.5">ค่าบริการ</div>
+            <div class="text-sm font-bold text-gray-800">${fmtMoney(inv.fee_amount)}</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-2">
+            <div class="text-xs text-gray-400 mb-0.5">หัก ณ ที่จ่าย</div>
+            <div class="text-sm font-bold text-orange-600">${fmtMoney(inv.wht_amount)}</div>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-2">
+            <div class="text-xs text-gray-400 mb-0.5">ที่รับจริง</div>
+            <div class="text-sm font-bold text-emerald-700">${fmtMoney(inv.expected_payment)}</div>
+          </div>
+        </div>
+        ${inv.payment_received_at ? `<div class="text-xs text-green-700 mb-2">รับเงิน ${fmtDate(inv.payment_received_at)} — ${fmtMoney(inv.payment_amount)}</div>` : ''}
+        ${actions.length ? `<div class="flex gap-2 flex-wrap">${actions.join('')}</div>` : ''}
+      </div>`;
+  }
+
+  const feePreview = fee > 0 ? `
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 text-xs text-blue-800">
+      <div class="font-semibold mb-1">ค่าบริการปัจจุบัน</div>
+      <div class="flex justify-between"><span>ค่าบริการ:</span><span class="font-bold">${fmtMoney(fee)}</span></div>
+      ${wht > 0 ? `<div class="flex justify-between"><span>หัก ณ ที่จ่าย 3%:</span><span class="font-bold text-orange-600">-${fmtMoney(wht)}</span></div>` : ''}
+      <div class="flex justify-between border-t border-blue-200 pt-1 mt-1"><span>ที่คาดว่าจะรับ:</span><span class="font-bold text-emerald-700">${fmtMoney(expected)}</span></div>
+    </div>` : `<div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700">ยังไม่ได้กำหนดค่าบริการ — ไปที่แท็บ "ข้อมูลบริษัท" เพื่อกรอก</div>`;
+
+  el.innerHTML = `
+    <div class="space-y-4">
+      <h4 class="text-sm font-bold text-gray-700">ใบแจ้งหนี้เดือน${THAI_MONTHS[curMonth]} ${curYear + 543}</h4>
+      ${invBox}
+      ${feePreview}
+      <div id="billing-history">
+        <h4 class="text-sm font-bold text-gray-700 mb-2">ประวัติใบแจ้งหนี้</h4>
+        <div class="text-xs text-gray-400">กำลังโหลด…</div>
+      </div>
+    </div>`;
+
+  loadBillingHistory(c.id);
+}
+
+async function loadBillingHistory(clientId) {
+  const { data } = await sb.from('crm_invoices')
+    .select('*').eq('client_id', clientId)
+    .order('year', { ascending: false }).order('month', { ascending: false })
+    .limit(12);
+
+  const el = document.getElementById('billing-history');
+  if (!el) return;
+  if (!data?.length) { el.innerHTML = '<div class="text-xs text-gray-400 mt-1">ยังไม่มีประวัติ</div>'; return; }
+
+  el.innerHTML = `<h4 class="text-sm font-bold text-gray-700 mb-2">ประวัติใบแจ้งหนี้</h4>` +
+    data.map(inv => `
+    <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+      <div>
+        <span class="text-xs font-semibold text-gray-700">${THAI_MONTHS[inv.month]} ${inv.year + 543}</span>
+        <span class="ml-2 text-xs text-gray-400">${fmtMoney(inv.expected_payment)}</span>
+      </div>
+      ${invBadge(inv.status)}
+    </div>`).join('');
+}
+
+async function createSingleInvoice(clientId) {
+  const c = clients.find(x => x.id === clientId);
+  if (!c) return;
+  const fee = c.monthly_fee || 0;
+  const wht = c.has_wht !== false ? Math.round(fee * 0.03 * 100) / 100 : 0;
+  const payload = {
+    client_id: clientId, year: curYear, month: curMonth,
+    billing_type: c.billing_type || 'monthly',
+    fee_amount: fee, wht_amount: wht, expected_payment: fee - wht,
+    status: 'draft'
+  };
+  const { data, error } = await sb.from('crm_invoices')
+    .upsert(payload, { onConflict: 'client_id,year,month' }).select().single();
+  if (error) { showToast('สร้างใบแจ้งหนี้ไม่สำเร็จ: ' + error.message, 'error'); return; }
+  invoiceMap[clientId] = data;
+  showToast('สร้างใบแจ้งหนี้สำเร็จ');
+  renderPanelBilling();
+  renderTrackingSummary();
+}
+
+async function updateInvStatus(clientId, newStatus) {
+  const inv = invoiceMap[clientId];
+  if (!inv) return;
+  const updateData = { status: newStatus };
+  if (newStatus === 'sent') updateData.invoice_sent_at = new Date().toISOString();
+  const { data, error } = await sb.from('crm_invoices').update(updateData).eq('id', inv.id).select().single();
+  if (error) { showToast('อัปเดตไม่สำเร็จ', 'error'); return; }
+  invoiceMap[clientId] = data;
+  showToast('อัปเดตสำเร็จ');
+  renderPanelBilling();
+  renderTrackingSummary();
+}
+
+function openMarkPaid(clientId) {
+  const inv = invoiceMap[clientId];
+  if (!inv) return;
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">บันทึกรับเงิน</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ยอดที่รับจริง (บาท)</label>
+        <input id="paid-amount" type="number" value="${inv.expected_payment || 0}" step="0.01"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <p class="text-xs text-gray-400 mt-1">ที่คาดว่าจะรับ: ${fmtMoney(inv.expected_payment)}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <input id="paid-update-task" type="checkbox" checked class="w-4 h-4 rounded text-blue-600">
+        <label class="text-sm text-gray-700">อัปเดต Acct Fee เป็น "เสร็จแล้ว" ด้วย</label>
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="confirmMarkPaid(${clientId})" class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700">บันทึก</button>
+    </div>`);
+}
+
+async function confirmMarkPaid(clientId) {
+  const inv = invoiceMap[clientId];
+  if (!inv) return;
+  const amount = parseFloat(document.getElementById('paid-amount').value) || 0;
+  const updateTask = document.getElementById('paid-update-task').checked;
+
+  const { data, error } = await sb.from('crm_invoices').update({
+    status: 'paid',
+    payment_amount: amount,
+    payment_received_at: new Date().toISOString()
+  }).eq('id', inv.id).select().single();
+
+  if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
+  invoiceMap[clientId] = data;
+
+  if (updateTask) {
+    const upsertData = {
+      client_id: clientId, year: curYear, month: curMonth,
+      acct_fee: 'done', invoice_id: inv.id
+    };
+    const { data: td } = await sb.from('crm_tax_tasks')
+      .upsert(upsertData, { onConflict: 'client_id,year,month' }).select().single();
+    if (td) taskMap[clientId] = td;
+  }
+
+  closeModal();
+  showToast('บันทึกรับเงินสำเร็จ');
+  renderPanelBilling();
+  renderTrackingSummary();
+  if (curPage === 'tracking') renderTracking();
+}
+
+// ── Creds Tab ──
+function renderPanelCreds() {
+  if (!canCred()) {
+    paneEl('creds').innerHTML = `<div class="text-center py-12 text-gray-400">
+      <svg class="w-10 h-10 mx-auto mb-3 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      <p class="text-sm">คุณไม่มีสิทธิ์ดูข้อมูลนี้</p></div>`;
+    return;
+  }
+  const cred = credMap[panelClientId] || {};
+  const ro   = !isOwner();
+
+  const credField = (label, key, val) => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <div class="relative">
+        <input type="password" value="${e(val)}" ${ro ? 'readonly' : ''} data-key="${key}"
+          class="editable-field w-full text-sm text-gray-800 pr-8"
+          ${ro ? '' : 'oninput="markDirty()"'}>
+        <button type="button" onclick="togglePw(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>`;
+
+  paneEl('creds').innerHTML = `
+    <div id="panel-cred-fields" class="space-y-5">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1 border-b border-gray-100">กรมสรรพากร (RD)</div>
+      <div class="grid grid-cols-2 gap-4">
+        ${credField('Username','rd_username', cred.rd_username)}
+        ${credField('Password','rd_password', cred.rd_password)}
+      </div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1 border-b border-gray-100">กรมพัฒนาธุรกิจการค้า (DBD)</div>
+      <div class="grid grid-cols-2 gap-4">
+        ${credField('Username','dbd_username', cred.dbd_username)}
+        ${credField('Password','dbd_password', cred.dbd_password)}
+      </div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1 border-b border-gray-100">ประกันสังคม (SSO)</div>
+      <div class="grid grid-cols-2 gap-4">
+        ${credField('Username','sso_username', cred.sso_username)}
+        ${credField('Password','sso_password', cred.sso_password)}
+      </div>
+      ${ro ? '<p class="text-xs text-gray-400 text-center mt-2">พนักงานอาวุโสดูได้ · เจ้าของเท่านั้นที่แก้ไขได้</p>' : ''}
+    </div>`;
+}
+
+async function savePanelCreds() {
+  if (!isOwner()) return;
+  const fields = { client_id: panelClientId };
+  document.querySelectorAll('#panel-cred-fields input[data-key]').forEach(inp => {
+    fields[inp.dataset.key] = inp.value;
+  });
+  const { error } = await sb.from('crm_client_credentials').upsert(fields, { onConflict: 'client_id' });
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+  credMap[panelClientId] = fields;
+  panelDirty = false;
+  document.getElementById('panel-save-bar').classList.add('hidden');
+  showToast('บันทึกสำเร็จ');
+}
+
+// ── History Tab ──
+async function renderPanelHistory() {
+  const el = paneEl('history');
+  el.innerHTML = '<div class="text-gray-400 text-sm py-4">กำลังโหลด…</div>';
+
+  const months = [];
+  let y = curYear, m = curMonth;
+  for (let i = 0; i < 6; i++) {
+    months.push({ y, m });
+    m--; if (m < 1) { m = 12; y--; }
+  }
+
+  const { data } = await sb.from('crm_tax_tasks')
+    .select('*').eq('client_id', panelClientId)
+    .in('year', months.map(x => x.y)).in('month', months.map(x => x.m))
+    .order('year', { ascending: false }).order('month', { ascending: false });
+
+  if (!data?.length) { el.innerHTML = '<div class="text-gray-400 text-sm py-4 text-center">ยังไม่มีประวัติงาน</div>'; return; }
+
+  el.innerHTML = data.map(t => {
+    const pct = calcPct(t);
+    const bar = pct === 100 ? '#16a34a' : pct > 50 ? '#2563eb' : '#d97706';
+    return `<div class="border border-gray-100 rounded-xl p-4 mb-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="font-semibold text-sm text-gray-800">${THAI_MONTHS[t.month]} ${t.year + 543}</span>
+        <span class="text-xs font-bold" style="color:${bar}">${pct}%</span>
+      </div>
+      <div class="prog-bar mb-2"><div class="prog-fill" style="width:${pct}%;background:${bar}"></div></div>
+      <div class="flex flex-wrap gap-1 mt-2">
+        ${FIELDS.map(f => `<span class="text-xs px-1.5 py-0.5 rounded ${t[f]==='done'?'bg-green-50 text-green-700':t[f]==='na'?'bg-gray-100 text-gray-400':'bg-amber-50 text-amber-600'}">${f.toUpperCase().replace('_',' ')}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePw(btn) {
+  const input = btn.previousElementSibling;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+function markDirty() {
+  if (!panelDirty) {
+    panelDirty = true;
+    document.getElementById('panel-save-bar').classList.remove('hidden');
+  }
+}
+function discardPanelEdits() {
+  panelDirty = false;
+  document.getElementById('panel-save-bar').classList.add('hidden');
+  switchTab(panelTab);
+}
+async function savePanelEdits() {
+  if (panelTab === 'info')  await savePanelInfo();
+  if (panelTab === 'creds') await savePanelCreds();
+}
+
+// ─────────────────────────────────────────────────────────────
+// BATCH INVOICE
+// ─────────────────────────────────────────────────────────────
+function openBatchInvoice() {
+  const thMonthYear = `${THAI_MONTHS[curMonth]} ${curYear + 543}`;
+  const rows = clients.map(c => {
+    const fee = c.monthly_fee || 0;
+    const wht = c.has_wht !== false ? Math.round(fee * 0.03 * 100) / 100 : 0;
+    const expected = fee - wht;
+    const inv = invoiceMap[c.id];
+    const alreadyExists = !!inv;
+    return `<tr class="border-b border-gray-100 ${alreadyExists ? 'opacity-50' : ''}">
+      <td class="py-2 pr-2">
+        ${!alreadyExists ? `<input type="checkbox" class="batch-chk w-4 h-4" data-cid="${c.id}" checked>` : '<span class="text-xs text-gray-300">มีแล้ว</span>'}
+      </td>
+      <td class="py-2 pr-3 text-left">
+        <span class="text-xs font-bold text-blue-700">${e(c.code)}</span>
+        <div class="text-xs text-gray-600 truncate max-w-[140px]">${e(c.thai_name)}</div>
+      </td>
+      <td class="py-2 pr-3 text-right text-xs font-mono">${fmtMoney(fee)}</td>
+      <td class="py-2 pr-3 text-right text-xs font-mono text-orange-600">${wht > 0 ? '-' + fmtMoney(wht) : '—'}</td>
+      <td class="py-2 text-right text-xs font-bold font-mono text-emerald-700">${fmtMoney(expected)}</td>
+    </tr>`;
+  }).join('');
+
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-1">สร้างใบแจ้งหนี้</h3>
+    <p class="text-xs text-gray-400 mb-4">${thMonthYear}</p>
+    <div class="overflow-x-auto max-h-72 overflow-y-auto border border-gray-100 rounded-lg mb-4">
+      <table class="w-full text-sm">
+        <thead class="sticky top-0 bg-gray-50">
+          <tr>
+            <th class="py-2 pr-2 w-8"></th>
+            <th class="py-2 pr-3 text-left text-xs font-semibold text-gray-500">ลูกค้า</th>
+            <th class="py-2 pr-3 text-right text-xs font-semibold text-gray-500">ค่าบริการ</th>
+            <th class="py-2 pr-3 text-right text-xs font-semibold text-gray-500">WHT</th>
+            <th class="py-2 text-right text-xs font-semibold text-gray-500">ที่รับจริง</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div id="batch-err" class="hidden text-sm text-red-600 mb-3"></div>
+    <div class="flex justify-end gap-2">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="createBatchInvoices()" class="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700">สร้างใบแจ้งหนี้</button>
+    </div>`);
+}
+
+async function createBatchInvoices() {
+  const selected = [...document.querySelectorAll('.batch-chk:checked')].map(el => parseInt(el.dataset.cid));
+  if (!selected.length) {
+    document.getElementById('batch-err').textContent = 'กรุณาเลือกลูกค้าอย่างน้อย 1 ราย';
+    document.getElementById('batch-err').classList.remove('hidden');
+    return;
+  }
+  const payloads = selected.map(cid => {
+    const c = clients.find(x => x.id === cid);
+    const fee = c?.monthly_fee || 0;
+    const wht = c?.has_wht !== false ? Math.round(fee * 0.03 * 100) / 100 : 0;
+    return { client_id: cid, year: curYear, month: curMonth, billing_type: c?.billing_type || 'monthly', fee_amount: fee, wht_amount: wht, expected_payment: fee - wht, status: 'draft' };
+  });
+  const { data, error } = await sb.from('crm_invoices')
+    .upsert(payloads, { onConflict: 'client_id,year,month' }).select();
+  if (error) {
+    document.getElementById('batch-err').textContent = error.message;
+    document.getElementById('batch-err').classList.remove('hidden');
+    return;
+  }
+  (data || []).forEach(inv => { invoiceMap[inv.client_id] = inv; });
+  closeModal();
+  showToast(`สร้างใบแจ้งหนี้ ${data?.length || 0} ใบสำเร็จ`);
+  renderTrackingSummary();
+  if (curPage === 'clients') renderClientList();
+}
+
+// ─────────────────────────────────────────────────────────────
+// ADD CLIENT
+// ─────────────────────────────────────────────────────────────
+function openAddClient() {
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">เพิ่มลูกค้าใหม่</h3>
+    <div class="space-y-3">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">CODE *</label>
+          <input id="nc-code" type="text" placeholder="เช่น EPED" maxlength="10"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">เลขภาษี</label>
+          <input id="nc-tax" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ชื่อบริษัท (ไทย) *</label>
+        <input id="nc-thai" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภทธุรกิจ</label>
+          <input id="nc-cat" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">รูปแบบนิติบุคคล</label>
+          <input id="nc-type" type="text" placeholder="เช่น บจก." class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div class="border-t border-gray-100 pt-3">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">ค่าบริการ</div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภท</label>
+            <select id="nc-btype" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="monthly">รายเดือน</option>
+              <option value="filing">ยื่นแบบ (filing only)</option>
+              <option value="annual">รายปี</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">ค่าบริการ (บาท/เดือน)</label>
+            <input id="nc-fee" type="number" value="0" min="0" step="100"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-2">
+          <input id="nc-wht" type="checkbox" checked class="w-4 h-4 rounded text-blue-600">
+          <label class="text-sm text-gray-700">หัก ณ ที่จ่าย 3%</label>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">อีเมลลูกค้า (สำหรับใบเสร็จ)</label>
+        <input id="nc-email" type="email" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div id="nc-err" class="hidden text-sm text-red-600"></div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="saveNewClient()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เพิ่มลูกค้า</button>
+    </div>`);
+}
+
+async function saveNewClient() {
+  const code  = document.getElementById('nc-code').value.trim().toUpperCase();
+  const thai  = document.getElementById('nc-thai').value.trim();
+  const ncErr = document.getElementById('nc-err');
+  if (!code || !thai) { ncErr.textContent = 'กรุณากรอก CODE และชื่อบริษัท'; ncErr.classList.remove('hidden'); return; }
+
+  const payload = {
+    code, thai_name: thai,
+    tax_number:   document.getElementById('nc-tax').value.trim(),
+    category:     document.getElementById('nc-cat').value.trim(),
+    type:         document.getElementById('nc-type').value.trim(),
+    billing_type: document.getElementById('nc-btype').value,
+    monthly_fee:  parseFloat(document.getElementById('nc-fee').value) || 0,
+    has_wht:      document.getElementById('nc-wht').checked,
+    client_email: document.getElementById('nc-email').value.trim(),
+  };
+
+  const { data, error } = await sb.from('crm_clients').insert(payload).select().single();
+  if (error) { ncErr.textContent = error.message; ncErr.classList.remove('hidden'); return; }
+
+  if (payload.monthly_fee > 0) {
+    await sb.from('crm_billing_contracts').insert({
+      client_id: data.id, billing_type: payload.billing_type,
+      fee_amount: payload.monthly_fee, has_wht: payload.has_wht,
+      notes: 'เริ่มต้น'
+    });
+  }
+
+  clients.push(data);
+  clients.sort((a, b) => a.code.localeCompare(b.code));
+  closeModal();
+  showToast('เพิ่มลูกค้าสำเร็จ');
+  if (curPage === 'clients') renderClientList();
+  if (curPage === 'tracking') renderTracking();
+}
+
+// ─────────────────────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────────────────────
+function openModal(html) {
+  document.getElementById('modal-area').innerHTML =
+    `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal-box">${html}</div></div>`;
+}
+function closeModal() { document.getElementById('modal-area').innerHTML = ''; }
+
+// ─────────────────────────────────────────────────────────────
+// AUTH
+// ─────────────────────────────────────────────────────────────
+async function signOut() { await sb.auth.signOut(); location.reload(); }
+
+async function changePassword() {
+  const p1 = document.getElementById('new-pass').value;
+  const p2 = document.getElementById('new-pass2').value;
+  const pe = document.getElementById('pass-err');
+  pe.classList.add('hidden');
+  if (!p1 || p1 !== p2) { pe.textContent = 'รหัสผ่านไม่ตรงกัน'; pe.classList.remove('hidden'); return; }
+  if (p1.length < 6)    { pe.textContent = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; pe.classList.remove('hidden'); return; }
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if (error) { pe.textContent = error.message; pe.classList.remove('hidden'); return; }
+  showToast('เปลี่ยนรหัสผ่านสำเร็จ');
+  document.getElementById('new-pass').value  = '';
+  document.getElementById('new-pass2').value = '';
+}
+
+// ─────────────────────────────────────────────────────────────
+// START
+// ─────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
