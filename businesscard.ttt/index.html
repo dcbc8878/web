@@ -459,18 +459,28 @@
            fixed pixel width, so the room for the mascot shrinks 1:1 with
            the viewport, not proportionally. */
         @media (max-width: 400px) {
-            .mascot { max-width: calc(100vw - 200px); }
+            .mascot { max-width: calc(100vw - 218px); }
         }
 
         /* ---- leaving for the company card ----
-           The row below is a link to another page, and a bare navigation
-           cuts the card off mid-frame. Fading it out first makes the two
-           cards read as one thing with a back and a front. */
+           The logo grows to the middle of the screen while everything else
+           falls away, and the company card picks it up from exactly there
+           and shrinks it into its own header. One movement across two
+           documents, so the navigation reads as the card turning over
+           rather than a new page loading.
+
+           The ambient background is deliberately left alone: both cards
+           draw the same one, so holding it steady is what hides the seam. */
         @keyframes page-out {
-            to { opacity: 0; transform: scale(0.97); }
+            to { opacity: 0; transform: translateY(6px); }
         }
-        .leaving .screen { animation: page-out 0.26s ease-in forwards; }
-        .leaving .bg-fx  { animation: page-out 0.26s ease-in forwards; }
+        .leaving .identity h1, .leaving .identity .latin-name,
+        .leaving .identity .tagline, .leaving .save-btn,
+        .leaving .channels, .leaving .footnote, .leaving .mascot {
+            animation: page-out 0.3s ease-in forwards;
+        }
+        /* above the rows it is travelling over */
+        .leaving .card-logo { position: relative; z-index: 60; }
 
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
@@ -485,7 +495,7 @@
             .identity::before { display: none; }
             .bg-fx i { animation: none !important; }
             .action-row::after, .save-btn::after { display: none; }
-            .leaving .screen, .leaving .bg-fx { animation: none !important; }
+            .leaving * { animation: none !important; }
         }
     </style>
 </head>
@@ -614,10 +624,20 @@
 
 
     <script>
-        // Fade this card out before handing over to the company card, and
-        // leave a note asking that card to come up without replaying its
-        // five-second opening — after a deliberate transition, sitting
-        // through the logo splash again reads as the page having reloaded.
+        // Hand the logo over to the company card. Both pages compute the
+        // same centre-of-screen target from the same viewport, so the logo
+        // is at identical coordinates and identical size on either side of
+        // the navigation and the seam does not show. The two cards give
+        // their logos different sizes per screen tier, which is why the
+        // target is measured rather than expressed as a scale factor.
+        function dcbcHandoffTransform(el) {
+            var r = el.getBoundingClientRect();
+            var target = Math.min(window.innerWidth * 0.6, window.innerHeight * 0.42, 280);
+            return 'translate(' + ((window.innerWidth / 2) - (r.left + r.width / 2)) + 'px,'
+                 + ((window.innerHeight / 2) - (r.top + r.height / 2)) + 'px) '
+                 + 'scale(' + (target / r.width) + ')';
+        }
+
         (function () {
             var link = document.getElementById('row-company');
             var still = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -627,11 +647,18 @@
                 try { sessionStorage.setItem('dcbc_card_handoff', '1'); } catch (err) {}
                 if (still.matches) return;
                 e.preventDefault();
+                var logo = document.querySelector('.card-logo');
                 document.documentElement.classList.add('leaving');
+                // the intro animation is filled forwards and would outrank an
+                // inline transform, so it has to be dropped first
+                logo.style.animation = 'none';
+                void logo.offsetWidth;
+                logo.style.transition = 'transform 0.55s cubic-bezier(0.72, 0, 0.24, 1)';
+                logo.style.transform = dcbcHandoffTransform(logo);
                 var go = function () { window.location.href = link.href; };
-                document.querySelector('.screen').addEventListener('animationend', go, { once: true });
-                // animationend can be missed if the tab is backgrounded mid-fade
-                setTimeout(go, 450);
+                logo.addEventListener('transitionend', go, { once: true });
+                // transitionend can be missed if the tab is backgrounded mid-move
+                setTimeout(go, 750);
             });
         })();
     </script>

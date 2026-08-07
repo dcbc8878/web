@@ -34,6 +34,23 @@
         }
     </script>
 
+    <script>
+        // Read in the head, before the first paint: the class decides
+        // whether the opening sequence runs at all, so discovering it later
+        // would show a frame of the wrong one. Cleared as it is read, so a
+        // direct visit later in the same session still gets the full intro.
+        (function () {
+            var handoff = null;
+            try {
+                handoff = sessionStorage.getItem('dcbc_card_handoff');
+                sessionStorage.removeItem('dcbc_card_handoff');
+            } catch (e) {}
+            if (handoff && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.documentElement.classList.add('handoff');
+            }
+        })();
+    </script>
+
     <style>
         /* Fill the phone screen exactly, including when the browser chrome
            collapses on scroll — dvh handles that, vh is the fallback. */
@@ -433,32 +450,34 @@
            A vw fraction gives the mascot too much of a narrow screen and it
            starts covering them. */
         @media (max-width: 400px) {
-            .mascot { max-width: calc(100vw - 200px); }
+            .mascot { max-width: calc(100vw - 218px); }
         }
 
         /* ---- arriving from the staff card ----
-           Handed over from /businesscard.ttt, this card comes up already
-           formed and just fades in. The five-second opening is right for a
-           cold NFC tap; replaying it one tap into the same site reads as
-           the page having reloaded rather than moved. The idle float and
-           the background drift are left running — only the entrance is
-           skipped. */
-        .handoff .animate-pop-in, .handoff .identity::before,
+           The staff card grew its logo to the middle of the screen before
+           navigating; this card picks it up there and shrinks it into its
+           own header, so one movement carries across the two documents.
+           The rest of the card follows behind it.
+
+           The five-second opening still belongs to a cold NFC tap. Playing
+           it again one tap into the same site would read as the page having
+           reloaded rather than moved, so the handoff replaces it. */
+        .handoff .animate-pop-in { animation: none !important; }
+        .handoff .identity::before { display: none; }
+        @keyframes card-settle {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
         .handoff .identity h1, .handoff .identity .latin-name,
         .handoff .identity .tagline, .handoff .save-btn,
         .handoff .channels .action-row, .handoff .footnote {
-            animation: none !important;
-            opacity: 1 !important;
-            transform: none !important;
+            animation: card-settle 0.42s ease-out 0.3s both !important;
         }
-        .handoff .identity::before { display: none; }
+        /* the idle float takes over once the entrance has finished */
         .handoff .mascot {
-            animation: mascot-idle 3.4s ease-in-out 0.4s infinite !important;
+            animation: card-settle 0.42s ease-out 0.3s both,
+                       mascot-idle 3.4s ease-in-out 1.1s infinite !important;
         }
-        @keyframes page-in {
-            from { opacity: 0; transform: scale(1.015); }
-        }
-        .handoff .screen { animation: page-in 0.3s ease-out both; }
 
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
@@ -490,6 +509,35 @@
             <!-- Identity -->
             <div class="identity text-center">
                 <img src="/logo.png" alt="เด็กชายบัญชี" class="card-logo mx-auto object-contain drop-shadow-md animate-pop-in mb-2">
+                <script>
+                    // Runs the moment the element is parsed, so the logo is
+                    // already centred and full size on the first frame — the
+                    // same place and size the staff card left it. Same target
+                    // formula on both pages; the two cards size their logos
+                    // differently per tier, so it is measured, not a scale.
+                    (function () {
+                        if (!document.documentElement.classList.contains('handoff')) return;
+                        var logo = document.currentScript.previousElementSibling;
+                        var place = function () {
+                            var r = logo.getBoundingClientRect();
+                            var target = Math.min(window.innerWidth * 0.6, window.innerHeight * 0.42, 280);
+                            logo.style.transition = 'none';
+                            logo.style.transform =
+                                'translate(' + ((window.innerWidth / 2) - (r.left + r.width / 2)) + 'px,'
+                                + ((window.innerHeight / 2) - (r.top + r.height / 2)) + 'px) '
+                                + 'scale(' + (target / r.width) + ')';
+                            requestAnimationFrame(function () {
+                                requestAnimationFrame(function () {
+                                    logo.style.transition = 'transform 0.6s cubic-bezier(0.72, 0, 0.24, 1)';
+                                    logo.style.transform = '';
+                                });
+                            });
+                        };
+                        // the rect is only right once layout knows the logo's size
+                        if (logo.complete) place();
+                        else logo.addEventListener('load', place, { once: true });
+                    })();
+                </script>
                 <h1 data-i18n="name" class="text-2xl font-bold text-gray-900 leading-tight">บริษัท เด็กชายบัญชี จำกัด</h1>
                 <p data-i18n="sub" class="latin-name text-[11px] text-gray-500 font-light tracking-wide mt-1">DEKCHAIBUNCHEE CO.,LTD.</p>
                 <p data-i18n="tagline" class="tagline text-sm text-brand font-medium mt-2.5">รับทำบัญชี · วางแผนภาษี · จดทะเบียนบริษัท</p>
@@ -606,20 +654,6 @@
         </div>
     </div>
 
-
-    <script>
-        // Arriving from the staff card: come up formed, not from the top of
-        // the opening sequence. The flag is cleared as it is read, so a
-        // direct visit later in the same session still gets the full intro.
-        (function () {
-            var handoff = null;
-            try {
-                handoff = sessionStorage.getItem('dcbc_card_handoff');
-                sessionStorage.removeItem('dcbc_card_handoff');
-            } catch (e) {}
-            if (handoff) document.documentElement.classList.add('handoff');
-        })();
-    </script>
 
     <script>
         // Every string below is authored here, never user input, so the few
