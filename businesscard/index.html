@@ -22,17 +22,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Loaded without blocking the first paint: the icons sit inside
+         solid coloured tiles, so a moment of empty tile costs far less than
+         holding the whole page back on a third-party stylesheet. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: { extend: {
-                fontFamily: { sans: ['Prompt', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'] },
-                colors: { brand: { light: '#FFF2E8', DEFAULT: '#FFB88C', dark: '#E5976A', text: '#4A4A4A' } }
-            } }
-        }
-    </script>
+    <!-- A built stylesheet, not the Tailwind Play CDN. The CDN is
+         JavaScript: it has to download, run and scan the DOM before the
+         page has any styling at all, so on a phone the card painted white
+         and unstyled first. That flash is what made moving between the two
+         cards look broken. This is 9KB of plain CSS instead of ~400KB of
+         script, and it applies on the first frame.
+         Rebuild after changing either card's markup — see scripts/tailwind.cards.js. -->
+    <link rel="stylesheet" href="/card.css">
 
     <script>
         // Read in the head, before the first paint: the class decides
@@ -52,6 +56,9 @@
     </script>
 
     <style>
+        /* Before any stylesheet lands, so no frame is ever white. */
+        html { background: #FFF2E8; }
+
         /* Fill the phone screen exactly, including when the browser chrome
            collapses on scroll — dvh handles that, vh is the fallback. */
         .screen { min-height: 100vh; min-height: 100dvh; position: relative; z-index: 1; }
@@ -145,6 +152,7 @@
            makes it read as an occasional sparkle rather than a conveyor
            belt. Durations and delays are deliberately uneven so no two
            buttons ever fire together or settle into a shared beat. */
+        .save-btn { box-shadow: 0 4px 15px rgb(255 184 140 / 0.5); }
         .action-row, .save-btn { position: relative; overflow: hidden; }
         .action-row::after, .save-btn::after {
             content: '';
@@ -570,7 +578,7 @@
             <!-- Save to phone contacts. The primary action for a tapped
                  NFC card, so it sits above the individual channels. -->
             <a id="save-vcard" href="/contact.vcf" download="dcbc-contact.vcf"
-               class="save-btn flex items-center justify-center gap-2.5 w-full bg-brand text-white rounded-2xl font-bold shadow-[0_4px_15px_rgb(255,184,140,0.5)] active:scale-[0.98] transition-transform">
+               class="save-btn flex items-center justify-center gap-2.5 w-full bg-brand text-white rounded-2xl font-bold active:scale-[0.98] transition-transform">
                 <i class="fa-solid fa-address-book"></i> <span data-i18n="save">บันทึกลงรายชื่อติดต่อ</span>
             </a>
 
