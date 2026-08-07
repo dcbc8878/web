@@ -396,7 +396,7 @@
            actually has, measured on the page, so nothing starts scrolling.
 
            These come after every tier above and so override them all. */
-        @media (min-height: 861px) {
+        @media (min-height: 930px) {
             .card-logo { width: 7rem; height: 7rem; }
             .identity { margin-bottom: 1.6rem; }
             .save-btn { padding-top: 0.85rem; padding-bottom: 0.85rem; margin-bottom: 1.3rem; }
@@ -404,6 +404,19 @@
             .action-row { padding: 0.85rem 0.85rem; }
             .mascot { max-height: 268px; margin-top: -8.8rem; }
             .mascot.tall { max-height: 300px; }
+        }
+        /* 861-929px: Galaxy S24 Ultra, Pixel 8 Pro, a Flip held open. The
+           block above needs about 930px to fit, so this band gets its own
+           step between it and the 730px tier rather than falling into
+           either one. */
+        @media (min-height: 861px) and (max-height: 929px) {
+            .card-logo { width: 6rem; height: 6rem; }
+            .identity { margin-bottom: 1.25rem; }
+            .save-btn { padding-top: 0.78rem; padding-bottom: 0.78rem; margin-bottom: 1.1rem; }
+            .channels > * + * { margin-top: 0.58rem; }
+            .action-row { padding: 0.62rem 0.8rem; }
+            .mascot { max-height: 250px; margin-top: -7.9rem; }
+            .mascot.tall { max-height: 285px; }
         }
         @media (min-height: 730px) and (max-height: 860px) {
             .card-logo { width: 5rem; height: 5rem; }
