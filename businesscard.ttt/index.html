@@ -474,23 +474,42 @@
         }
 
         /* ---- leaving for the company card ----
-           The logo grows to the middle of the screen while everything else
-           falls away, and the company card picks it up from exactly there
-           and shrinks it into its own header. One movement across two
-           documents, so the navigation reads as the card turning over
-           rather than a new page loading.
+           The opening sequence, rewound. Everything leaves in the reverse
+           of the order it arrived — mascot, then the copyright, then the
+           rows bottom to top, the save button, the tagline, the names —
+           and last the logo grows back to the middle of the screen, which
+           is where the sequence began. Then the company card picks the logo
+           up from exactly there.
 
-           The ambient background is deliberately left alone: both cards
-           draw the same one, so holding it steady is what hides the seam. */
-        @keyframes page-out {
-            to { opacity: 0; transform: translateY(6px); }
-        }
-        .leaving .identity h1, .leaving .identity .latin-name,
-        .leaving .identity .tagline, .leaving .save-btn,
-        .leaving .channels, .leaving .footnote, .leaving .mascot {
-            animation: page-out 0.3s ease-in forwards;
-        }
-        /* above the rows it is travelling over */
+           Each exit is the mirror of its own entrance: the rows slide back
+           out to the right they came in from, the risers drop back down,
+           the mascot leaves the way it flew in. The stagger is the
+           entrance's, compressed about four times — a literal rewind would
+           take four and a half seconds.
+
+           This row is the only way into the company card from here, so the
+           two sequences always meet; nothing else has to account for the
+           card being left mid-rewind.
+
+           The ambient background is deliberately left running: both cards
+           draw the same one, and holding it steady is what hides the join. */
+        @keyframes rise-out   { to { opacity: 0; transform: translateY(14px); } }
+        @keyframes slide-out  { to { opacity: 0; transform: translateX(22px); } }
+        @keyframes mascot-out { to { opacity: 0; transform: translateX(60px) translateY(10px) rotate(10deg); } }
+
+        .leaving .mascot   { animation: mascot-out 0.28s ease-in 0s both; }
+        .leaving .footnote { animation: rise-out 0.26s ease-in 0.05s both; }
+        .leaving .channels .action-row { animation: slide-out 0.24s ease-in both; }
+        .leaving .channels .action-row:nth-child(5) { animation-delay: 0.090s; }
+        .leaving .channels .action-row:nth-child(4) { animation-delay: 0.125s; }
+        .leaving .channels .action-row:nth-child(3) { animation-delay: 0.160s; }
+        .leaving .channels .action-row:nth-child(2) { animation-delay: 0.195s; }
+        .leaving .channels .action-row:nth-child(1) { animation-delay: 0.230s; }
+        .leaving .save-btn             { animation: rise-out 0.26s ease-in 0.27s both; }
+        .leaving .identity .tagline    { animation: rise-out 0.26s ease-in 0.31s both; }
+        .leaving .identity .latin-name { animation: rise-out 0.26s ease-in 0.34s both; }
+        .leaving .identity h1          { animation: rise-out 0.26s ease-in 0.37s both; }
+        /* above the rows it travels over on its way out */
         .leaving .card-logo { position: relative; z-index: 60; }
 
         /* Anyone who has asked their phone to reduce motion gets the card
@@ -664,12 +683,13 @@
                 // inline transform, so it has to be dropped first
                 logo.style.animation = 'none';
                 void logo.offsetWidth;
-                logo.style.transition = 'transform 0.55s cubic-bezier(0.72, 0, 0.24, 1)';
+                // waits for the text around it to clear before it moves
+                logo.style.transition = 'transform 0.55s cubic-bezier(0.72, 0, 0.24, 1) 0.42s';
                 logo.style.transform = dcbcHandoffTransform(logo);
                 var go = function () { window.location.href = link.href; };
                 logo.addEventListener('transitionend', go, { once: true });
                 // transitionend can be missed if the tab is backgrounded mid-move
-                setTimeout(go, 750);
+                setTimeout(go, 1250);
             });
         })();
     </script>
