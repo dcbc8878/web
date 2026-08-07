@@ -452,6 +452,26 @@
             .mascot.tall { max-height: 189px; }
         }
 
+        /* On a narrow screen the mascot takes a much larger share of the
+           width and starts covering the row labels — 52vw is 156px of a
+           300px screen. Cap it by what is actually left beside the widest
+           label rather than by a fraction of the screen: the labels are a
+           fixed pixel width, so the room for the mascot shrinks 1:1 with
+           the viewport, not proportionally. */
+        @media (max-width: 400px) {
+            .mascot { max-width: calc(100vw - 200px); }
+        }
+
+        /* ---- leaving for the company card ----
+           The row below is a link to another page, and a bare navigation
+           cuts the card off mid-frame. Fading it out first makes the two
+           cards read as one thing with a back and a front. */
+        @keyframes page-out {
+            to { opacity: 0; transform: scale(0.97); }
+        }
+        .leaving .screen { animation: page-out 0.26s ease-in forwards; }
+        .leaving .bg-fx  { animation: page-out 0.26s ease-in forwards; }
+
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
         @media (prefers-reduced-motion: reduce) {
@@ -465,6 +485,7 @@
             .identity::before { display: none; }
             .bg-fx i { animation: none !important; }
             .action-row::after, .save-btn::after { display: none; }
+            .leaving .screen, .leaving .bg-fx { animation: none !important; }
         }
     </style>
 </head>
@@ -534,7 +555,7 @@
 
                 <!-- The way back to the company's own card, which carries the
                      office address, the LINE Official account and the site. -->
-                <a href="/businesscard" class="action-row">
+                <a id="row-company" href="/businesscard" class="action-row">
                     <div class="action-icon bg-brand-dark"><i class="fa-regular fa-address-card"></i></div>
                     <div class="min-w-0 flex-1">
                         <p data-i18n="company_card" class="text-[11px] text-gray-400 font-light leading-none mb-1">ดูเพิ่มเติม</p>
@@ -591,6 +612,29 @@
         </div>
     </div>
 
+
+    <script>
+        // Fade this card out before handing over to the company card, and
+        // leave a note asking that card to come up without replaying its
+        // five-second opening — after a deliberate transition, sitting
+        // through the logo splash again reads as the page having reloaded.
+        (function () {
+            var link = document.getElementById('row-company');
+            var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+            link.addEventListener('click', function (e) {
+                // let the browser handle new-tab / long-press / middle click
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                try { sessionStorage.setItem('dcbc_card_handoff', '1'); } catch (err) {}
+                if (still.matches) return;
+                e.preventDefault();
+                document.documentElement.classList.add('leaving');
+                var go = function () { window.location.href = link.href; };
+                document.querySelector('.screen').addEventListener('animationend', go, { once: true });
+                // animationend can be missed if the tab is backgrounded mid-fade
+                setTimeout(go, 450);
+            });
+        })();
+    </script>
 
     <script>
         // The card holder's own details are the name / sub / tagline

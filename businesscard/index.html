@@ -428,6 +428,38 @@
             .identity .latin-name { display: none; }
         }
 
+        /* The row labels are a fixed pixel width, so the room left beside
+           them shrinks 1:1 with the viewport rather than proportionally.
+           A vw fraction gives the mascot too much of a narrow screen and it
+           starts covering them. */
+        @media (max-width: 400px) {
+            .mascot { max-width: calc(100vw - 200px); }
+        }
+
+        /* ---- arriving from the staff card ----
+           Handed over from /businesscard.ttt, this card comes up already
+           formed and just fades in. The five-second opening is right for a
+           cold NFC tap; replaying it one tap into the same site reads as
+           the page having reloaded rather than moved. The idle float and
+           the background drift are left running — only the entrance is
+           skipped. */
+        .handoff .animate-pop-in, .handoff .identity::before,
+        .handoff .identity h1, .handoff .identity .latin-name,
+        .handoff .identity .tagline, .handoff .save-btn,
+        .handoff .channels .action-row, .handoff .footnote {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        .handoff .identity::before { display: none; }
+        .handoff .mascot {
+            animation: mascot-idle 3.4s ease-in-out 0.4s infinite !important;
+        }
+        @keyframes page-in {
+            from { opacity: 0; transform: scale(1.015); }
+        }
+        .handoff .screen { animation: page-in 0.3s ease-out both; }
+
         /* Anyone who has asked their phone to reduce motion gets the card
            fully formed and still, with no entrance and no idle loop. */
         @media (prefers-reduced-motion: reduce) {
@@ -574,6 +606,20 @@
         </div>
     </div>
 
+
+    <script>
+        // Arriving from the staff card: come up formed, not from the top of
+        // the opening sequence. The flag is cleared as it is read, so a
+        // direct visit later in the same session still gets the full intro.
+        (function () {
+            var handoff = null;
+            try {
+                handoff = sessionStorage.getItem('dcbc_card_handoff');
+                sessionStorage.removeItem('dcbc_card_handoff');
+            } catch (e) {}
+            if (handoff) document.documentElement.classList.add('handoff');
+        })();
+    </script>
 
     <script>
         // Every string below is authored here, never user input, so the few
