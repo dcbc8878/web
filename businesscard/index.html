@@ -414,10 +414,10 @@
             .channels > * + * { margin-top: 0.44rem; }
             .action-row { padding: 0.5rem 0.8rem; }
             .action-icon { width: 2.2rem; height: 2.2rem; font-size: 0.95rem; }
-            .mascot { max-height: 196px; max-width: min(184px, 48vw); margin-top: -4.9rem; }
-            /* 250px put the outstretched-arm pose's hand over the second
-               line of the address at 412px wide */
-            .mascot.tall { max-height: 232px; }
+            .mascot { max-height: 196px; max-width: min(178px, 48vw); margin-top: -4.9rem; }
+            /* the outstretched-arm pose reaches the second line of the
+               address at 412px wide long before it runs out of height */
+            .mascot.tall { max-height: 224px; }
         }
 
         /* ---- narrow screens ----
@@ -452,13 +452,17 @@
            A vw fraction gives the mascot too much of a narrow screen and it
            starts covering them. */
         @media (max-width: 400px) {
-            .mascot { max-width: calc(100vw - 218px); }
+            .mascot { max-width: calc(100vw - 224px); }
         }
 
         /* Narrower than about 335px and still tall — the smallest folding
            cover screens. The mascot is width-limited there and grows taller
            than its tier intended, and the company name wraps. Bounded to
            tall screens so the short tiers keep their own, lower, numbers. */
+        @media (max-width: 335px) and (min-height: 690px) and (max-height: 729px) {
+            .identity h1 { font-size: 1.1rem; }
+            .mascot, .mascot.tall { max-height: 172px; }
+        }
         @media (max-width: 335px) and (min-height: 730px) {
             .identity h1 { font-size: 1.1rem; }
             .mascot, .mascot.tall { max-height: 200px; }
