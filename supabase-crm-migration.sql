@@ -5,7 +5,7 @@
 -- ============================================================
 
 -- ──────────────────────────────────────────────────────────
--- Helper: updated_at trigger function
+-- 1. Helper: updated_at trigger function (no dependencies)
 -- ──────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.crm_set_updated_at()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -13,7 +13,7 @@ BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $$;
 
 -- ──────────────────────────────────────────────────────────
--- crm_staff — CRM staff accounts (linked to auth.users)
+-- 2. crm_staff table (needed by crm_get_role)
 -- ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.crm_staff (
   id           uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -24,16 +24,18 @@ CREATE TABLE IF NOT EXISTS public.crm_staff (
   created_at   timestamptz NOT NULL DEFAULT now()
 );
 
-ALTER TABLE public.crm_staff ENABLE ROW LEVEL SECURITY;
-
 -- ──────────────────────────────────────────────────────────
--- Helper: get current user's role from crm_staff
--- (must be created AFTER crm_staff table)
+-- 3. crm_get_role function (needs crm_staff to exist)
 -- ──────────────────────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.crm_get_role()
 RETURNS text LANGUAGE sql SECURITY DEFINER STABLE AS $$
   SELECT role FROM public.crm_staff WHERE id = auth.uid() AND is_active = true LIMIT 1;
 $$;
+
+-- ──────────────────────────────────────────────────────────
+-- 4. crm_staff RLS (needs crm_get_role)
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_staff ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS crm_staff_sel ON public.crm_staff;
 CREATE POLICY crm_staff_sel ON public.crm_staff FOR SELECT
@@ -44,7 +46,7 @@ CREATE POLICY crm_staff_upd ON public.crm_staff FOR UPDATE
   USING (crm_get_role() = 'owner');
 
 -- ──────────────────────────────────────────────────────────
--- crm_clients — accounting clients
+-- 5. crm_clients table (no RLS policies yet — added in step 7)
 -- ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.crm_clients (
   id          bigint      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -69,6 +71,32 @@ CREATE TRIGGER crm_clients_upd_at
 
 ALTER TABLE public.crm_clients ENABLE ROW LEVEL SECURITY;
 
+-- ──────────────────────────────────────────────────────────
+-- 6. crm_staff_clients junction table (needs crm_clients)
+-- ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.crm_staff_clients (
+  staff_id   uuid   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  client_id  bigint NOT NULL REFERENCES public.crm_clients(id) ON DELETE CASCADE,
+  PRIMARY KEY (staff_id, client_id)
+);
+
+ALTER TABLE public.crm_staff_clients ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS crm_sc_sel ON public.crm_staff_clients;
+CREATE POLICY crm_sc_sel ON public.crm_staff_clients FOR SELECT
+  USING (crm_get_role() IN ('owner','senior') OR staff_id = auth.uid());
+
+DROP POLICY IF EXISTS crm_sc_ins ON public.crm_staff_clients;
+CREATE POLICY crm_sc_ins ON public.crm_staff_clients FOR INSERT
+  WITH CHECK (crm_get_role() = 'owner');
+
+DROP POLICY IF EXISTS crm_sc_del ON public.crm_staff_clients;
+CREATE POLICY crm_sc_del ON public.crm_staff_clients FOR DELETE
+  USING (crm_get_role() = 'owner');
+
+-- ──────────────────────────────────────────────────────────
+-- 7. crm_clients RLS policies (needs crm_staff_clients)
+-- ──────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS crm_cli_sel ON public.crm_clients;
 CREATE POLICY crm_cli_sel ON public.crm_clients FOR SELECT
   USING (
@@ -92,37 +120,13 @@ CREATE POLICY crm_cli_del ON public.crm_clients FOR DELETE
   USING (crm_get_role() = 'owner');
 
 -- ──────────────────────────────────────────────────────────
--- crm_staff_clients — which staff are assigned to which clients
--- ──────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.crm_staff_clients (
-  staff_id   uuid   NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  client_id  bigint NOT NULL REFERENCES public.crm_clients(id) ON DELETE CASCADE,
-  PRIMARY KEY (staff_id, client_id)
-);
-
-ALTER TABLE public.crm_staff_clients ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS crm_sc_sel ON public.crm_staff_clients;
-CREATE POLICY crm_sc_sel ON public.crm_staff_clients FOR SELECT
-  USING (crm_get_role() IN ('owner','senior') OR staff_id = auth.uid());
-
-DROP POLICY IF EXISTS crm_sc_ins ON public.crm_staff_clients;
-CREATE POLICY crm_sc_ins ON public.crm_staff_clients FOR INSERT
-  WITH CHECK (crm_get_role() = 'owner');
-
-DROP POLICY IF EXISTS crm_sc_del ON public.crm_staff_clients;
-CREATE POLICY crm_sc_del ON public.crm_staff_clients FOR DELETE
-  USING (crm_get_role() = 'owner');
-
--- ──────────────────────────────────────────────────────────
--- crm_tax_tasks — monthly tax task checklist per client
+-- 8. crm_tax_tasks (needs crm_clients + crm_staff_clients)
 -- ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.crm_tax_tasks (
   id          bigint      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   client_id   bigint      NOT NULL REFERENCES public.crm_clients(id) ON DELETE CASCADE,
   year        int         NOT NULL,
   month       int         NOT NULL CHECK (month BETWEEN 1 AND 12),
-  -- งานยื่นแบบรายเดือน
   stm         text        NOT NULL DEFAULT 'todo' CHECK (stm        IN ('done','todo','na')),
   pnd1        text        NOT NULL DEFAULT 'todo' CHECK (pnd1       IN ('done','todo','na')),
   pnd3        text        NOT NULL DEFAULT 'todo' CHECK (pnd3       IN ('done','todo','na')),
@@ -135,7 +139,7 @@ CREATE TABLE IF NOT EXISTS public.crm_tax_tasks (
   pp30_paid   text        NOT NULL DEFAULT 'todo' CHECK (pp30_paid  IN ('done','todo','na')),
   rd_keyed    text        NOT NULL DEFAULT 'todo' CHECK (rd_keyed   IN ('done','todo','na')),
   acct_fee    text        NOT NULL DEFAULT 'todo' CHECK (acct_fee   IN ('done','todo','na')),
-  doc_date    text        NOT NULL DEFAULT '',    -- วันที่รับเอกสาร (free-text)
+  doc_date    text        NOT NULL DEFAULT '',
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now(),
   UNIQUE (client_id, year, month)
@@ -183,7 +187,7 @@ CREATE POLICY crm_tt_del ON public.crm_tax_tasks FOR DELETE
   USING (crm_get_role() IN ('owner','senior'));
 
 -- ──────────────────────────────────────────────────────────
--- crm_client_credentials — RD / DBD / SSO logins per client
+-- 9. crm_client_credentials (needs crm_clients)
 -- ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.crm_client_credentials (
   id           bigint      GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
