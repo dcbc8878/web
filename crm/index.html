@@ -248,6 +248,7 @@
               <tr>
                 <th rowspan="2" class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:210px;vertical-align:middle">ลูกค้า</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle;min-width:80px">รับเอกสาร</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">STM</th>
                 <th colspan="4" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ภ.ง.ด.</th>
                 <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ภ.พ.36</th>
                 <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-gray-400 bg-gray-50 border-b border-gray-200 border-l border-gray-200">ประกันสังคม</th>
@@ -257,10 +258,10 @@
                 <th rowspan="2" class="px-3 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="vertical-align:middle;min-width:110px">ความคืบหน้า</th>
               </tr>
               <tr>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">STM</th>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.1</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">PND.1</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.3</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.53</th>
+                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.54</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">PP.36</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">SSO</th>
@@ -270,7 +271,7 @@
               </tr>
             </thead>
             <tbody id="tracking-tbody">
-              <tr><td colspan="15" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              <tr><td colspan="16" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
             </tbody>
           </table>
         </div>
@@ -324,10 +325,13 @@
               <tr>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:210px">ลูกค้า</th>
                 <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">ภ.ง.ด.51</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ภงด.1ก</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">กท.26ก</th>
                 <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ภ.ง.ด.50</th>
                 <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">งบการเงิน</th>
                 <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ผู้สอบฯ</th>
                 <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">ส่ง DBD</th>
+                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">บอจ.5</th>
                 <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:110px">ความคืบหน้า</th>
               </tr>
             </thead>
@@ -439,8 +443,8 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
   'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const ROLE_LABEL = { owner:'เจ้าของ', senior:'พนักงานอาวุโส', staff:'พนักงาน' };
-const FIELDS = ['stm','pnd1','pnd3','pnd53','pp36','pp36_paid','sso','sso_paid','pp30','pp30_paid','rd_keyed','acct_fee'];
-const YE_FIELDS = ['pnd51','pnd50','fin_stmt','audit','dbd_submit'];
+const FIELDS = ['stm','pnd1','pnd3','pnd53','pnd54','pp36','pp36_paid','sso','sso_paid','pp30','pp30_paid','rd_keyed','acct_fee'];
+const YE_FIELDS = ['pnd51','pnd1k','kt26k','pnd50','fin_stmt','audit','dbd_submit','boj5'];
 const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', paid:'ชำระแล้ว', cancelled:'ยกเลิก' };
 const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
 
@@ -681,7 +685,7 @@ function renderTracking() {
         <div class="text-sm text-gray-800 mt-0.5 max-w-[190px] leading-tight">${e(c.thai_name)}</div>
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
-      ${mkCell('stm',gb)}${mkCell('pnd1')}${mkCell('pnd3')}${mkCell('pnd53')}
+      ${mkCell('stm',gb)}${mkCell('pnd1',gb)}${mkCell('pnd3')}${mkCell('pnd53')}${mkCell('pnd54')}
       ${mkCell('pp36',gb)}${mkCell('pp36_paid')}
       ${mkCell('sso',gb)}${mkCell('sso_paid')}
       ${mkCell('pp30',gb)}${mkCell('pp30_paid')}
@@ -791,7 +795,7 @@ function renderYearEnd() {
     const pct = calcPct(t, YE_FIELDS);
 
     const mkYeCell = (f, bc = '') => {
-      const v = t[f] || (f === 'pnd51' || f === 'audit' ? 'na' : 'todo');
+      const v = t[f] || (['pnd51','audit'].includes(f) ? 'na' : 'todo');
       return `<td class="status-td px-2 py-2.5 ${bc} ${canEdit() ? 'clickable' : ''}"
                   ${canEdit() ? `onclick="toggleYearEndField(${c.id},'${f}',this)"` : ''}>
                 ${statusDot(v)}</td>`;
@@ -803,12 +807,12 @@ function renderYearEnd() {
         <div class="text-sm text-gray-800 mt-0.5 max-w-[190px] leading-tight">${e(c.thai_name)}</div>
       </td>
       ${mkYeCell('pnd51','border-l border-gray-200')}
-      ${mkYeCell('pnd50')}${mkYeCell('fin_stmt')}${mkYeCell('audit')}${mkYeCell('dbd_submit')}
+      ${mkYeCell('pnd1k')}${mkYeCell('kt26k')}${mkYeCell('pnd50')}${mkYeCell('fin_stmt')}${mkYeCell('audit')}${mkYeCell('dbd_submit')}${mkYeCell('boj5')}
       <td class="px-3 py-2.5">${progressBar(pct)}</td>
     </tr>`;
   });
 
-  if (!rows) rows = `<tr><td colspan="7" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  if (!rows) rows = `<tr><td colspan="10" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
   document.getElementById('yearend-tbody').innerHTML = rows;
 }
 
@@ -821,12 +825,13 @@ async function changeYearEnd(delta) {
 
 async function toggleYearEndField(clientId, field, cell) {
   if (!canEdit()) return;
-  const defaultVal = (field === 'pnd51' || field === 'audit') ? 'na' : 'todo';
+  const naDefault = ['pnd51','audit'];
+  const defaultVal = naDefault.includes(field) ? 'na' : 'todo';
   const cur  = yearEndMap[clientId]?.[field] || defaultVal;
   const next = cur === 'todo' ? 'done' : cur === 'done' ? 'na' : 'todo';
   if (!yearEndMap[clientId]) {
     yearEndMap[clientId] = { client_id: clientId, year: yearEndYear };
-    YE_FIELDS.forEach(f => { yearEndMap[clientId][f] = f === 'pnd51' || f === 'audit' ? 'na' : 'todo'; });
+    YE_FIELDS.forEach(f => { yearEndMap[clientId][f] = naDefault.includes(f) ? 'na' : 'todo'; });
   }
   yearEndMap[clientId][field] = next;
   cell.innerHTML = statusDot(next);
