@@ -13,14 +13,6 @@ BEGIN NEW.updated_at = now(); RETURN NEW; END;
 $$;
 
 -- ──────────────────────────────────────────────────────────
--- Helper: get current user's role from crm_staff
--- ──────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION public.crm_get_role()
-RETURNS text LANGUAGE sql SECURITY DEFINER STABLE AS $$
-  SELECT role FROM public.crm_staff WHERE id = auth.uid() AND is_active = true LIMIT 1;
-$$;
-
--- ──────────────────────────────────────────────────────────
 -- crm_staff — CRM staff accounts (linked to auth.users)
 -- ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.crm_staff (
@@ -33,6 +25,15 @@ CREATE TABLE IF NOT EXISTS public.crm_staff (
 );
 
 ALTER TABLE public.crm_staff ENABLE ROW LEVEL SECURITY;
+
+-- ──────────────────────────────────────────────────────────
+-- Helper: get current user's role from crm_staff
+-- (must be created AFTER crm_staff table)
+-- ──────────────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.crm_get_role()
+RETURNS text LANGUAGE sql SECURITY DEFINER STABLE AS $$
+  SELECT role FROM public.crm_staff WHERE id = auth.uid() AND is_active = true LIMIT 1;
+$$;
 
 DROP POLICY IF EXISTS crm_staff_sel ON public.crm_staff;
 CREATE POLICY crm_staff_sel ON public.crm_staff FOR SELECT
