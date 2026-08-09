@@ -1053,10 +1053,11 @@ function navigate(p) {
 function renderTracking() {
   const thYear = curYear + 543;
   document.getElementById('month-display').textContent = `${THAI_MONTHS[curMonth]} ${thYear}`;
+  const visibleClients = canManageOwnCompany() ? clients : clients.filter(c => !c.is_own_company);
 
   let totalDone = 0, totalTodo = 0;
   let invPaid = 0, invTotal = 0;
-  clients.forEach(c => {
+  visibleClients.forEach(c => {
     const t = taskMap[c.id] || {};
     const hasVat = c.has_vat !== false;
     const hasSso = c.has_sso !== false;
@@ -1072,14 +1073,14 @@ function renderTracking() {
       if (invoiceMap[c.id].status === 'paid') invPaid++;
     }
   });
-  document.getElementById('sv-total').textContent = clients.length;
+  document.getElementById('sv-total').textContent = visibleClients.length;
   document.getElementById('sv-done').textContent  = totalDone;
   document.getElementById('sv-inv').textContent   = canEdit() ? `${invPaid}/${invTotal}` : '—';
   document.getElementById('sv-todo').textContent  = totalTodo;
 
   const gb = 'border-l border-gray-200';
   let rows = '';
-  clients.forEach(c => {
+  visibleClients.forEach(c => {
     const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
     const t = taskMap[c.id] || {};
     const docItems = (t.doc_items||'').split(',').filter(Boolean);
@@ -1322,7 +1323,8 @@ async function cycleGroupFromModal(clientId, group, action) {
 
 function renderTrackingSummary() {
   let totalDone = 0, totalTodo = 0, invPaid = 0, invTotal = 0;
-  clients.forEach(c => {
+  const visibleClients = canManageOwnCompany() ? clients : clients.filter(c => !c.is_own_company);
+  visibleClients.forEach(c => {
     const t = taskMap[c.id] || {};
     const hasVat = c.has_vat !== false;
     const hasSso = c.has_sso !== false;
@@ -1427,9 +1429,10 @@ async function saveDocModal(clientId) {
 // ─────────────────────────────────────────────────────────────
 function renderYearEnd() {
   document.getElementById('yearend-display').textContent = `พ.ศ. ${yearEndYear + 543}`;
+  const visibleClients = canManageOwnCompany() ? clients : clients.filter(c => !c.is_own_company);
 
   let allDone = 0, inProg = 0, pending = 0;
-  clients.forEach(c => {
+  visibleClients.forEach(c => {
     const t = yearEndMap[c.id] || {};
     const pct = calcPct(t, YE_FIELDS);
     if (pct === 100) allDone++;
@@ -1441,7 +1444,7 @@ function renderYearEnd() {
   document.getElementById('ye-pending').textContent = pending;
 
   let rows = '';
-  clients.forEach(c => {
+  visibleClients.forEach(c => {
     const t   = yearEndMap[c.id] || {};
     const pct = calcPct(t, YE_FIELDS);
 
