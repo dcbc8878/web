@@ -531,9 +531,12 @@
       <div id="panel-code" class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-2 py-0.5 rounded mb-1"></div>
       <div id="panel-name" class="font-bold text-gray-900 text-base"></div>
     </div>
-    <button onclick="closePanel()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
+    <div class="flex items-center gap-2">
+      <button id="panel-deactivate-btn" onclick="confirmDeactivateClient()" class="hidden text-xs bg-red-600 text-white hover:bg-red-700 font-semibold px-3 py-1.5 rounded-lg transition-colors">ลบ</button>
+      <button onclick="closePanel()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="flex border-b border-gray-200 px-4 flex-shrink-0 overflow-x-auto">
@@ -603,6 +606,26 @@ const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', p
 const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
 const ENTITY_TYPES = ['บริษัทจำกัด','บริษัทมหาชนจำกัด','ห้างหุ้นส่วนจำกัด','ห้างหุ้นส่วนสามัญนิติบุคคล','ห้างหุ้นส่วนสามัญ','สมาคม','มูลนิธิ','วิสาหกิจชุมชน','กิจการร่วมค้า','อื่นๆ','บุคคลธรรมดา'];
 const CLIENT_TYPE_MAP = { M:'รายเดือน', Y:'รายปี', T:'ยื่นแบบเปล่า' };
+const BUSINESS_CATEGORIES = [
+  'การผลิต / โรงงาน','การค้าส่ง','การค้าปลีก','ก่อสร้าง',
+  'บริการทั่วไป','อสังหาริมทรัพย์','ขนส่ง / โลจิสติกส์',
+  'อาหาร / เครื่องดื่ม','สุขภาพ / ความงาม / คลินิก',
+  'การเกษตร / ปศุสัตว์','การศึกษา / สถาบัน',
+  'เทคโนโลยีสารสนเทศ','สื่อ / โฆษณา',
+  'การเงิน / ประกันภัย','นำเข้า / ส่งออก',
+  'บันเทิง / ท่องเที่ยว','อื่นๆ'
+];
+const CHANGE_TYPES = [
+  { key:'fee',        label:'ค่าบริการรายเดือน',             need:'number',   ph:'ค่าบริการใหม่ (บาท)' },
+  { key:'name',       label:'เปลี่ยนชื่อบริษัท',               need:'text',     ph:'ชื่อใหม่' },
+  { key:'address',    label:'เปลี่ยนที่อยู่',                  need:'textarea', ph:'ที่อยู่ใหม่' },
+  { key:'vat_on',     label:'จดทะเบียนภาษีมูลค่าเพิ่ม',       need:null },
+  { key:'vat_off',    label:'ยกเลิกจดทะเบียนภาษีมูลค่าเพิ่ม', need:null },
+  { key:'sso_on',     label:'ขึ้นทะเบียนนายจ้างประกันสังคม',  need:null },
+  { key:'sso_pause',  label:'พักการยื่นประกันสังคม',           need:null },
+  { key:'sso_resume', label:'เริ่มส่งประกันสังคมต่อ',          need:null },
+  { key:'sso_off',    label:'ยกเลิกเป็นนายจ้าง',              need:null },
+];
 
 // ─────────────────────────────────────────────────────────────
 // STATE
@@ -721,27 +744,27 @@ async function saveNote(clientId, val) {
   if (data) taskMap[clientId] = data;
   renderTracking();
 }
-function editClientSeq(cell, clientId, clientNo) {
+function editClientSeq(cell, clientId, code) {
   if (!canEdit()) return;
-  const num = parseInt((clientNo||'').slice(1)) || 0;
+  const num = parseInt((code||'').replace(/^[A-Z]+/,'')) || 0;
   cell.innerHTML = `<input type="number" min="1" max="999" value="${num}"
     style="width:38px;font-size:11px;text-align:center;border:1.5px solid #3b82f6;border-radius:4px;outline:none;padding:2px;-moz-appearance:textfield"
     onclick="event.stopPropagation()"
-    onblur="saveClientSeq(${clientId},'${clientNo}',this.value)"
+    onblur="saveClientSeq(${clientId},'${code}',this.value)"
     onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){event.preventDefault();renderTracking();}">`;
   const inp = cell.querySelector('input');
   inp.focus(); inp.select();
 }
-async function saveClientSeq(clientId, clientNo, newVal) {
-  const prefix = (clientNo||'').charAt(0) || 'M';
+async function saveClientSeq(clientId, code, newVal) {
+  const prefix = (code.match(/^([A-Z]+)/)||['',''])[1] || 'M';
   const newNum = Math.max(1, Math.min(999, parseInt(newVal)||1));
-  const newClientNo = prefix + String(newNum).padStart(3,'0');
-  if (newClientNo === clientNo) { renderTracking(); return; }
-  const { error } = await sb.from('crm_clients').update({ client_no: newClientNo }).eq('id', clientId);
+  const newCode = prefix + String(newNum).padStart(3,'0');
+  if (newCode === code) { renderTracking(); return; }
+  const { error } = await sb.from('crm_clients').update({ code: newCode }).eq('id', clientId);
   if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); renderTracking(); return; }
   const c = clients.find(x => x.id === clientId);
-  if (c) c.client_no = newClientNo;
-  clients.sort((a,b) => { const na=a.client_no||'',nb=b.client_no||''; return na?nb?na.localeCompare(nb):-1:nb?1:0; });
+  if (c) c.code = newCode;
+  clients.sort((a,b) => a.code.localeCompare(b.code));
   renderTracking();
 }
 function progressBar(pct) {
@@ -830,13 +853,8 @@ async function init() {
 // DATA LOADING
 // ─────────────────────────────────────────────────────────────
 async function loadClients() {
-  const { data } = await sb.from('crm_clients').select('*').eq('is_active', true);
-  clients = (data || []).sort((a, b) => {
-    const na = a.client_no || '', nb = b.client_no || '';
-    if (na && nb) return na.localeCompare(nb);
-    if (na) return -1; if (nb) return 1;
-    return (a.code||'').localeCompare(b.code||'');
-  });
+  const { data } = await sb.from('crm_clients').select('*').eq('is_active', true).order('code');
+  clients = data || [];
 }
 async function loadTasks() {
   const prevMonths = [];
@@ -936,8 +954,7 @@ function renderTracking() {
   const gb = 'border-l border-gray-200';
   let rows = '';
   clients.forEach(c => {
-    const clientNo = c.client_no || '';
-    const seqNum = clientNo ? (parseInt(clientNo.slice(1)) || '') : (parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '');
+    const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
     const t = taskMap[c.id] || {};
     const docItems = (t.doc_items||'').split(',').filter(Boolean);
     const docBadge = t.doc_date
@@ -990,7 +1007,7 @@ function renderTracking() {
     };
 
     rows += `<tr class="border-b border-gray-100">
-      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(clientNo)}')`:''}">
+      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(c.code)}')`:''}">
         ${seqNum}
       </td>
       <td class="px-1 py-3 text-center col-code cursor-pointer" onclick="openPanel(${c.id})">
@@ -1376,11 +1393,10 @@ function renderClientList() {
   const q = (document.getElementById('client-search')?.value || '').toLowerCase();
   const filtered = q
     ? clients.filter(c =>
-        (c.client_no||'').toLowerCase().includes(q) ||
         (c.code||'').toLowerCase().includes(q) ||
         (c.thai_name||'').toLowerCase().includes(q) ||
         (c.eng_name || '').toLowerCase().includes(q) ||
-        (c.tax_id || c.tax_number || '').includes(q))
+        (c.tax_number || '').includes(q))
     : clients;
 
   const container = document.getElementById('client-list');
@@ -1398,15 +1414,14 @@ function renderClientList() {
     const feeStr = c.monthly_fee > 0 ? fmtMoney(c.monthly_fee) : '';
     return `<div onclick="openPanel(${c.id})"
       class="bg-white border border-gray-200 rounded-xl px-5 py-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-4">
-      <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 flex-col gap-0.5">
-        ${c.client_no ? `<span class="text-blue-700 text-xs font-bold leading-none">${e(c.client_no)}</span>` : ''}
-        <span class="text-blue-500 text-[10px] font-medium leading-none">${e(c.code)}</span>
+      <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+        <span class="text-blue-700 text-sm font-bold">${e(c.code)}</span>
       </div>
       <div class="flex-1 min-w-0">
         <div class="font-semibold text-gray-900 truncate">${e(c.thai_name)}</div>
         <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
-          ${(c.tax_id||c.tax_number) ? `<span>เลขภาษี: ${e(c.tax_id||c.tax_number)}</span>` : ''}
-          ${c.entity_type ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.entity_type)}</span>` : (c.category ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.category)}</span>` : '')}
+          ${c.tax_number ? `<span>เลขภาษี: ${e(c.tax_number)}</span>` : ''}
+          ${c.category ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.category)}</span>` : ''}
           ${feeStr ? `<span class="text-emerald-700 font-semibold">${feeStr}</span>` : ''}
           ${inv && canEdit() ? invBadge(inv.status) : ''}
         </div>
@@ -1517,9 +1532,9 @@ function nextClientCode(type) {
 function nextClientNo(type) {
   const prefix = type || 'M';
   const nums = clients
-    .filter(c => c.client_no && c.client_no.startsWith(prefix))
-    .map(c => parseInt((c.client_no||'').slice(1)) || 0)
-    .filter(n => n > 0);
+    .map(c => c.code || '')
+    .filter(code => new RegExp(`^${prefix}\\d{3}$`).test(code))
+    .map(code => parseInt(code.slice(1)) || 0);
   return prefix + String(nums.length ? Math.max(...nums) + 1 : 1).padStart(3,'0');
 }
 function suggestCode() {
@@ -1543,13 +1558,14 @@ async function openPanel(clientId) {
   const c = clients.find(x => x.id === clientId);
   if (!c) return;
 
-  document.getElementById('panel-code').textContent = c.client_no || c.code;
+  document.getElementById('panel-code').textContent = c.code;
   document.getElementById('panel-name').textContent = c.thai_name;
   document.getElementById('panel-overlay').classList.remove('hidden');
   document.getElementById('client-panel').style.transform = 'translateX(0)';
 
   document.getElementById('tab-btn-billing').classList.toggle('hidden', !canEdit());
   document.getElementById('tab-btn-creds').classList.toggle('hidden', !canCred());
+  document.getElementById('panel-deactivate-btn').classList.toggle('hidden', !isOwner());
 
   switchTab('info');
 }
@@ -1559,6 +1575,97 @@ function closePanel() {
   document.getElementById('panel-overlay').classList.add('hidden');
   panelClientId = null;
   panelDirty = false;
+}
+
+function confirmDeactivateClient() {
+  const c = clients.find(x => x.id === panelClientId);
+  if (!c) return;
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-1">จัดการลูกค้า</h3>
+    <p class="text-sm text-gray-700 mb-4">เลือกการดำเนินการสำหรับ <strong>${e(c.thai_name)}</strong></p>
+    <div class="space-y-3">
+      <div class="border border-gray-200 rounded-xl p-4">
+        <div class="text-sm font-semibold text-gray-800 mb-1">ปิดใช้งานชั่วคราว</div>
+        <div class="text-xs text-gray-400 mb-3">ซ่อนจากรายการ แต่ข้อมูลยังคงอยู่ครบ สามารถเปิดคืนได้ผ่าน Supabase</div>
+        <button onclick="doDeactivateClient()" class="w-full px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors">ปิดใช้งาน</button>
+      </div>
+      <div class="border border-red-200 bg-red-50 rounded-xl p-4">
+        <div class="text-sm font-semibold text-red-700 mb-1">ลบถาวร</div>
+        <div class="text-xs text-red-400 mb-3">ลบลูกค้าและข้อมูลทั้งหมด (งานภาษี, ใบแจ้งหนี้, ประวัติ) ไม่สามารถกู้คืนได้</div>
+        <button onclick="confirmHardDeleteClient()" class="w-full px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors">ลบถาวร</button>
+      </div>
+    </div>
+    <div class="flex justify-end mt-4">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+    </div>`);
+}
+
+function confirmHardDeleteClient() {
+  const c = clients.find(x => x.id === panelClientId);
+  if (!c) return;
+  openModal(`
+    <h3 class="text-base font-bold text-red-700 mb-3">ยืนยันการลบถาวร</h3>
+    <p class="text-sm text-gray-700">พิมพ์รหัสลูกค้า <strong class="text-red-600">${e(c.code)}</strong> เพื่อยืนยัน</p>
+    <input id="delete-confirm-code" type="text" placeholder="${e(c.code)}"
+      class="mt-3 w-full px-3.5 py-2.5 rounded-lg border border-red-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+    <p class="text-xs text-red-400 mt-2">การดำเนินการนี้ไม่สามารถยกเลิกได้ ข้อมูลทั้งหมดจะถูกลบถาวร</p>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="doHardDeleteClient('${e(c.code)}')" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700">ลบถาวร</button>
+    </div>`);
+}
+
+async function doDeactivateClient() {
+  closeModal();
+  const id = panelClientId;
+  const { error } = await sb.from('crm_clients').update({ is_active: false }).eq('id', id);
+  if (error) { showToast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+  clients = clients.filter(x => x.id !== id);
+  closePanel();
+  showToast('ปิดใช้งานลูกค้าแล้ว');
+  navigate(curPage);
+}
+
+async function doHardDeleteClient(expectedCode) {
+  const typed = document.getElementById('delete-confirm-code')?.value.trim();
+  if (typed !== expectedCode) { showToast('รหัสลูกค้าไม่ถูกต้อง', 'error'); return; }
+  closeModal();
+  const id = panelClientId;
+  const { error } = await sb.from('crm_clients').delete().eq('id', id);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  clients = clients.filter(x => x.id !== id);
+  delete invoiceMap[id];
+  delete taskMap[id];
+  delete yearEndMap[id];
+  closePanel();
+  showToast('ลบลูกค้าแล้ว');
+  navigate(curPage);
+}
+
+async function deleteChangeLog(logId) {
+  if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
+  const { error } = await sb.from('crm_client_change_log').delete().eq('id', logId);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  showToast('ลบรายการแล้ว');
+  renderPanelHistory();
+}
+
+async function deleteInvoice(invId) {
+  if (!confirm('ต้องการลบใบแจ้งหนี้นี้ใช่หรือไม่?')) return;
+  const { error } = await sb.from('crm_invoices').delete().eq('id', invId);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  if (invoiceMap[panelClientId]?.id === invId) delete invoiceMap[panelClientId];
+  showToast('ลบใบแจ้งหนี้แล้ว');
+  renderPanelBilling();
+  renderTrackingSummary();
+}
+
+async function deleteBillingContract(contractId) {
+  if (!confirm('ต้องการลบสัญญาค่าบริการนี้ใช่หรือไม่?')) return;
+  const { error } = await sb.from('crm_billing_contracts').delete().eq('id', contractId);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  showToast('ลบสัญญาแล้ว');
+  loadBillingContracts(panelClientId);
 }
 
 function switchTab(tab) {
@@ -1577,13 +1684,13 @@ function switchTab(tab) {
 function renderPanelInfo() {
   const c = clients.find(x => x.id === panelClientId);
   if (!c) return;
-  const ro     = !isOwner();
+  const ro = !isOwner();
   const roBill = !canEdit();
 
-  const tf = (label, key, val, opts = '') => `
+  const tf = (label, key, val) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <input type="text" value="${e(val)}" ${ro ? 'readonly' : ''} data-key="${key}" ${opts}
+      <input type="text" value="${e(val)}" ${ro ? 'readonly' : ''} data-key="${key}"
         class="editable-field w-full text-sm text-gray-800"
         ${ro ? '' : 'oninput="markDirty()"'}>
     </div>`;
@@ -1599,24 +1706,24 @@ function renderPanelInfo() {
   const selectField = (label, key, val, options, useRo) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <select data-key="${key}" ${useRo ? 'disabled' : ''} onchange="markDirty()"
+      <select data-key="${key}" ${useRo ? 'disabled' : ''} onchange="${useRo ? '' : 'markDirty()'}"
         class="select-field text-sm text-gray-800">
         ${options.map(([v,l]) => `<option value="${v}" ${val===v?'selected':''}>${l}</option>`).join('')}
       </select>
     </div>`;
 
-  const numField = (label, key, val) => `
+  const numField = (label, key, val, useRo) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <input type="number" value="${val || 0}" min="0" step="100" ${roBill ? 'readonly' : ''} data-key="${key}"
+      <input type="number" value="${val || 0}" min="0" step="100" ${useRo ? 'readonly' : ''} data-key="${key}"
         class="editable-field w-full text-sm text-gray-800"
-        ${roBill ? '' : 'oninput="markDirty()"'}>
+        ${useRo ? '' : 'oninput="markDirty()"'}>
     </div>`;
 
   const chkField = (label, key, val, useRo) => `
-    <div class="flex items-center gap-2 pt-5">
+    <div class="flex items-center gap-2 pt-4">
       <input type="checkbox" data-key="${key}" ${val ? 'checked' : ''} ${useRo ? 'disabled' : ''}
-        onchange="markDirty()" class="w-4 h-4 rounded text-blue-600 flex-shrink-0">
+        onchange="${useRo ? '' : 'markDirty()'}" class="w-4 h-4 rounded text-blue-600 flex-shrink-0">
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">${label}</div>
     </div>`;
 
@@ -1629,168 +1736,273 @@ function renderPanelInfo() {
       >${e(val)}</textarea>
     </div>`;
 
-  const entityOptions = ENTITY_TYPES.map(t =>
-    `<option value="${e(t)}" ${(c.entity_type||c.type||''===t)?'selected':''}>${e(t)}</option>`).join('');
-
-  const clientNoDisplay = c.client_no
+  const codePrefix = (c.code || '').match(/^([A-Z]+)/)?.[1] || '';
+  const clientNoDisplay = c.code
     ? `<div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
-         <span class="text-blue-700 font-bold text-sm">${e(c.client_no)}</span>
-         <span class="text-blue-400 text-xs">${e(CLIENT_TYPE_MAP[c.client_type||'M']||'')}</span>
+         <span class="text-blue-700 font-bold text-sm">${e(c.code)}</span>
+         <span class="text-blue-400 text-xs">${e(CLIENT_TYPE_MAP[codePrefix]||'')}</span>
        </div>`
     : `<span class="text-xs text-gray-300 italic">ยังไม่ได้กำหนด</span>`;
+
+  const vatBadge = c.has_vat !== false
+    ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">มี VAT (PP.30)</span>`
+    : `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400 border border-gray-200">ไม่มี VAT</span>`;
+  const ssoBadge = c.has_sso !== false
+    ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">มี SSO</span>`
+    : `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400 border border-gray-200">ไม่มี SSO</span>`;
+
+  const categoryOpts = BUSINESS_CATEGORIES.map(cat =>
+    `<option value="${e(cat)}" ${(c.category||'')==cat?'selected':''}>${e(cat)}</option>`).join('');
+
+  const changeTypeOpts = CHANGE_TYPES.map(ct =>
+    `<option value="${e(ct.key)}">${e(ct.label)}</option>`).join('');
+
+  const changeSection = canEdit() ? `
+    <div class="border-t border-gray-100 pt-4 mt-4">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">บันทึกการเปลี่ยนแปลง</div>
+      <div class="space-y-3">
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทการเปลี่ยนแปลง</div>
+          <select id="change-type-sel" onchange="renderChangeValInput()"
+            class="select-field text-sm text-gray-800">
+            <option value="">-- เลือกประเภท --</option>
+            ${changeTypeOpts}
+          </select>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">วันที่มีผล</div>
+          <input id="change-date-inp" type="date"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+        <div id="change-val-wrap" class="hidden">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ค่าใหม่</div>
+          <div id="change-val-container"></div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">หมายเหตุ (ไม่บังคับ)</div>
+          <input id="change-note-inp" type="text" placeholder="เช่น ประชุมผู้ถือหุ้นอนุมัติ"
+            class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+        </div>
+        <div class="flex justify-end">
+          <button onclick="applyClientChange()"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors">
+            บันทึกการเปลี่ยนแปลง
+          </button>
+        </div>
+      </div>
+    </div>` : '';
 
   paneEl('info').innerHTML = `
     <div id="panel-info-fields">
 
-      <div class="mb-4 pb-4 border-b border-gray-100">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">รหัสลูกค้า</div>
-        <div class="flex items-center gap-3">
-          ${clientNoDisplay}
-          ${!ro && c.client_no ? `<button onclick="editClientSeqFromPanel(${c.id},'${e(c.client_no)}')"
-            class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50">แก้ไขลำดับ</button>` : ''}
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">CODE (ชื่อเรียก)</div>
-          <div class="flex gap-1.5 items-center">
-            <input type="text" value="${e(c.code)}" ${ro ? 'readonly' : ''} data-key="code"
-              class="editable-field flex-1 text-sm text-gray-800" ${ro ? '' : 'oninput="markDirty()"'}>
-            ${ro ? '' : `<button onclick="suggestCode()" class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0">แนะนำ</button>`}
+      <!-- ข้อมูลพื้นฐาน (owner-only) -->
+      <div class="mb-5 pb-4 border-b border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ข้อมูลพื้นฐาน</div>
+        <div class="mb-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">รหัสลูกค้า</div>
+          <div class="flex items-center gap-3">
+            ${clientNoDisplay}
           </div>
         </div>
-        <div>
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทนิติบุคคล</div>
-          <select data-key="entity_type" ${ro ? 'disabled' : ''} onchange="markDirty()"
-            class="select-field text-sm text-gray-800">
-            <option value="">-- เลือก --</option>
-            ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.entity_type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
-          </select>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">CODE (ชื่อเรียก)</div>
+            <div class="flex gap-1.5 items-center">
+              <input type="text" value="${e(c.code)}" ${ro ? 'readonly' : ''} data-key="code"
+                class="editable-field flex-1 text-sm text-gray-800" ${ro ? '' : 'oninput="markDirty()"'}>
+              ${ro ? '' : `<button onclick="suggestCode()" class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0">แนะนำ</button>`}
+            </div>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทนิติบุคคล</div>
+            <select data-key="type" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
+              class="select-field text-sm text-gray-800">
+              <option value="">-- เลือก --</option>
+              ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="col-span-2">${tf('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
+          <div class="col-span-2">${tf('ชื่อบริษัท (อังกฤษ)', 'eng_name', c.eng_name||'')}</div>
+          ${tf('เลขผู้เสียภาษี', 'tax_id', c.tax_id || c.tax_number || '')}
+          <div></div>
+          <div class="col-span-2">${taField('ที่อยู่', 'address', c.address||'', 2, ro, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
+          ${tf('วันที่จดทะเบียน', 'registration_date', c.registration_date||'')}
+          ${tf('วันที่เริ่มให้บริการ', 'start_date', c.start_date || '')}
+          ${tf('วันที่สิ้นสุดให้บริการ', 'end_date', c.end_date||'')}
+          <div class="col-span-2">${tf('หมายเหตุ', 'notes', c.notes||'')}</div>
         </div>
-        <div class="col-span-2">${tf('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
-        <div class="col-span-2">${tf('ชื่อบริษัท (อังกฤษ)', 'eng_name', c.eng_name||'')}</div>
-        ${tf('เลขผู้เสียภาษี', 'tax_id', c.tax_id || c.tax_number || '')}
-        ${tf('ประเภทธุรกิจ', 'category', c.category||'')}
-        <div class="col-span-2">${taField('ที่อยู่', 'address', c.address||'', 2, ro, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
-        ${tf('วันที่จดทะเบียน', 'registration_date', c.registration_date||'')}
-        ${tf('วันที่เริ่มให้บริการ', 'service_start_date', c.service_start_date || c.start_date || '')}
-        ${tf('วันที่สิ้นสุดให้บริการ', 'end_date', c.end_date||'')}
-        <div class="col-span-2">${tf('หมายเหตุ', 'notes', c.notes||'')}</div>
+        ${ro ? '<p class="text-xs text-gray-400 mt-3">แก้ไขได้เฉพาะเจ้าของ</p>' : ''}
       </div>
 
-      <div class="border-t border-gray-100 pt-4 mt-5">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ค่าบริการ</div>
+      <!-- ข้อมูลทั่วไป (canEdit) -->
+      <div class="mb-5 pb-4 border-b border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ข้อมูลทั่วไป</div>
+        <div class="space-y-4">
+          <div>
+            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทธุรกิจ</div>
+            <select data-key="category" ${roBill ? 'disabled' : ''} onchange="${roBill ? '' : 'markDirty()'}"
+              class="select-field text-sm text-gray-800">
+              <option value="">-- เลือก --</option>
+              ${categoryOpts}
+            </select>
+          </div>
+          ${tfBill('อีเมล (สำหรับใบเสร็จ)', 'client_email', c.client_email||'')}
+          ${tfBill('LINE Group ID', 'line_group_id', c.line_group_id||'')}
+        </div>
+      </div>
+
+      <!-- สถานะบริการปัจจุบัน (display only) -->
+      <div class="mb-5 pb-4 border-b border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">สถานะบริการปัจจุบัน</div>
+        <div class="flex flex-wrap items-center gap-3">
+          ${c.monthly_fee > 0
+            ? `<span class="text-sm font-bold text-gray-800">${fmtMoney(c.monthly_fee)}<span class="text-xs font-normal text-gray-400 ml-1">/เดือน</span></span>`
+            : `<span class="text-xs text-gray-300 italic">ยังไม่ได้กำหนดค่าบริการ</span>`}
+          ${vatBadge}
+          ${ssoBadge}
+        </div>
+      </div>
+
+      <!-- บันทึกการเปลี่ยนแปลง -->
+      ${changeSection}
+
+      <!-- การออกบิล (canEdit) -->
+      <div class="border-t border-gray-100 pt-4 mt-4">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">การออกบิล</div>
         <div class="grid grid-cols-2 gap-4">
           ${selectField('ประเภทการเรียกเก็บ','billing_type', c.billing_type||'monthly', [
               ['monthly','รายเดือน (M)'],['annual','รายปี (Y)'],['filing','ยื่นแบบเปล่า (T)']
             ], roBill)}
-          ${numField('ค่าบริการ (บาท/เดือน)', 'monthly_fee', c.monthly_fee)}
+          ${numField('ค่าบริการ (บาท/เดือน)', 'monthly_fee', c.monthly_fee, roBill)}
+          <div></div>
           ${chkField('หัก ณ ที่จ่าย 3%', 'has_wht', c.has_wht !== false, roBill)}
-          ${chkField('มี VAT (PP.30)', 'has_vat', c.has_vat !== false, roBill)}
-          ${chkField('มี SSO (ประกันสังคม)', 'has_sso', c.has_sso !== false, roBill)}
           ${chkField('มีที่ตั้งสำนักงานของตัวเอง', 'has_own_office', c.has_own_office !== false, roBill)}
         </div>
       </div>
 
+      <!-- FlowAccount & รายการเอกสาร (canEdit) -->
       <div class="border-t border-gray-100 pt-4 mt-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ช่องทางติดต่อ</div>
-        <div class="grid grid-cols-1 gap-4">
-          ${tfBill('อีเมล (สำหรับใบเสร็จ)', 'client_email', c.client_email||'')}
-          ${tfBill('LINE Group ID', 'line_group_id', c.line_group_id||'')}
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">FlowAccount & เอกสาร</div>
+        <div class="space-y-4">
           ${tfBill('FlowAccount Contact ID', 'fa_contact_id', c.fa_contact_id||'')}
+          <div>
+            <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รายการเอกสาร</div>
+            <div class="text-xs text-gray-400 mb-2">พิมพ์ทีละบรรทัด — ใช้ใน popup รับเอกสาร ถ้าว่างจะใช้รายการ default</div>
+            <textarea data-key="doc_item_templates" data-type="linelist"
+              ${roBill ? 'readonly' : 'oninput="markDirty()"'}
+              rows="5" placeholder="สลิปเงินเดือน&#10;ใบเสร็จค่าใช้จ่าย&#10;Statement ธนาคาร"
+              class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
+            >${e((c.doc_item_templates||'').split(',').filter(Boolean).join('\n'))}</textarea>
+          </div>
         </div>
       </div>
 
-      <div class="border-t border-gray-100 pt-4 mt-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รายการเอกสาร</div>
-        <div class="text-xs text-gray-400 mb-2">พิมพ์ทีละบรรทัด — ใช้ใน popup รับเอกสาร ถ้าว่างจะใช้รายการ default</div>
-        <textarea data-key="doc_item_templates" data-type="linelist"
-          ${roBill ? 'readonly' : 'oninput="markDirty()"'}
-          rows="5" placeholder="สลิปเงินเดือน&#10;ใบเสร็จค่าใช้จ่าย&#10;Statement ธนาคาร"
-          class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
-        >${e((c.doc_item_templates||'').split(',').filter(Boolean).join('\n'))}</textarea>
-      </div>
-
-      ${ro && !roBill ? '<p class="text-xs text-gray-400 text-center mt-4 pb-2">ข้อมูลบริษัท — แก้ไขได้เฉพาะเจ้าของ</p>' : ''}
     </div>`;
 }
 
-function editClientSeqFromPanel(clientId, clientNo) {
-  if (!canEdit()) return;
-  const num = parseInt((clientNo||'').slice(1)) || 0;
-  openModal(`
-    <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขลำดับที่ (${clientNo})</h3>
-    <div class="mb-4">
-      <label class="block text-sm font-semibold text-gray-700 mb-1.5">ลำดับที่ใหม่</label>
-      <input id="seq-input" type="number" min="1" max="999" value="${num}"
-        class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        onkeydown="if(event.key==='Enter')document.getElementById('seq-save-btn').click()">
-    </div>
-    <div class="flex justify-end gap-2">
-      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium">ยกเลิก</button>
-      <button id="seq-save-btn" onclick="saveSeqFromPanel(${clientId},'${clientNo}',document.getElementById('seq-input').value);closeModal()"
-        class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">บันทึก</button>
-    </div>`);
-  setTimeout(() => { const inp = document.getElementById('seq-input'); if(inp){inp.focus();inp.select();} }, 50);
-}
-async function saveSeqFromPanel(clientId, clientNo, newVal) {
-  const prefix = (clientNo||'').charAt(0) || 'M';
-  const newNum = Math.max(1, Math.min(999, parseInt(newVal)||1));
-  const newClientNo = prefix + String(newNum).padStart(3,'0');
-  if (newClientNo === clientNo) return;
-  const { error } = await sb.from('crm_clients').update({ client_no: newClientNo }).eq('id', clientId);
-  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
-  const c = clients.find(x => x.id === clientId);
-  if (c) c.client_no = newClientNo;
-  clients.sort((a,b) => { const na=a.client_no||'',nb=b.client_no||''; return na?nb?na.localeCompare(nb):-1:nb?1:0; });
-  document.getElementById('panel-code').textContent = newClientNo;
-  showToast('บันทึกสำเร็จ');
-  renderPanelInfo();
-}
-
 async function savePanelInfo() {
-  const oldClient = clients.find(x => x.id === panelClientId);
   const fields = {};
   document.querySelectorAll('#panel-info-fields [data-key]').forEach(el => {
-    if (el.disabled && el.tagName === 'SELECT') return;
-    if (el.tagName === 'SELECT') {
-      fields[el.dataset.key] = el.value;
-    } else if (el.type === 'checkbox') {
-      fields[el.dataset.key] = el.checked;
-    } else if (el.type === 'number') {
-      fields[el.dataset.key] = parseFloat(el.value) || 0;
-    } else if (el.dataset.type === 'linelist') {
-      fields[el.dataset.key] = el.value.split('\n').map(s => s.trim()).filter(Boolean).join(',');
-    } else {
-      fields[el.dataset.key] = el.value.trim();
-    }
+    if (el.disabled || el.readOnly) return;
+    if (el.tagName === 'SELECT') { fields[el.dataset.key] = el.value; }
+    else if (el.type === 'checkbox') { fields[el.dataset.key] = el.checked; }
+    else if (el.type === 'number') { fields[el.dataset.key] = parseFloat(el.value) || 0; }
+    else if (el.dataset.type === 'linelist') { fields[el.dataset.key] = el.value.split('\n').map(s=>s.trim()).filter(Boolean).join(','); }
+    else { fields[el.dataset.key] = el.value.trim(); }
   });
-  if (fields.tax_id !== undefined) { fields.tax_number = fields.tax_id; }
+  if (fields.tax_id !== undefined) { fields.tax_number = fields.tax_id; delete fields.tax_id; }
+  ['start_date', 'end_date'].forEach(f => { if (f in fields && fields[f] === '') fields[f] = null; });
+
+  if (!Object.keys(fields).length) {
+    panelDirty = false;
+    document.getElementById('panel-save-bar').classList.add('hidden');
+    return;
+  }
 
   const { error } = await sb.from('crm_clients').update(fields).eq('id', panelClientId);
   if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
 
-  if (oldClient && fields.monthly_fee !== oldClient.monthly_fee && fields.monthly_fee > 0) {
-    const today = new Date().toISOString().split('T')[0];
-    await sb.from('crm_billing_contracts')
-      .update({ effective_to: today })
-      .eq('client_id', panelClientId).is('effective_to', null);
-    await sb.from('crm_billing_contracts').insert({
-      client_id: panelClientId,
-      billing_type: fields.billing_type || 'monthly',
-      fee_amount: fields.monthly_fee,
-      has_wht: fields.has_wht !== false,
-      notes: `เปลี่ยนจาก ${oldClient.monthly_fee} → ${fields.monthly_fee} บาท`
-    });
-  }
-
   const idx = clients.findIndex(x => x.id === panelClientId);
   if (idx !== -1) Object.assign(clients[idx], fields);
-  document.getElementById('panel-name').textContent = fields.thai_name || '';
+  if (fields.thai_name) document.getElementById('panel-name').textContent = fields.thai_name;
   panelDirty = false;
   document.getElementById('panel-save-bar').classList.add('hidden');
   showToast('บันทึกสำเร็จ');
+}
+
+function renderChangeValInput() {
+  const ct = document.getElementById('change-type-sel')?.value;
+  const typeDef = CHANGE_TYPES.find(t => t.key === ct);
+  const wrap = document.getElementById('change-val-wrap');
+  const container = document.getElementById('change-val-container');
+  if (!wrap || !container) return;
+  if (!typeDef?.need) { wrap.classList.add('hidden'); container.innerHTML = ''; return; }
+  wrap.classList.remove('hidden');
+  const cls = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300';
+  if (typeDef.need === 'number') {
+    container.innerHTML = `<input id="change-val-inp" type="number" min="0" step="100" placeholder="${e(typeDef.ph)}" class="${cls}">`;
+  } else if (typeDef.need === 'textarea') {
+    container.innerHTML = `<textarea id="change-val-inp" rows="3" placeholder="${e(typeDef.ph)}" class="${cls} resize-none"></textarea>`;
+  } else {
+    container.innerHTML = `<input id="change-val-inp" type="text" placeholder="${e(typeDef.ph)}" class="${cls}">`;
+  }
+  document.getElementById('change-val-inp')?.focus();
+}
+
+async function applyClientChange() {
+  if (!canEdit()) return;
+  const ct = document.getElementById('change-type-sel')?.value;
+  const cd = (document.getElementById('change-date-inp')?.value || '').trim();
+  if (!ct) { showToast('กรุณาเลือกประเภทการเปลี่ยนแปลง', 'error'); return; }
+  if (!cd) { showToast('กรุณาระบุวันที่มีผล', 'error'); return; }
+  const typeDef = CHANGE_TYPES.find(t => t.key === ct);
+  let newValue = '';
+  if (typeDef?.need) {
+    newValue = (document.getElementById('change-val-inp')?.value || '').trim();
+    if (!newValue) { showToast('กรุณากรอกค่าใหม่', 'error'); return; }
+  }
+  const note = (document.getElementById('change-note-inp')?.value || '').trim();
+
+  const { error: logErr } = await sb.from('crm_client_change_log').insert({
+    client_id: panelClientId, change_type: ct, change_date: cd, new_value: newValue, note,
+    created_by: profile?.id,
+  });
+  if (logErr) { showToast('บันทึกไม่สำเร็จ: ' + logErr.message, 'error'); return; }
+
+  const updates = {};
+  if (ct === 'fee')    { updates.monthly_fee = parseFloat(newValue) || 0; }
+  if (ct === 'name')   { updates.thai_name = newValue; }
+  if (ct === 'address') { updates.address = newValue; }
+  if (ct === 'vat_on')  { updates.has_vat = true; }
+  if (ct === 'vat_off') { updates.has_vat = false; }
+  if (ct === 'sso_on' || ct === 'sso_resume') { updates.has_sso = true; }
+  if (ct === 'sso_pause' || ct === 'sso_off') { updates.has_sso = false; }
+
+  if (Object.keys(updates).length) {
+    const { error: updErr } = await sb.from('crm_clients').update(updates).eq('id', panelClientId);
+    if (updErr) { showToast('อัปเดตข้อมูลไม่สำเร็จ: ' + updErr.message, 'error'); return; }
+    if (ct === 'fee') {
+      const c = clients.find(x => x.id === panelClientId);
+      await sb.from('crm_billing_contracts')
+        .update({ effective_to: cd }).eq('client_id', panelClientId).is('effective_to', null);
+      await sb.from('crm_billing_contracts').insert({
+        client_id: panelClientId,
+        billing_type: c?.billing_type || 'monthly',
+        fee_amount: updates.monthly_fee,
+        has_wht: c?.has_wht !== false,
+        effective_from: cd,
+        notes: `เปลี่ยนค่าบริการ: ${newValue} บาท (${cd})`
+      });
+    }
+    const idx = clients.findIndex(x => x.id === panelClientId);
+    if (idx !== -1) Object.assign(clients[idx], updates);
+    if (updates.thai_name) document.getElementById('panel-name').textContent = updates.thai_name;
+  }
+
+  showToast('บันทึกการเปลี่ยนแปลงสำเร็จ');
+  panelDirty = false;
+  document.getElementById('panel-save-bar').classList.add('hidden');
+  renderPanelInfo();
 }
 
 // ── Billing Tab ──
@@ -1866,9 +2078,14 @@ async function renderPanelBilling() {
         <h4 class="text-sm font-bold text-gray-700 mb-2">ประวัติใบแจ้งหนี้</h4>
         <div class="text-xs text-gray-400">กำลังโหลด…</div>
       </div>
+      <div id="billing-contracts">
+        <h4 class="text-sm font-bold text-gray-700 mb-2">ประวัติสัญญาค่าบริการ</h4>
+        <div class="text-xs text-gray-400">กำลังโหลด…</div>
+      </div>
     </div>`;
 
   loadBillingHistory(c.id);
+  loadBillingContracts(c.id);
 }
 
 async function loadBillingHistory(clientId) {
@@ -1888,7 +2105,36 @@ async function loadBillingHistory(clientId) {
         <span class="text-xs font-semibold text-gray-700">${THAI_MONTHS[inv.month]} ${inv.year + 543}</span>
         <span class="ml-2 text-xs text-gray-400">${fmtMoney(inv.expected_payment)}</span>
       </div>
-      ${invBadge(inv.status)}
+      <div class="flex items-center gap-2">
+        ${invBadge(inv.status)}
+        ${isOwner() ? `<button onclick="deleteInvoice(${inv.id})" class="text-gray-300 hover:text-red-500 transition-colors text-xs" title="ลบ">✕</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+async function loadBillingContracts(clientId) {
+  const el = document.getElementById('billing-contracts');
+  if (!el) return;
+
+  const { data } = await sb.from('crm_billing_contracts')
+    .select('*').eq('client_id', clientId)
+    .order('effective_from', { ascending: false });
+
+  if (!data?.length) {
+    el.innerHTML = `<h4 class="text-sm font-bold text-gray-700 mb-2">ประวัติสัญญาค่าบริการ</h4><div class="text-xs text-gray-400">ยังไม่มีข้อมูล</div>`;
+    return;
+  }
+
+  const BILLING_LABEL = { monthly: 'รายเดือน', yearly: 'รายปี', per_form: 'ยื่นแบบเปล่า' };
+  el.innerHTML = `<h4 class="text-sm font-bold text-gray-700 mb-2">ประวัติสัญญาค่าบริการ</h4>` +
+    data.map(ct => `
+    <div class="flex items-start justify-between py-2 border-b border-gray-100 last:border-0">
+      <div class="flex-1 min-w-0">
+        <div class="text-xs font-semibold text-gray-700">${fmtMoney(ct.fee_amount)} <span class="text-gray-400 font-normal">· ${BILLING_LABEL[ct.billing_type] || ct.billing_type}</span>${ct.has_wht ? ' · <span class="text-orange-500">หัก ณ ที่จ่าย</span>' : ''}</div>
+        <div class="text-[10px] text-gray-400 mt-0.5">มีผล ${ct.effective_from ? thaiDate(ct.effective_from) : '—'}${ct.effective_to ? ` ถึง ${thaiDate(ct.effective_to)}` : ''}</div>
+        ${ct.notes ? `<div class="text-[10px] text-gray-400 truncate">${e(ct.notes)}</div>` : ''}
+      </div>
+      ${isOwner() ? `<button onclick="deleteBillingContract(${ct.id})" class="ml-2 text-gray-300 hover:text-red-500 transition-colors text-xs flex-shrink-0" title="ลบ">✕</button>` : ''}
     </div>`).join('');
 }
 
@@ -2052,47 +2298,104 @@ async function savePanelCreds() {
 // ── History Tab ──
 async function renderPanelHistory() {
   const el = paneEl('history');
+  const c = clients.find(cl => cl.id === panelClientId);
+  if (!c) return;
   el.innerHTML = '<div class="text-gray-400 text-sm py-4">กำลังโหลด…</div>';
 
   const months = [];
-  let y = curYear, m = curMonth;
+  let hy = curYear, hm = curMonth;
   for (let i = 0; i < 6; i++) {
-    months.push({ y, m });
-    m--; if (m < 1) { m = 12; y--; }
+    months.push({ y: hy, m: hm });
+    hm--; if (hm < 1) { hm = 12; hy--; }
+  }
+  const monthFilter = months.map(({ y, m }) => `and(year.eq.${y},month.eq.${m})`).join(',');
+
+  const [{ data: tasks }, { data: changeLog }] = await Promise.all([
+    sb.from('crm_tax_tasks')
+      .select('*').eq('client_id', panelClientId).or(monthFilter)
+      .order('year', { ascending: false }).order('month', { ascending: false }),
+    sb.from('crm_client_change_log')
+      .select('*').eq('client_id', panelClientId)
+      .order('change_date', { ascending: false }).order('created_at', { ascending: false }),
+  ]);
+
+  const tasksByMonth = {};
+  (tasks || []).forEach(t => { tasksByMonth[`${t.year}-${t.month}`] = t; });
+  const nameChanges = (changeLog || []).filter(ch => ch.change_type === 'name');
+
+  function effectiveNameAt(year, month) {
+    const lastDay = `${year}-${String(month).padStart(2,'0')}-${String(new Date(year, month, 0).getDate()).padStart(2,'0')}`;
+    const before = nameChanges
+      .filter(ch => ch.change_date <= lastDay)
+      .sort((a, b) => b.change_date.localeCompare(a.change_date));
+    return before.length ? before[0].new_value : c.thai_name;
   }
 
-  const { data } = await sb.from('crm_tax_tasks')
-    .select('*').eq('client_id', panelClientId)
-    .in('year', months.map(x => x.y)).in('month', months.map(x => x.m))
-    .order('year', { ascending: false }).order('month', { ascending: false });
+  const CHANGE_TYPE_LABEL = {};
+  CHANGE_TYPES.forEach(t => { CHANGE_TYPE_LABEL[t.key] = t.label; });
 
-  if (!data?.length) { el.innerHTML = '<div class="text-gray-400 text-sm py-4 text-center">ยังไม่มีประวัติงาน</div>'; return; }
+  let changeLogHtml = '';
+  if (changeLog?.length) {
+    changeLogHtml = `
+      <div class="mb-5 pb-4 border-b border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ประวัติการเปลี่ยนแปลง</div>
+        <div class="space-y-2.5">
+          ${changeLog.map(ch => {
+            const label = CHANGE_TYPE_LABEL[ch.change_type] || ch.change_type;
+            const valueStr = ch.new_value ? ` → <span class="text-blue-700 font-semibold">${e(ch.new_value)}</span>` : '';
+            const noteStr = ch.note ? `<span class="text-gray-400 ml-1">· ${e(ch.note)}</span>` : '';
+            const delBtn = canEdit() ? `<button onclick="deleteChangeLog(${ch.id})" class="ml-1 text-gray-300 hover:text-red-500 transition-colors text-xs leading-none flex-shrink-0" title="ลบ">✕</button>` : '';
+            return `<div class="flex gap-3 items-start">
+              <div class="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs text-gray-700 flex items-start gap-1"><span><span class="font-semibold">${e(label)}</span>${valueStr}${noteStr}</span>${delBtn}</div>
+                <div class="text-[10px] text-gray-400 mt-0.5">${ch.change_date ? thaiDate(ch.change_date) : ''}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
 
-  const _panelClient = clients.find(cl => cl.id === panelClientId);
-  const _pHv = _panelClient?.has_vat !== false, _pHs = _panelClient?.has_sso !== false;
-  el.innerHTML = data.map(t => {
-    const pct = calcRowPct(t, _pHv, _pHs);
+  const hasVat = c.has_vat !== false, hasSso = c.has_sso !== false;
+  const monthCards = months.map(({ y: my, m: mm }) => {
+    const t = tasksByMonth[`${my}-${mm}`];
+    if (!t) return `<div class="border border-dashed border-gray-100 rounded-xl p-4 mb-3 opacity-50">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-500">${THAI_MONTHS[mm]} ${my + 543}</span>
+        <span class="text-xs text-gray-400">ไม่มีข้อมูล</span>
+      </div>
+    </div>`;
+    const nameAtMonth = effectiveNameAt(my, mm);
+    const showNameTag = nameAtMonth !== c.thai_name;
+    const pct = calcRowPct(t, hasVat, hasSso);
     const bar = pct === 100 ? '#16a34a' : pct > 50 ? '#2563eb' : '#d97706';
     const badges = [
-      { label:'STM',     done: t.stm==='done' },
-      { label:'TAX1',    done: !!t.tax1_paid },
-      ...(_pHs ? [{ label:'SSO',  done: !!t.sso_client_paid }] : []),
-      ...(_pHv ? [{ label:'TAX2', done: !!t.tax2_paid }] : []),
+      { label:'TAX1', done: !!t.tax1_paid },
+      ...(hasSso ? [{ label:'SSO',  done: !!t.sso_client_paid }] : []),
+      ...(hasVat ? [{ label:'TAX2', done: !!t.tax2_paid }] : []),
       { label:'Download', done: t.rd_download==='done' },
       { label:'Key',      done: t.rd_keyed==='done' },
-      { label:'Acct Fee', done: t.acct_fee==='done' },
     ];
     return `<div class="border border-gray-100 rounded-xl p-4 mb-3">
-      <div class="flex items-center justify-between mb-2">
-        <span class="font-semibold text-sm text-gray-800">${THAI_MONTHS[t.month]} ${t.year + 543}</span>
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-semibold text-sm text-gray-800">${THAI_MONTHS[mm]} ${my + 543}</span>
+          ${showNameTag ? `<span class="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">${e(nameAtMonth)}</span>` : ''}
+        </div>
         <span class="text-xs font-bold" style="color:${bar}">${pct}%</span>
       </div>
       <div class="prog-bar mb-2"><div class="prog-fill" style="width:${pct}%;background:${bar}"></div></div>
-      <div class="flex flex-wrap gap-1 mt-2">
+      <div class="flex flex-wrap gap-1">
         ${badges.map(b => `<span class="text-xs px-1.5 py-0.5 rounded ${b.done?'bg-green-50 text-green-700':'bg-amber-50 text-amber-600'}">${b.label}</span>`).join('')}
       </div>
+      ${t.notes ? `<div class="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-50">${e(t.notes)}</div>` : ''}
     </div>`;
   }).join('');
+
+  el.innerHTML = changeLogHtml +
+    `<div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ประวัติงานรายเดือน</div>` +
+    monthCards;
 }
 
 function togglePw(btn) {
@@ -2251,7 +2554,7 @@ function openAddClient() {
         </div>
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1">วันที่เริ่มให้บริการ</label>
-          <input id="nc-svcdate" type="text" placeholder="เช่น 1 ม.ค. 2566" class="${inp}">
+          <input id="nc-svcdate" type="date" class="${inp}">
         </div>
       </div>
       <div class="border-t border-gray-100 pt-3">
@@ -2297,27 +2600,24 @@ async function saveNewClient() {
     ncErr.classList.remove('hidden'); return;
   }
 
-  const clientNo     = ctypeVal + String(Math.max(1, Math.min(999, seqVal))).padStart(3,'0');
+  const seqCode      = ctypeVal + String(Math.max(1, Math.min(999, seqVal))).padStart(3,'0');
   const codeRaw      = (document.getElementById('nc-code')?.value || '').trim().toUpperCase();
-  const code         = codeRaw || clientNo;
+  const code         = codeRaw || seqCode;
   const taxId        = (document.getElementById('nc-taxid')?.value || '').trim();
   const address      = (document.getElementById('nc-address')?.value || '').trim();
   const regDate      = (document.getElementById('nc-regdate')?.value || '').trim();
-  const svcDate      = (document.getElementById('nc-svcdate')?.value || '').trim();
+  const svcDate      = document.getElementById('nc-svcdate')?.value || null;
   const fee          = parseFloat(document.getElementById('nc-fee')?.value) || 0;
   const billing_type = ctypeVal === 'M' ? 'monthly' : ctypeVal === 'Y' ? 'annual' : 'filing';
 
   const payload = {
-    client_no:          clientNo,
-    client_type:        ctypeVal,
     code,
-    entity_type:        entity,
+    type:               entity,
     thai_name:          thai,
-    tax_id:             taxId,
     tax_number:         taxId,
     address,
     registration_date:  regDate,
-    service_start_date: svcDate,
+    start_date:         svcDate,
     billing_type,
     monthly_fee:        fee,
     has_wht:            document.getElementById('nc-wht').checked,
@@ -2331,12 +2631,12 @@ async function saveNewClient() {
   if (fee > 0) {
     await sb.from('crm_billing_contracts').insert({
       client_id: data.id, billing_type, fee_amount: fee,
-      has_wht: payload.has_wht, notes: 'เริ่มต้น'
+      has_wht: payload.has_wht, effective_from: svcDate || undefined, notes: 'เริ่มต้น'
     });
   }
 
   clients.push(data);
-  clients.sort((a,b) => { const na=a.client_no||'',nb=b.client_no||''; return na?nb?na.localeCompare(nb):-1:nb?1:0; });
+  clients.sort((a,b) => a.code.localeCompare(b.code));
   closeModal();
   showToast('เพิ่มลูกค้าสำเร็จ');
   if (curPage === 'clients') renderClientList();
