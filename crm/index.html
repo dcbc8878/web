@@ -1403,7 +1403,7 @@ async function openDocModal(clientId) {
   const isoDate = /^\d{4}-\d{2}-\d{2}$/.test(curDate) ? curDate : '';
 
   openModal(`
-    <div class="p-5" style="min-width:600px;max-width:720px">
+    <div class="p-5">
       <h3 class="text-base font-semibold text-gray-800 mb-4">รับเอกสาร</h3>
       <div class="mb-4">
         ${dateFieldHtml({
@@ -1432,7 +1432,7 @@ async function openDocModal(clientId) {
         </div>
       </div>
     </div>
-  `);
+  `, { maxWidth: '760px' });
   renderDocBankSection();
   renderDocOtherSection();
 }
@@ -1581,72 +1581,149 @@ async function printDocReceipt(clientId) {
   const templates = (c.doc_item_templates || '').split(',').filter(Boolean);
   const otherList = templates.length ? templates : DOC_ITEMS;
 
-  const lines = [];
-  lines.push(`รายการรับเอกสารจากลูกค้า ประจำเดือน${THAI_MONTHS[curMonth]} ปี${curYear + 543}`);
-  lines.push('');
-  lines.push(`รับเอกสารวันที่ ${t.doc_date ? fmtDDMMYYYY(t.doc_date) : '—'} โดยมีรายการดังนี้`);
-  lines.push('');
-  lines.push('bank statement');
-  let n = 1;
+  const rows = [];
   if (bankList.length) {
-    bankList.forEach(b => {
-      lines.push(`${n}. ${bankLabel(b)} — ${bankChecked.has(String(b.id)) ? 'ได้รับ' : 'ยังไม่ได้'}`);
-      n++;
-    });
+    bankList.forEach(b => rows.push({ label: bankLabel(b), got: bankChecked.has(String(b.id)) }));
   } else {
-    lines.push(`${n}. (ไม่มีบัญชีธนาคาร)`);
-    n++;
+    rows.push({ label: '(ไม่มีบัญชีธนาคาร)', got: false });
   }
-  otherList.forEach(item => {
-    lines.push(`${n}. ${item} — ${otherChecked.has(item) ? 'ได้รับ' : 'ยังไม่ได้'}`);
-    n++;
-  });
-  lines.push('');
-  lines.push(`ตรวจสอบเอกสารโดย ${profile?.display_name || ''}`);
+  otherList.forEach(item => rows.push({ label: item, got: otherChecked.has(item) }));
 
-  openDocReceiptPrintView(c, lines.join('\n'));
+  const dateStr = t.doc_date ? fmtDDMMYYYY(t.doc_date) : '—';
+  const monthLabel = `ประจำเดือน${THAI_MONTHS[curMonth]} พ.ศ. ${curYear + 543}`;
+  openDocReceiptPrintView(c, monthLabel, dateStr, rows);
 }
 
-let docReceiptText = '';
-let docReceiptTitle = '';
+let docReceiptData = null;
 
-function openDocReceiptPrintView(c, text) {
-  docReceiptText = text;
-  docReceiptTitle = c.thai_name || 'receipt';
-  document.getElementById('doc-print-area').innerHTML =
-    `<div style="white-space:pre-wrap;font-size:14px;line-height:1.8;padding:24px">${e(text)}</div>`;
+function docReceiptClassicHtml(c, monthLabel, dateStr, rows) {
+  const rowsHtml = rows.map((r, i) => `
+    <tr>
+      <td style="border:1px solid #94a3b8;padding:6px 8px;text-align:center;width:40px">${i + 1}</td>
+      <td style="border:1px solid #94a3b8;padding:6px 10px;text-align:left">${e(r.label)}</td>
+      <td style="border:1px solid #94a3b8;padding:6px 8px;text-align:center;width:100px;font-weight:700;color:${r.got ? '#15803d' : '#b91c1c'}">${r.got ? '✓ ได้รับ' : '✗ ยังไม่ได้'}</td>
+    </tr>`).join('');
+  return `
+    <div style="font-family:'Noto Sans Thai',sans-serif;max-width:640px;margin:0 auto;padding:32px;color:#1e293b">
+      <div style="text-align:center;border-bottom:3px double #1e293b;padding-bottom:14px;margin-bottom:18px">
+        <div style="font-size:19px;font-weight:700">รายการรับเอกสารจากลูกค้า</div>
+        <div style="font-size:13px;color:#64748b;margin-top:2px">${e(monthLabel)}</div>
+      </div>
+      <table style="width:100%;font-size:13px;margin-bottom:16px;border-collapse:collapse">
+        <tr><td style="font-weight:700;width:130px;padding:2px 0">ชื่อบริษัท</td><td style="padding:2px 0">: ${e(c.thai_name)} (${e(c.code)})</td></tr>
+        <tr><td style="font-weight:700;padding:2px 0">รับเอกสารวันที่</td><td style="padding:2px 0">: ${e(dateStr)}</td></tr>
+      </table>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#f1f5f9">
+            <th style="border:1px solid #94a3b8;padding:6px 8px">ลำดับ</th>
+            <th style="border:1px solid #94a3b8;padding:6px 8px;text-align:left">รายการเอกสาร</th>
+            <th style="border:1px solid #94a3b8;padding:6px 8px">สถานะ</th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+      <div style="margin-top:56px;display:flex;justify-content:flex-end">
+        <div style="text-align:center">
+          <div style="border-bottom:1px dotted #94a3b8;width:220px;margin-bottom:6px">&nbsp;</div>
+          <div>ตรวจสอบเอกสารโดย ${e(profile?.display_name || '')}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function openDocReceiptPrintView(c, monthLabel, dateStr, rows) {
+  docReceiptData = { c, monthLabel, dateStr, rows };
+  const html = docReceiptClassicHtml(c, monthLabel, dateStr, rows);
+  document.getElementById('doc-print-area').innerHTML = html;
   openModal(`
-    <div class="p-5" style="min-width:420px;max-width:520px">
-      <h3 class="text-base font-semibold text-gray-800 mb-3">${e(c.thai_name)}</h3>
-      <pre class="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-3" style="white-space:pre-wrap;max-height:360px;overflow-y:auto;font-family:inherit">${e(text)}</pre>
+    <div class="p-4">
+      <div class="bg-white border border-gray-200 rounded-lg" style="max-height:420px;overflow-y:auto">${html}</div>
       <div class="flex gap-2 justify-end mt-4">
         <button onclick="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ปิด</button>
         <button onclick="downloadDocReceiptJpg()" class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ดาวน์โหลด JPG</button>
         <button onclick="window.print()" class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">พิมพ์ / บันทึก PDF</button>
       </div>
-    </div>`);
+    </div>`, { maxWidth: '700px' });
 }
 
 function downloadDocReceiptJpg() {
-  const lines = docReceiptText.split('\n');
-  const fontSize = 20, lineHeight = 32, padding = 40;
+  const { c, monthLabel, dateStr, rows } = docReceiptData;
+  const padding = 40, rowH = 34, headerH = 110, metaH = 70, sigH = 90;
+  const colNo = 60, colStatus = 130;
+  const width = 800;
+  const colLabel = width - padding * 2 - colNo - colStatus;
+  const height = headerH + metaH + 40 + rows.length * rowH + sigH + padding;
+
   const canvas = document.createElement('canvas');
+  canvas.width = width; canvas.height = height;
   const ctx = canvas.getContext('2d');
-  ctx.font = `${fontSize}px sans-serif`;
-  const widest = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
-  canvas.width = Math.min(Math.max(600, widest + padding * 2), 1000);
-  canvas.height = lines.length * lineHeight + padding * 2;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#1f2937';
-  ctx.font = `${fontSize}px sans-serif`;
-  ctx.textBaseline = 'top';
-  lines.forEach((line, i) => ctx.fillText(line, padding, padding + i * lineHeight));
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+
+  let y = padding;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#1e293b';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.fillText('รายการรับเอกสารจากลูกค้า', width / 2, y + 24);
+  ctx.font = '14px sans-serif';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText(monthLabel, width / 2, y + 48);
+  y += headerH;
+  ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(padding, y - 20); ctx.lineTo(width - padding, y - 20); ctx.stroke();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#1e293b';
+  ctx.font = '14px sans-serif';
+  ctx.fillText(`ชื่อบริษัท: ${c.thai_name} (${c.code})`, padding, y);
+  ctx.fillText(`รับเอกสารวันที่: ${dateStr}`, padding, y + 26);
+  y += metaH;
+
+  const tableTop = y;
+  ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1;
+  ctx.fillStyle = '#f1f5f9';
+  ctx.fillRect(padding, tableTop, width - padding * 2, rowH);
+  ctx.strokeRect(padding, tableTop, width - padding * 2, rowH);
+  ctx.fillStyle = '#1e293b';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 13px sans-serif';
+  ctx.fillText('ลำดับ', padding + colNo / 2, tableTop + rowH / 2 + 5);
+  ctx.textAlign = 'left';
+  ctx.fillText('รายการเอกสาร', padding + colNo + 10, tableTop + rowH / 2 + 5);
+  ctx.textAlign = 'center';
+  ctx.fillText('สถานะ', width - padding - colStatus / 2, tableTop + rowH / 2 + 5);
+
+  rows.forEach((r, i) => {
+    const ry = tableTop + rowH * (i + 1);
+    ctx.strokeStyle = '#94a3b8';
+    ctx.strokeRect(padding, ry, colNo, rowH);
+    ctx.strokeRect(padding + colNo, ry, colLabel, rowH);
+    ctx.strokeRect(padding + colNo + colLabel, ry, colStatus, rowH);
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(i + 1), padding + colNo / 2, ry + rowH / 2 + 5);
+    ctx.textAlign = 'left';
+    ctx.fillText(r.label, padding + colNo + 10, ry + rowH / 2 + 5);
+    ctx.fillStyle = r.got ? '#15803d' : '#b91c1c';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(r.got ? '✓ ได้รับ' : '✗ ยังไม่ได้', width - padding - colStatus / 2, ry + rowH / 2 + 5);
+  });
+
+  y = tableTop + rowH * (rows.length + 1) + 50;
+  ctx.fillStyle = '#1e293b';
+  ctx.font = '13px sans-serif';
+  ctx.textAlign = 'right';
+  ctx.strokeStyle = '#94a3b8';
+  ctx.beginPath(); ctx.moveTo(width - padding - 220, y); ctx.lineTo(width - padding, y); ctx.stroke();
+  ctx.fillText(`ตรวจสอบเอกสารโดย ${profile?.display_name || ''}`, width - padding, y + 20);
+
   canvas.toBlob(blob => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${docReceiptTitle}.jpg`;
+    a.download = `${c.thai_name || 'receipt'}.jpg`;
     a.click();
     URL.revokeObjectURL(url);
   }, 'image/jpeg', 0.92);
@@ -3572,9 +3649,10 @@ async function saveOwnCompany() {
 // ─────────────────────────────────────────────────────────────
 // MODAL
 // ─────────────────────────────────────────────────────────────
-function openModal(html) {
+function openModal(html, opts) {
+  const maxW = opts?.maxWidth || '580px';
   document.getElementById('modal-area').innerHTML =
-    `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal-box">${html}</div></div>`;
+    `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal-box" style="max-width:${maxW}">${html}</div></div>`;
 }
 function closeModal() { document.getElementById('modal-area').innerHTML = ''; }
 
