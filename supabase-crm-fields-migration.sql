@@ -5,13 +5,16 @@
 -- ============================================================
 
 -- ──────────────────────────────────────────────────────────
--- เพิ่ม pnd54 ใน crm_tax_tasks (ภ.ง.ด.54)
+-- เพิ่ม pnd54 และ rd_download ใน crm_tax_tasks
 -- ──────────────────────────────────────────────────────────
 ALTER TABLE public.crm_tax_tasks
   ADD COLUMN IF NOT EXISTS pnd54 text NOT NULL DEFAULT 'todo'
-    CHECK (pnd54 IN ('done','todo','na'));
+    CHECK (pnd54 IN ('done','todo','na')),
+  ADD COLUMN IF NOT EXISTS rd_download text NOT NULL DEFAULT 'todo'
+    CHECK (rd_download IN ('done','todo','na'));
 
-COMMENT ON COLUMN public.crm_tax_tasks.pnd54 IS 'ภ.ง.ด.54 — ภาษีเงินได้หัก ณ ที่จ่าย (บริษัทต่างประเทศ)';
+COMMENT ON COLUMN public.crm_tax_tasks.pnd54       IS 'ภ.ง.ด.54 — ภาษีเงินได้หัก ณ ที่จ่าย (บริษัทต่างประเทศ)';
+COMMENT ON COLUMN public.crm_tax_tasks.rd_download IS 'RD Download — ดาวน์โหลดเอกสารจากกรมสรรพากร';
 
 -- ──────────────────────────────────────────────────────────
 -- เพิ่มคอลัมน์ปลายปีใน crm_year_end_tasks
