@@ -668,15 +668,22 @@ function noteCell(clientId, note, prevNote) {
 }
 function editNote(clientId, current, prevNote) {
   if (!canEdit()) return;
-  const el = document.querySelector(`[onclick*="editNote(${clientId},"]`);
-  const wrapper = el?.closest('td');
-  if (!wrapper) return;
   const ph = prevNote ? `เดือนก่อน: ${prevNote}` : 'พิมพ์โน๊ต…';
-  wrapper.innerHTML = `<input id="note-inp-${clientId}" type="text" value="${e(current)}" placeholder="${e(ph)}"
-    class="w-full text-xs px-1.5 py-1 border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
-    onblur="saveNote(${clientId},this.value)"
-    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${e(current)}';this.blur();}">`;
-  wrapper.querySelector('input').focus();
+  openModal(`<div style="min-width:300px;max-width:420px;font-family:inherit">
+    <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:12px">โน๊ตรายเดือน</div>
+    ${prevNote ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px">เดือนก่อน: ${e(prevNote)}</div>` : ''}
+    <textarea id="note-popup-input" rows="3" placeholder="${e(ph)}"
+      style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:8px;resize:vertical;outline:none;font-family:inherit;line-height:1.5"
+      onfocus="this.style.borderColor='#3b82f6'"
+      onblur="this.style.borderColor='#d1d5db'"
+      onkeydown="if(event.key==='Escape')closeModal()"
+    >${e(current)}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button onclick="closeModal()" style="padding:7px 16px;border-radius:7px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;font-size:13px;cursor:pointer">ยกเลิก</button>
+      <button onclick="saveNote(${clientId},document.getElementById('note-popup-input').value);closeModal()" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer">บันทึก</button>
+    </div>
+  </div>`);
+  setTimeout(() => { const inp = document.getElementById('note-popup-input'); if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);} }, 50);
 }
 async function saveNote(clientId, val) {
   const note = val.trim();
@@ -1065,7 +1072,7 @@ async function saveGroupItemField(clientId, field, value, group) {
   if (error) {
     taskMap[clientId][field] = prev;
     openGroupModal(clientId, group);
-    showToast('บันทึกไม่สำเร็จ', 'error');
+    showToast('บันทึกไม่สำเร็จ: ' + (error.message || error.code || JSON.stringify(error)), 'error');
   } else if (data) { taskMap[clientId] = data; }
 }
 
