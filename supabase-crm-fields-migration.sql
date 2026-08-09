@@ -88,3 +88,13 @@ ALTER TABLE public.crm_clients
   ADD COLUMN IF NOT EXISTS doc_item_templates text NOT NULL DEFAULT '';
 
 COMMENT ON COLUMN public.crm_clients.doc_item_templates IS 'รายการเอกสารที่ต้องรับต่อบริษัท (comma-separated) — ว่าง = ใช้ default';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่ม registration_date และ has_own_office ใน crm_clients
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_clients
+  ADD COLUMN IF NOT EXISTS registration_date text    NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS has_own_office    boolean NOT NULL DEFAULT true;
+
+COMMENT ON COLUMN public.crm_clients.registration_date IS 'วันที่จดทะเบียนบริษัท';
+COMMENT ON COLUMN public.crm_clients.has_own_office    IS 'บริษัทมีที่ตั้งสำนักงานของตัวเอง (false = ใช้ที่อยู่สำนักงานบัญชี)';
