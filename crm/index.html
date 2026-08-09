@@ -537,6 +537,27 @@
       <div class="p-6 max-w-3xl">
         <div class="max-w-md">
           <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 class="font-bold text-gray-900 mb-4">ข้อมูลส่วนตัว</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อ-นามสกุล</label>
+                <input id="prof-name" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">วันเดือนปีเกิด</label>
+                <input id="prof-birthdate" type="date" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อผู้ใช้ (username)</label>
+                <input id="prof-username" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-400 mt-1">ใช้สำหรับเข้าสู่ระบบแทนอีเมล</p>
+              </div>
+              <div id="prof-err" class="hidden text-sm text-red-600"></div>
+              <button id="prof-save-btn" onclick="saveOwnProfile()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">บันทึก</button>
+            </div>
+          </div>
+
+          <div class="bg-white border border-gray-200 rounded-xl p-6 mt-6">
             <h3 class="font-bold text-gray-900 mb-4">เปลี่ยนรหัสผ่าน</h3>
             <div class="space-y-4">
               <div>
@@ -713,7 +734,6 @@ const canEditBasic  = () => myLevel() <= 3;              // LV1-3: basic info + 
 const canSeeServiceDates = () => myLevel() <= 3;          // LV1-3: registration/start/end date fields
 const canCred   = () => true;                            // everyone can view credentials (read-only below LV3)
 const canSeeDashboard = () => myLevel() <= 3;             // LV1-3: รายได้สรุป
-const canSeeSettings  = () => myLevel() <= 3;             // LV1-3: ตั้งค่า (LV4-5 only get งานภาษี/ปลายปี/ลูกค้า)
 
 // ─────────────────────────────────────────────────────────────
 // UTILITIES
@@ -922,7 +942,7 @@ async function init() {
   if (isOwner()) document.getElementById('own-company-section').classList.remove('hidden');
   if (canSeeAuditLog()) document.getElementById('activity-log-section').classList.remove('hidden');
   document.getElementById('nav-dashboard').classList.toggle('hidden', !canSeeDashboard());
-  if (canSeeSettings()) document.getElementById('settings-btn').classList.remove('hidden');
+  document.getElementById('settings-btn').classList.remove('hidden');
   if (canEdit()) {
     const bib = document.getElementById('batch-inv-btn');
     bib.classList.remove('hidden');
@@ -999,7 +1019,7 @@ async function loadStaff() {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────
 function navigate(p) {
-  if (myLevel() > 3 && !['tracking','yearend','clients'].includes(p)) p = 'tracking';
+  if (myLevel() > 3 && !['tracking','yearend','clients','settings'].includes(p)) p = 'tracking';
   curPage = p;
   ['dashboard','tracking','yearend','clients','staff','settings'].forEach(pg => {
     document.getElementById(`page-${pg}`).classList.toggle('hidden', pg !== p);
@@ -1013,6 +1033,7 @@ function navigate(p) {
   else if (p === 'staff') loadStaff().then(renderStaff);
   else if (p === 'dashboard') loadDashboard();
   else if (p === 'settings') {
+    renderOwnProfile();
     if (isOwner()) renderOwnCompanies();
     if (canSeeAuditLog()) renderActivityLog();
   }
@@ -1962,6 +1983,13 @@ function renderPanelInfo() {
           <div></div>
           ${dtField('Service start Month', 'start_date', c.start_date || '')}
           ${dtField('Service End Month', 'end_date', c.end_date || '')}
+          <div class="col-span-2">
+            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">รอบงบการเงิน (ปิดบัญชีเดือน)</div>
+            <select data-key="fiscal_year_end_month" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
+              class="select-field text-sm text-gray-800">
+              ${THAI_MONTHS.map((m,i) => i ? `<option value="${i}" ${(c.fiscal_year_end_month||'12')==String(i)?'selected':''}>${m}</option>` : '').join('')}
+            </select>
+          </div>
         ` : ''}
         <div class="col-span-2">${taField('NOTE', 'notes', c.notes||'', 2)}</div>
       </div>
@@ -3272,6 +3300,46 @@ async function changeDashYear(delta) {
 // AUTH
 // ─────────────────────────────────────────────────────────────
 async function signOut() { await sb.auth.signOut(); location.reload(); }
+
+async function renderOwnProfile() {
+  document.getElementById('prof-name').value = profile?.display_name || '';
+  document.getElementById('prof-birthdate').value = profile?.birthdate || '';
+  const { data: { user } } = await sb.auth.getUser();
+  const email = user?.email || '';
+  document.getElementById('prof-username').value = email.endsWith('@staff.dcbc.co.th')
+    ? email.slice(0, -'@staff.dcbc.co.th'.length) : email;
+}
+
+async function saveOwnProfile() {
+  const name = document.getElementById('prof-name').value.trim();
+  const birthdate = document.getElementById('prof-birthdate').value;
+  const username = document.getElementById('prof-username').value.trim();
+  const errEl = document.getElementById('prof-err');
+  errEl.classList.add('hidden');
+  if (!name) { errEl.textContent = 'กรุณากรอกชื่อ-นามสกุล'; errEl.classList.remove('hidden'); return; }
+  if (!username) { errEl.textContent = 'กรุณากรอกชื่อผู้ใช้'; errEl.classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('prof-save-btn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+
+  const { data, error } = await sb.functions.invoke(ADMIN_STAFF_FN, {
+    body: { action: 'self_update', display_name: name, birthdate: birthdate || null, username },
+  });
+
+  btn.disabled = false; btn.textContent = 'บันทึก';
+
+  if (error || data?.error) {
+    errEl.textContent = data?.error || await invokeErrorMessage(error) || 'บันทึกไม่สำเร็จ';
+    errEl.classList.remove('hidden');
+    return;
+  }
+
+  profile.display_name = name;
+  profile.birthdate = birthdate || null;
+  document.getElementById('user-name').textContent = name;
+  document.getElementById('user-initial').textContent = name[0] || '?';
+  showToast('บันทึกข้อมูลส่วนตัวสำเร็จ');
+}
 
 async function changePassword() {
   const p1 = document.getElementById('new-pass').value;

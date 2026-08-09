@@ -1,14 +1,17 @@
 // Supabase Edge Function: admin-staff
 //
-// Handles the two actions that require the service-role key
-// (never exposed to the browser):
-//   - action "create": make a new auth user + crm_staff row, default
-//     password "123456", must_change_password = true
-//   - action "reset":  reset an existing staff member's password back
-//     to "123456" and set must_change_password = true
+// Handles the actions that require the service-role key (never exposed
+// to the browser):
+//   - action "create":      make a new auth user + crm_staff row, default
+//     password "123456", must_change_password = true (LV1-3 only)
+//   - action "reset":       reset an existing staff member's password back
+//     to "123456" and set must_change_password = true (LV1-2 only)
+//   - action "self_update": let ANY active staff member change their own
+//     username (auth email), display name, and/or birthdate — always
+//     targets the caller's own account, never a target id from the body
 //
-// Both actions re-check the caller's role server-side (never trust the
-// client) using the caller's own JWT to look up their crm_staff row.
+// All actions re-check the caller's role/identity server-side (never
+// trust the client) using the caller's own JWT.
 //
 // Deploy via the Supabase Dashboard: Edge Functions → Create a function
 // → name it "admin-staff" → paste this file's contents → Deploy.
@@ -105,6 +108,43 @@ Deno.serve(async (req) => {
 
       await admin.from("crm_staff").update({ must_change_password: true }).eq("id", staffId);
       return json({ ok: true, default_password: DEFAULT_PASSWORD });
+    }
+
+    if (action === "self_update") {
+      // Any active staff member may update their OWN display name /
+      // birthdate / username (auth email). Always targets caller.id —
+      // never a target id from the request body — so this can never be
+      // used to modify someone else's account.
+      const displayName = body.display_name != null ? String(body.display_name).trim() : undefined;
+      const birthdate = body.birthdate != null ? String(body.birthdate).trim() : undefined;
+      const usernameRaw = body.username != null ? String(body.username).trim().toLowerCase().replace(/[^a-z0-9._-]/g, "") : undefined;
+
+      if (usernameRaw !== undefined) {
+        if (!usernameRaw) return json({ error: "กรุณากรอกชื่อผู้ใช้" }, 400);
+        const newEmail = `${usernameRaw}@${STAFF_EMAIL_DOMAIN}`;
+        const { error: emailErr } = await admin.auth.admin.updateUserById(caller.id, {
+          email: newEmail, email_confirm: true,
+        });
+        if (emailErr) {
+          const msg = /already|exists|registered/i.test(emailErr.message)
+            ? "ชื่อผู้ใช้นี้ถูกใช้แล้ว" : emailErr.message;
+          return json({ error: msg }, 400);
+        }
+      }
+
+      const staffFields: Record<string, unknown> = {};
+      if (displayName !== undefined) {
+        if (!displayName) return json({ error: "กรุณากรอกชื่อ-นามสกุล" }, 400);
+        staffFields.display_name = displayName;
+      }
+      if (birthdate !== undefined) staffFields.birthdate = birthdate || null;
+
+      if (Object.keys(staffFields).length) {
+        const { error: profErr } = await admin.from("crm_staff").update(staffFields).eq("id", caller.id);
+        if (profErr) return json({ error: profErr.message }, 400);
+      }
+
+      return json({ ok: true });
     }
 
     return json({ error: "ไม่รู้จักคำสั่งนี้" }, 400);
