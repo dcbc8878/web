@@ -589,7 +589,7 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 
 const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
   'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const ROLE_LABEL = { owner:'เจ้าของ (LV1)', manager:'ผู้จัดการ (LV2)', senior:'พนักงานอาวุโส (LV3)', junior:'พนักงาน (LV4)', parttime:'พาร์ทไทม์/ฝึกงาน (LV5)' };
+const ROLE_LABEL = { owner:'เจ้าของ (LV1)', manager:'ผู้จัดการ (LV2)', senior:'พนักงานอาวุโส (LV3)', junior:'พนักงาน (LV4)', parttime:'นักศึกษาฝึกงาน (LV5)' };
 const FIELDS = ['rd_download','rd_keyed'];
 const YE_FIELDS = ['pnd51','pnd1k','kt26k','pnd50','fin_stmt','audit','dbd_submit','boj5'];
 const GROUP_ITEMS = {
@@ -1543,7 +1543,7 @@ function editStaff(s) {
           <option value="manager"  ${s.role==='manager'?'selected':''}>ผู้จัดการ (LV2)</option>
           <option value="senior"   ${s.role==='senior'?'selected':''}>พนักงานอาวุโส (LV3)</option>
           <option value="junior"   ${s.role==='junior'?'selected':''}>พนักงาน (LV4)</option>
-          <option value="parttime" ${s.role==='parttime'?'selected':''}>พาร์ทไทม์/ฝึกงาน (LV5)</option>
+          <option value="parttime" ${s.role==='parttime'?'selected':''}>นักศึกษาฝึกงาน (LV5)</option>
         </select></div>
       <div class="flex items-center gap-2">
         <input id="edit-staff-active" type="checkbox" ${s.is_active?'checked':''} class="w-4 h-4 rounded text-blue-600">
@@ -2390,8 +2390,144 @@ function renderPanelCreds() {
         ${credField('Username','kys_username', cred.kys_username)}
         ${credField('Password','kys_password', cred.kys_password)}
       </div>
+      <div class="flex items-center justify-between pb-1 border-b border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">รายการเพิ่มเติม</div>
+        ${editable ? `<button onclick="openAddCredItem()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2.5 py-1 rounded-lg transition-colors">+ เพิ่มรายการ</button>` : ''}
+      </div>
+      <div id="cred-items-section" class="text-xs text-gray-400">กำลังโหลด…</div>
       ${!editable ? `<p class="text-xs text-gray-400 text-center mt-2">คลิกที่ช่องเพื่อคัดลอก${canEditBasic() ? ' · แก้ไขได้ที่หน้าลูกค้า' : ' · แก้ไขได้เฉพาะ เจ้าของ / ผู้จัดการ / พนักงานอาวุโส'}</p>` : ''}
     </div>`;
+
+  loadCredItems(panelClientId);
+}
+
+async function loadCredItems(clientId) {
+  const el = document.getElementById('cred-items-section');
+  if (!el) return;
+  const { data, error } = await sb.from('crm_client_credential_items')
+    .select('*').eq('client_id', clientId).order('created_at');
+  if (error) { el.innerHTML = `<div class="text-red-500">โหลดไม่สำเร็จ: ${e(error.message)}</div>`; return; }
+  if (clientId !== panelClientId) return; // panel switched while loading
+  panelCredItemsCache = data || [];
+
+  const editable = canEditBasic() && panelOrigin === 'full';
+  if (!panelCredItemsCache.length) {
+    el.innerHTML = '<div class="text-gray-400">ยังไม่มีรายการเพิ่มเติม</div>';
+    return;
+  }
+  el.innerHTML = panelCredItemsCache.map(item => `
+    <div class="mb-3 pb-3 border-b border-gray-50 last:border-0 last:mb-0 last:pb-0">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-semibold text-gray-700">${e(item.label || '(ไม่มีชื่อ)')}</span>
+        ${editable ? `<span class="flex items-center gap-2">
+          <button onclick="editCredItem(${item.id})" class="text-xs text-blue-600 hover:text-blue-800 font-semibold">แก้ไข</button>
+          <button onclick="deleteCredItem(${item.id})" class="text-xs text-red-500 hover:text-red-700 font-semibold">ลบ</button>
+        </span>` : ''}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        ${editable ? `
+          <div><div class="text-[10px] text-gray-400 uppercase mb-0.5">Username</div><div class="text-sm text-gray-800">${e(item.username) || '—'}</div></div>
+          <div><div class="text-[10px] text-gray-400 uppercase mb-0.5">Password</div><div class="text-sm text-gray-800 font-mono">${e(item.password) || '—'}</div></div>
+        ` : `
+          <div><div class="text-[10px] text-gray-400 uppercase mb-0.5">Username</div><span class="cred-view-val block px-2 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 font-mono truncate cursor-pointer hover:bg-blue-50" title="คลิกเพื่อคัดลอก" data-val="${e(item.username)}" data-masked="true" onclick="copyCredValue(this)">${maskCredVal(item.username)}</span></div>
+          <div><div class="text-[10px] text-gray-400 uppercase mb-0.5">Password</div><span class="cred-view-val block px-2 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 font-mono truncate cursor-pointer hover:bg-blue-50" title="คลิกเพื่อคัดลอก" data-val="${e(item.password)}" data-masked="true" onclick="copyCredValue(this)">${maskCredVal(item.password)}</span></div>
+        `}
+      </div>
+    </div>`).join('');
+}
+
+let panelCredItemsCache = [];
+
+function openAddCredItem() {
+  if (!canEditBasic() || panelOrigin !== 'full') return;
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">เพิ่มรายการรหัสผ่าน</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อระบบ</label>
+        <input id="ci-label" type="text" placeholder="เช่น ระบบ e-Filing, FlowAccount"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
+        <input id="ci-username" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+        <input id="ci-password" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="saveCredItem()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เพิ่ม</button>
+    </div>`);
+}
+
+async function saveCredItem() {
+  const label = document.getElementById('ci-label').value.trim();
+  const username = document.getElementById('ci-username').value.trim();
+  const password = document.getElementById('ci-password').value.trim();
+  if (!label) { showToast('กรุณากรอกชื่อระบบ', 'error'); return; }
+  const { error } = await sb.from('crm_client_credential_items')
+    .insert({ client_id: panelClientId, label, username, password });
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+  await logActivity('client_cred_item_add', 'client', panelClientId, `เพิ่มรายการรหัสผ่าน: ${label}`);
+  closeModal();
+  showToast('เพิ่มรายการสำเร็จ');
+  loadCredItems(panelClientId);
+}
+
+function editCredItem(itemId) {
+  if (!canEditBasic() || panelOrigin !== 'full') return;
+  const item = panelCredItemsCache.find(x => x.id === itemId);
+  if (!item) return;
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขรายการรหัสผ่าน</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อระบบ</label>
+        <input id="ci-label" type="text" value="${e(item.label)}"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
+        <input id="ci-username" type="text" value="${e(item.username)}"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+        <input id="ci-password" type="text" value="${e(item.password)}"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="saveEditCredItem(${itemId})" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">บันทึก</button>
+    </div>`);
+}
+
+async function saveEditCredItem(itemId) {
+  const label = document.getElementById('ci-label').value.trim();
+  const username = document.getElementById('ci-username').value.trim();
+  const password = document.getElementById('ci-password').value.trim();
+  if (!label) { showToast('กรุณากรอกชื่อระบบ', 'error'); return; }
+  const { error } = await sb.from('crm_client_credential_items')
+    .update({ label, username, password }).eq('id', itemId);
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+  await logActivity('client_cred_item_edit', 'client', panelClientId, `แก้ไขรายการรหัสผ่าน: ${label}`);
+  closeModal();
+  showToast('บันทึกสำเร็จ');
+  loadCredItems(panelClientId);
+}
+
+async function deleteCredItem(itemId) {
+  if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
+  const item = panelCredItemsCache.find(x => x.id === itemId);
+  const { error } = await sb.from('crm_client_credential_items').delete().eq('id', itemId);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  await logActivity('client_cred_item_delete', 'client', panelClientId, `ลบรายการรหัสผ่าน: ${item?.label||''}`);
+  showToast('ลบรายการแล้ว');
+  loadCredItems(panelClientId);
 }
 
 async function savePanelCreds() {
