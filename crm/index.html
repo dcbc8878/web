@@ -1587,7 +1587,7 @@ function openAddStaffForm() {
         </select>
       </div>
       <div id="as-err" class="hidden text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg"></div>
-      <p class="text-xs text-gray-400">รหัสผ่านเริ่มต้นคือ <code class="bg-gray-100 px-1 py-0.5 rounded">1234</code> — พนักงานต้องเปลี่ยนรหัสผ่านทันทีที่ล็อกอินครั้งแรก</p>
+      <p class="text-xs text-gray-400">รหัสผ่านเริ่มต้นคือ <code class="bg-gray-100 px-1 py-0.5 rounded">123456</code> — พนักงานต้องเปลี่ยนรหัสผ่านทันทีที่ล็อกอินครั้งแรก</p>
     </div>
     <div class="flex justify-end gap-2 mt-6">
       <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
@@ -1621,7 +1621,7 @@ async function submitAddStaff() {
 
   await logActivity('staff_create', 'staff', username, `เพิ่มพนักงานใหม่: ${display_name} (${ROLE_LABEL[roleVal]||roleVal})`);
   closeModal();
-  showToast(`เพิ่มพนักงานสำเร็จ — รหัสผ่านเริ่มต้น: 1234`);
+  showToast(`เพิ่มพนักงานสำเร็จ — รหัสผ่านเริ่มต้น: 123456`);
   await loadStaff(); renderStaff();
 }
 
@@ -1658,7 +1658,7 @@ function editStaff(s) {
 
 async function resetStaffPassword(staffId, displayName) {
   if (!canManageStaff()) return;
-  if (!confirm(`รีเซ็ทรหัสผ่านของ ${displayName} กลับเป็น 1234 ใช่หรือไม่?`)) return;
+  if (!confirm(`รีเซ็ทรหัสผ่านของ ${displayName} กลับเป็น 123456 ใช่หรือไม่?`)) return;
 
   const { data, error } = await sb.functions.invoke(ADMIN_STAFF_FN, {
     body: { action: 'reset', staff_id: staffId },
@@ -1670,7 +1670,7 @@ async function resetStaffPassword(staffId, displayName) {
   }
 
   await logActivity('staff_password_reset', 'staff', staffId, `รีเซ็ทรหัสผ่าน ${displayName} กลับเป็นค่าเริ่มต้น`);
-  showToast(`รีเซ็ทรหัสผ่านสำเร็จ — รหัสผ่านใหม่: 1234`);
+  showToast(`รีเซ็ทรหัสผ่านสำเร็จ — รหัสผ่านใหม่: 123456`);
 }
 
 async function saveStaff(staffId) {
@@ -3275,7 +3275,7 @@ async function completeFirstLogin() {
   if (!name) { errEl.textContent = 'กรุณากรอกชื่อแสดง'; errEl.classList.remove('hidden'); return; }
   if (!p1 || p1 !== p2) { errEl.textContent = 'รหัสผ่านไม่ตรงกัน'; errEl.classList.remove('hidden'); return; }
   if (p1.length < 6) { errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; errEl.classList.remove('hidden'); return; }
-  if (p1 === '1234') { errEl.textContent = 'กรุณาตั้งรหัสผ่านใหม่ ไม่ใช้รหัสผ่านเริ่มต้น'; errEl.classList.remove('hidden'); return; }
+  if (p1 === '123456') { errEl.textContent = 'กรุณาตั้งรหัสผ่านใหม่ ไม่ใช้รหัสผ่านเริ่มต้น'; errEl.classList.remove('hidden'); return; }
 
   const btn = document.getElementById('fl-btn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก…';

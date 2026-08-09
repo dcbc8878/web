@@ -3,9 +3,9 @@
 // Handles the two actions that require the service-role key
 // (never exposed to the browser):
 //   - action "create": make a new auth user + crm_staff row, default
-//     password "1234", must_change_password = true
+//     password "123456", must_change_password = true
 //   - action "reset":  reset an existing staff member's password back
-//     to "1234" and set must_change_password = true
+//     to "123456" and set must_change_password = true
 //
 // Both actions re-check the caller's role server-side (never trust the
 // client) using the caller's own JWT to look up their crm_staff row.
@@ -20,7 +20,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const STAFF_EMAIL_DOMAIN = "staff.dcbc.co.th";
-const DEFAULT_PASSWORD = "1234";
+const DEFAULT_PASSWORD = "123456";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
