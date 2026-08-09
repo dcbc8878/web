@@ -848,7 +848,7 @@ function renderTracking() {
     const docBadge = t.doc_date
       ? `<span onclick="openDocModal(${c.id})" title="${e(docItems.join(', ')||'คลิกเพื่อแก้ไข')}"
            class="inline-flex flex-col items-start bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-0.5 rounded cursor-pointer hover:bg-green-100 leading-tight">
-           <span>📄 ${e(t.doc_date)}</span>
+           <span>📄 ${e(thaiDate(t.doc_date))}</span>
            ${docItems.length ? `<span class="text-[10px] text-green-500 font-normal">${docItems.length} รายการ</span>` : ''}
          </span>`
       : (canEdit()
@@ -877,17 +877,18 @@ function renderTracking() {
     const t2Sent = t.tax2_sent || false;
     const t2Paid = t.tax2_paid || false;
 
-    const mkGroupCell = (sent, paid, cid, sentField, paidField, off) => {
-      if (off) return `<td class="px-2 py-2.5 text-center border-l border-gray-200"><span class="dot na">—</span></td>`;
-      let inner;
+    const mkGroupCell = (sent, paid, cid, sentField, paidField, off, items = []) => {
+      if (off) return `<td class="px-2 py-2 text-center border-l border-gray-200"><span class="dot na">—</span></td>`;
+      let chip;
       if (paid) {
-        inner = `<span class="tog-chip" style="background:#dcfce7;color:#15803d;border-color:#86efac">✓ PAID</span>`;
+        chip = `<span class="tog-chip" style="background:#dcfce7;color:#15803d;border-color:#86efac">✓ PAID</span>`;
       } else if (sent) {
-        inner = `<span class="tog-chip" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">→ SENT</span>`;
+        chip = `<span class="tog-chip" style="background:#fef3c7;color:#92400e;border-color:#fcd34d">→ SENT</span>`;
       } else {
-        inner = canEdit() ? `<span class="tog-chip tog-empty">—</span>` : `<span class="dot na">—</span>`;
+        chip = canEdit() ? `<span class="tog-chip tog-empty">—</span>` : `<span class="dot na">—</span>`;
       }
-      return `<td class="px-1.5 py-2.5 text-center border-l border-gray-200 ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="cycleGroupState(${cid},'${sentField}','${paidField}')"`:''}>${inner}</td>`;
+      const sub = items.map(it => `<div class="text-[9px] text-gray-400 leading-tight">${it}</div>`).join('');
+      return `<td class="px-1.5 py-2 text-center border-l border-gray-200 ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="cycleGroupState(${cid},'${sentField}','${paidField}')"`:''}>${chip}${sub?`<div class="mt-0.5">${sub}</div>`:''}</td>`;
     };
 
     const pct = calcRowPct(t, hasVat, hasSso);
@@ -899,9 +900,9 @@ function renderTracking() {
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
       ${mkCell('stm',gb)}
-      ${mkGroupCell(t1Sent, t1Paid, c.id, 'tax1_sent', 'tax1_paid')}
-      ${mkGroupCell(ssoSent, ssoPaid, c.id, 'sso_sent', 'sso_client_paid', !hasSso)}
-      ${mkGroupCell(t2Sent, t2Paid, c.id, 'tax2_sent', 'tax2_paid', !hasVat)}
+      ${mkGroupCell(t1Sent, t1Paid, c.id, 'tax1_sent', 'tax1_paid', false, GROUP_ITEMS.tax1)}
+      ${mkGroupCell(ssoSent, ssoPaid, c.id, 'sso_sent', 'sso_client_paid', !hasSso, GROUP_ITEMS.sso)}
+      ${mkGroupCell(t2Sent, t2Paid, c.id, 'tax2_sent', 'tax2_paid', !hasVat, GROUP_ITEMS.tax2)}
       ${mkCell('rd_download',gb)}${mkCell('rd_keyed')}
       ${mkCell('acct_fee',gb)}
       <td class="px-2 py-2 border-l border-gray-200" style="overflow:hidden">
@@ -1010,6 +1011,20 @@ const DOC_ITEMS = [
   'เอกสารอื่นๆ',
 ];
 
+const GROUP_ITEMS = {
+  tax1: ['ภ.ง.ด.1', 'ภ.พ.30'],
+  sso:  ['ประกันสังคม'],
+  tax2: ['ภ.ง.ด.3', 'ภ.ง.ด.53'],
+};
+
+function thaiDate(v) {
+  if (!v) return '';
+  const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return v;
+  const mo = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'][+m[2]-1];
+  return `${+m[3]} ${mo} ${(+m[1]+543)%100}`;
+}
+
 function openDocModal(clientId) {
   if (!canEdit()) return;
   const t = taskMap[clientId] || {};
@@ -1017,6 +1032,7 @@ function openDocModal(clientId) {
   const clientTemplates = (c?.doc_item_templates || '').split(',').filter(Boolean);
   const itemList = clientTemplates.length ? clientTemplates : DOC_ITEMS;
   const curDate = t.doc_date || '';
+  const isoDate = /^\d{4}-\d{2}-\d{2}$/.test(curDate) ? curDate : '';
   const curItems = (t.doc_items || '').split(',').filter(Boolean);
   const checkboxes = itemList.map((item, i) => {
     const checked = curItems.includes(item) ? 'checked' : '';
@@ -1032,7 +1048,7 @@ function openDocModal(clientId) {
       <h3 class="text-base font-semibold text-gray-800 mb-4">รับเอกสาร</h3>
       <div class="mb-4">
         <label class="block text-xs font-medium text-gray-500 mb-1">วันที่รับเอกสาร</label>
-        <input id="doc-date-input" type="text" value="${e(curDate)}" placeholder="เช่น 3 ส.ค."
+        <input id="doc-date-input" type="date" value="${isoDate}"
           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
       </div>
       <div class="mb-5">
