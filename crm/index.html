@@ -532,7 +532,7 @@
       <div id="panel-name" class="font-bold text-gray-900 text-base"></div>
     </div>
     <div class="flex items-center gap-2">
-      <button id="panel-deactivate-btn" onclick="confirmDeactivateClient()" class="hidden text-xs bg-red-50 text-red-600 hover:bg-red-100 font-semibold px-3 py-1.5 rounded-lg transition-colors">ปิดใช้งาน</button>
+      <button id="panel-deactivate-btn" onclick="confirmDeactivateClient()" class="hidden text-xs bg-red-600 text-white hover:bg-red-700 font-semibold px-3 py-1.5 rounded-lg transition-colors">ลบ</button>
       <button onclick="closePanel()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition-colors">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -1548,7 +1548,7 @@ async function openPanel(clientId) {
 
   document.getElementById('tab-btn-billing').classList.toggle('hidden', !canEdit());
   document.getElementById('tab-btn-creds').classList.toggle('hidden', !canCred());
-  document.getElementById('panel-deactivate-btn').classList.toggle('hidden', !isOwner() || !c.is_active);
+  document.getElementById('panel-deactivate-btn').classList.toggle('hidden', !isOwner());
 
   switchTab('info');
 }
