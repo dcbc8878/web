@@ -516,6 +516,15 @@
             <button onclick="changePassword()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">บันทึก</button>
           </div>
         </div>
+
+        <div id="own-company-section" class="hidden bg-white border border-gray-200 rounded-xl p-6 mt-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-gray-900">บริษัทของตัวเอง</h3>
+            <button onclick="openAddOwnCompany()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">+ เพิ่ม</button>
+          </div>
+          <p class="text-xs text-gray-400 mb-4">บริษัทที่เพิ่มตรงนี้จะถูกติดตามงานภาษีเหมือนลูกค้า แต่จะไม่นับรวมในรายชื่อลูกค้าและรายได้</p>
+          <div id="own-company-list" class="space-y-2"></div>
+        </div>
       </div>
     </div>
 
@@ -831,6 +840,7 @@ async function init() {
   document.getElementById('user-role-badge').textContent  = ROLE_LABEL[prof.role] || prof.role;
   if (isOwner()) document.getElementById('nav-staff').classList.remove('hidden');
   if (isOwner()) document.getElementById('add-client-btn').classList.remove('hidden');
+  if (isOwner()) document.getElementById('own-company-section').classList.remove('hidden');
   if (canEdit()) {
     const bib = document.getElementById('batch-inv-btn');
     bib.classList.remove('hidden');
@@ -919,6 +929,7 @@ function navigate(p) {
   else if (p === 'clients') renderClientList();
   else if (p === 'staff') loadStaff().then(renderStaff);
   else if (p === 'dashboard') loadDashboard();
+  else if (p === 'settings' && isOwner()) renderOwnCompanies();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1391,13 +1402,14 @@ async function toggleYearEndField(clientId, field, cell) {
 // ─────────────────────────────────────────────────────────────
 function renderClientList() {
   const q = (document.getElementById('client-search')?.value || '').toLowerCase();
+  const realClients = clients.filter(c => !c.is_own_company);
   const filtered = q
-    ? clients.filter(c =>
+    ? realClients.filter(c =>
         (c.code||'').toLowerCase().includes(q) ||
         (c.thai_name||'').toLowerCase().includes(q) ||
         (c.eng_name || '').toLowerCase().includes(q) ||
         (c.tax_number || '').includes(q))
-    : clients;
+    : realClients;
 
   const container = document.getElementById('client-list');
   if (!container) return;
@@ -2644,6 +2656,107 @@ async function saveNewClient() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// OWN COMPANY (settings page — tracked like a client but excluded
+// from the client list and revenue reports)
+// ─────────────────────────────────────────────────────────────
+function renderOwnCompanies() {
+  const el = document.getElementById('own-company-list');
+  if (!el) return;
+  const own = clients.filter(c => c.is_own_company);
+  if (!own.length) {
+    el.innerHTML = '<div class="text-xs text-gray-400 py-2">ยังไม่มีข้อมูล</div>';
+    return;
+  }
+  el.innerHTML = own.map(c => `
+    <div onclick="openPanel(${c.id})"
+      class="flex items-center justify-between px-3 py-2.5 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50/30 transition-colors">
+      <div class="min-w-0">
+        <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-bold px-1.5 py-0.5 rounded mr-1.5">${e(c.code)}</span>
+        <span class="text-sm text-gray-800">${e(c.thai_name)}</span>
+      </div>
+      ${!c.is_active ? '<span class="text-xs text-red-500 flex-shrink-0">ปิดใช้งาน</span>' : ''}
+    </div>`).join('');
+}
+
+function openAddOwnCompany() {
+  if (!isOwner()) return;
+  const entityOptions = ENTITY_TYPES.map(t => `<option value="${e(t)}">${e(t)}</option>`).join('');
+  const inp = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">เพิ่มบริษัทของตัวเอง</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ชื่อบริษัท (ไทย) *</label>
+        <input id="oc-thai" type="text" class="${inp}">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">CODE (ชื่อเรียก) *</label>
+        <input id="oc-code" type="text" maxlength="20" class="${inp} uppercase" placeholder="เช่น DCBC">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภทนิติบุคคล</label>
+        <select id="oc-entity" class="${inp}">
+          <option value="">-- เลือก --</option>
+          ${entityOptions}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">เลขผู้เสียภาษี</label>
+        <input id="oc-taxid" type="text" maxlength="13" class="${inp}">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ที่อยู่</label>
+        <textarea id="oc-address" rows="2" class="${inp} resize-none"></textarea>
+      </div>
+      <div class="flex flex-wrap gap-x-5 gap-y-1.5">
+        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input id="oc-vat" type="checkbox" checked class="w-4 h-4 rounded text-blue-600"> มี VAT (PP.30)
+        </label>
+        <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <input id="oc-sso" type="checkbox" checked class="w-4 h-4 rounded text-blue-600"> มี SSO
+        </label>
+      </div>
+      <div id="oc-err" class="hidden text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg"></div>
+    </div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="saveOwnCompany()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เพิ่ม</button>
+    </div>`);
+}
+
+async function saveOwnCompany() {
+  if (!isOwner()) return;
+  const thai = (document.getElementById('oc-thai')?.value || '').trim();
+  const code = (document.getElementById('oc-code')?.value || '').trim().toUpperCase();
+  const ocErr = document.getElementById('oc-err');
+
+  if (!thai || !code) {
+    ocErr.textContent = !thai ? 'กรุณากรอกชื่อบริษัท' : 'กรุณากรอก CODE';
+    ocErr.classList.remove('hidden'); return;
+  }
+
+  const payload = {
+    code,
+    thai_name:      thai,
+    type:           document.getElementById('oc-entity')?.value || '',
+    tax_number:     (document.getElementById('oc-taxid')?.value || '').trim(),
+    address:        (document.getElementById('oc-address')?.value || '').trim(),
+    has_vat:        document.getElementById('oc-vat').checked,
+    has_sso:        document.getElementById('oc-sso').checked,
+    is_own_company: true,
+  };
+
+  const { data, error } = await sb.from('crm_clients').insert(payload).select().single();
+  if (error) { ocErr.textContent = error.message; ocErr.classList.remove('hidden'); return; }
+
+  clients.push(data);
+  clients.sort((a,b) => a.code.localeCompare(b.code));
+  closeModal();
+  showToast('เพิ่มบริษัทสำเร็จ');
+  renderOwnCompanies();
+}
+
+// ─────────────────────────────────────────────────────────────
 // MODAL
 // ─────────────────────────────────────────────────────────────
 function openModal(html) {
@@ -2675,7 +2788,7 @@ async function loadDashboard() {
 function renderDashboard() {
   document.getElementById('dash-year-display').textContent = `ปี ${dashYear + 543}`;
 
-  const monthlyClients = clients.filter(c => c.is_active && c.billing_type === 'monthly');
+  const monthlyClients = clients.filter(c => c.is_active && !c.is_own_company && c.billing_type === 'monthly');
   const expectedMo = monthlyClients.reduce((s, c) => s + (parseFloat(c.monthly_fee) || 0), 0);
 
   let totalInvoiced = 0, totalCollected = 0;
@@ -2738,7 +2851,7 @@ function renderDashboard() {
     if (inv.status === 'paid') clientMap[inv.client_id].collected += parseFloat(inv.payment_amount ?? inv.fee_amount) || 0;
   });
 
-  const activeMonthly = clients.filter(c => c.is_active && c.billing_type === 'monthly')
+  const activeMonthly = clients.filter(c => c.is_active && !c.is_own_company && c.billing_type === 'monthly')
     .sort((a,b) => (clientMap[b.id]?.invoiced||0) - (clientMap[a.id]?.invoiced||0));
 
   if (!activeMonthly.length) {
