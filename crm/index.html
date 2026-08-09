@@ -565,6 +565,33 @@ const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','�
 const ROLE_LABEL = { owner:'เจ้าของ', senior:'พนักงานอาวุโส', staff:'พนักงาน' };
 const FIELDS = ['rd_download','rd_keyed'];
 const YE_FIELDS = ['pnd51','pnd1k','kt26k','pnd50','fin_stmt','audit','dbd_submit','boj5'];
+const GROUP_ITEMS = {
+  tax1: {
+    label: 'TAX 1', sublabel: 'PND1 · PND3 · PND53 · PND54 · PP36',
+    sentField: 'tax1_sent', paidField: 'tax1_paid', color: '#3b82f6',
+    items: [
+      { field: 'pnd1',  label: 'PND.1'  },
+      { field: 'pnd3',  label: 'PND.3'  },
+      { field: 'pnd53', label: 'PND.53' },
+      { field: 'pnd54', label: 'PND.54' },
+      { field: 'pp36',  label: 'PP.36'  },
+    ],
+  },
+  sso: {
+    label: 'SSO', sublabel: 'ประกันสังคม',
+    sentField: 'sso_sent', paidField: 'sso_client_paid', color: '#22c55e',
+    items: [
+      { field: 'sso', label: 'SSO' },
+    ],
+  },
+  tax2: {
+    label: 'TAX 2', sublabel: 'PP.30',
+    sentField: 'tax2_sent', paidField: 'tax2_paid', color: '#a855f7',
+    items: [
+      { field: 'pp30', label: 'PP.30' },
+    ],
+  },
+};
 const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', paid:'ชำระแล้ว', cancelled:'ยกเลิก' };
 const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
 
@@ -868,8 +895,12 @@ function renderTracking() {
     const t2Sent = t.tax2_sent || false;
     const t2Paid = t.tax2_paid || false;
 
-    const mkGroupCell = (sent, paid, cid, sentField, paidField, off) => {
+    const mkGroupCell = (sent, paid, cid, sentField, paidField, off, group) => {
       if (off) return `<td class="px-1 py-2 text-center border-l border-gray-200"><span class="dot na">—</span></td>`;
+      const gItems = (GROUP_ITEMS[group]||{}).items || [];
+      const gApp = gItems.filter(it => (t[it.field]||'todo') !== 'na').length;
+      const gDone = gItems.filter(it => (t[it.field]||'todo') === 'done').length;
+      const prog = gItems.length ? `<div style="font-size:10px;color:#9ca3af;margin-top:2px">${gDone}/${gApp}</div>` : '';
       let chip;
       if (paid) {
         chip = `<span class="tog-chip" style="background:#dcfce7;color:#15803d;border-color:#86efac">✓ PAID</span>`;
@@ -878,7 +909,7 @@ function renderTracking() {
       } else {
         chip = canEdit() ? `<span class="tog-chip tog-empty">—</span>` : `<span class="dot na">—</span>`;
       }
-      return `<td class="px-1 py-2 text-center border-l border-gray-200 ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="cycleGroupState(${cid},'${sentField}','${paidField}')"`:''}>${chip}</td>`;
+      return `<td class="px-1 py-2 text-center border-l border-gray-200 ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="openGroupModal(${cid},'${group}')"`:''}>${chip}${prog}</td>`;
     };
 
     rows += `<tr class="border-b border-gray-100">
@@ -890,9 +921,9 @@ function renderTracking() {
         ${noteCell(c.id, t.notes||'', prevTaskMap[c.id]||'')}
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
-      ${mkGroupCell(t1Sent, t1Paid, c.id, 'tax1_sent', 'tax1_paid', false)}
-      ${mkGroupCell(ssoSent, ssoPaid, c.id, 'sso_sent', 'sso_client_paid', !hasSso)}
-      ${mkGroupCell(t2Sent, t2Paid, c.id, 'tax2_sent', 'tax2_paid', !hasVat)}
+      ${mkGroupCell(t1Sent, t1Paid, c.id, 'tax1_sent', 'tax1_paid', false, 'tax1')}
+      ${mkGroupCell(ssoSent, ssoPaid, c.id, 'sso_sent', 'sso_client_paid', !hasSso, 'sso')}
+      ${mkGroupCell(t2Sent, t2Paid, c.id, 'tax2_sent', 'tax2_paid', !hasVat, 'tax2')}
       ${mkCell('rd_download',gb)}${mkCell('rd_keyed')}
     </tr>`;
   });
@@ -933,30 +964,135 @@ async function toggleField(clientId, field, cell) {
   renderTrackingSummary();
 }
 
-async function cycleGroupState(clientId, sentField, paidField) {
+function openGroupModal(clientId, group) {
   if (!canEdit()) return;
+  const conf = GROUP_ITEMS[group];
+  if (!conf) return;
   const t = taskMap[clientId] || {};
-  const sent = t[sentField] || false;
-  const paid = t[paidField] || false;
-  let newSent, newPaid;
-  if (!sent && !paid)     { newSent = true;  newPaid = false; }
-  else if (sent && !paid) { newSent = true;  newPaid = true;  }
-  else                    { newSent = false; newPaid = false; }
+  const c = clients.find(x => x.id === clientId);
+
+  const items = conf.items;
+  const applicable = items.filter(it => (t[it.field]||'todo') !== 'na').length;
+  const done       = items.filter(it => (t[it.field]||'todo') === 'done').length;
+  const pct        = applicable ? Math.round(done / applicable * 100) : 0;
+
+  const r = 28, cxy = 36, circ = 2 * Math.PI * r;
+  const dash = (pct / 100 * circ).toFixed(1);
+  const donut = `<svg width="72" height="72" viewBox="0 0 72 72">
+    <circle cx="${cxy}" cy="${cxy}" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+    ${pct>0?`<circle cx="${cxy}" cy="${cxy}" r="${r}" fill="none" stroke="${conf.color}" stroke-width="8"
+      stroke-dasharray="${dash} ${circ.toFixed(1)}" stroke-linecap="round"
+      transform="rotate(-90 ${cxy} ${cxy})"/>`:''}
+    <text x="${cxy}" y="${cxy+5}" text-anchor="middle" font-size="13" font-weight="700" fill="#374151">${pct}%</text>
+  </svg>`;
+
+  const SLABEL = { todo:'—', inprogress:'กำลังทำ', done:'เสร็จ ✓', na:'—' };
+  const SSTYLE = {
+    todo:       'background:#f9fafb;color:#9ca3af;border:1.5px dashed #d1d5db',
+    inprogress: 'background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d',
+    done:       'background:#dcfce7;color:#15803d;border:1.5px solid #86efac',
+    na:         'background:#f3f4f6;color:#d1d5db;border:1.5px solid #e5e7eb',
+  };
+
+  const formRows = items.map(item => {
+    const v = t[item.field] || 'todo';
+    const isNa = v === 'na';
+    return `<div class="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 last:border-0">
+      <span style="width:48px;font-size:13px;font-weight:600;color:#374151;flex-shrink:0">${item.label}</span>
+      <button onclick="cycleItemStatus(${clientId},'${item.field}','${group}')"
+              style="${SSTYLE[isNa?'na':v]};font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;flex:1;cursor:${isNa?'default':'pointer'};text-align:center"
+              ${isNa?'disabled':''}>
+        ${SLABEL[isNa?'na':v]}
+      </button>
+      <button onclick="toggleItemNa(${clientId},'${item.field}','${group}')"
+              style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid ${isNa?'#9ca3af':'#e5e7eb'};background:${isNa?'#e5e7eb':'transparent'};color:${isNa?'#374151':'#9ca3af'};cursor:pointer;white-space:nowrap">
+        ไม่มี
+      </button>
+    </div>`;
+  }).join('');
+
+  const sent = t[conf.sentField] || false;
+  const paid = t[conf.paidField] || false;
+  const sentSty = sent ? 'background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d'
+                       : 'background:#f9fafb;color:#6b7280;border:1.5px solid #e5e7eb';
+  const paidSty = paid ? 'background:#dcfce7;color:#15803d;border:1.5px solid #86efac'
+                       : 'background:#f9fafb;color:#6b7280;border:1.5px solid #e5e7eb';
+
+  openModal(`<div style="min-width:320px;max-width:400px;font-family:inherit">
+    <div class="p-4 pb-0 flex items-start gap-3">
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700;color:#1f2937">${conf.label}</div>
+        <div style="font-size:11px;color:#9ca3af;margin-top:2px">${e(c?.thai_name||'')}</div>
+      </div>
+      ${donut}
+    </div>
+    <div class="mx-4 mt-3 mb-3 rounded-lg border border-gray-100 overflow-hidden">${formRows}</div>
+    <div class="px-4 pb-4 flex gap-3">
+      <button onclick="cycleGroupFromModal(${clientId},'${group}','sent')"
+              style="${sentSty};flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+        → SENT
+      </button>
+      <button onclick="cycleGroupFromModal(${clientId},'${group}','paid')"
+              style="${paidSty};flex:1;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+        ✓ PAID
+      </button>
+    </div>
+  </div>`);
+}
+
+function cycleItemStatus(clientId, field, group) {
+  const v = taskMap[clientId]?.[field] || 'todo';
+  if (v === 'na') return;
+  const next = v === 'todo' ? 'inprogress' : v === 'inprogress' ? 'done' : 'todo';
+  saveGroupItemField(clientId, field, next, group);
+}
+
+function toggleItemNa(clientId, field, group) {
+  const v = taskMap[clientId]?.[field] || 'todo';
+  saveGroupItemField(clientId, field, v === 'na' ? 'todo' : 'na', group);
+}
+
+async function saveGroupItemField(clientId, field, value, group) {
+  if (!canEdit()) return;
   if (!taskMap[clientId]) taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
-  taskMap[clientId][sentField] = newSent;
-  taskMap[clientId][paidField] = newPaid;
-  renderTracking();
+  const prev = taskMap[clientId][field];
+  taskMap[clientId][field] = value;
+  openGroupModal(clientId, group);
   const { data, error } = await sb.from('crm_tax_tasks')
-    .upsert({ client_id: clientId, year: curYear, month: curMonth, [sentField]: newSent, [paidField]: newPaid },
+    .upsert({ client_id: clientId, year: curYear, month: curMonth, [field]: value },
       { onConflict: 'client_id,year,month' }).select().single();
   if (error) {
-    taskMap[clientId][sentField] = sent;
-    taskMap[clientId][paidField] = paid;
-    renderTracking();
+    taskMap[clientId][field] = prev;
+    openGroupModal(clientId, group);
     showToast('บันทึกไม่สำเร็จ', 'error');
-    return;
-  }
-  if (data) taskMap[clientId] = data;
+  } else if (data) { taskMap[clientId] = data; }
+}
+
+async function cycleGroupFromModal(clientId, group, action) {
+  if (!canEdit()) return;
+  const conf = GROUP_ITEMS[group];
+  const t = taskMap[clientId] || {};
+  const sent = t[conf.sentField] || false;
+  const paid = t[conf.paidField] || false;
+  let newSent = sent, newPaid = paid;
+  if (action === 'sent') { newSent = !sent; if (!newSent) newPaid = false; }
+  else                   { newPaid = !paid; if (newPaid)  newSent = true;  }
+  if (!taskMap[clientId]) taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
+  taskMap[clientId][conf.sentField] = newSent;
+  taskMap[clientId][conf.paidField] = newPaid;
+  renderTracking();
+  openGroupModal(clientId, group);
+  const { data, error } = await sb.from('crm_tax_tasks')
+    .upsert({ client_id: clientId, year: curYear, month: curMonth,
+              [conf.sentField]: newSent, [conf.paidField]: newPaid },
+      { onConflict: 'client_id,year,month' }).select().single();
+  if (error) {
+    taskMap[clientId][conf.sentField] = sent;
+    taskMap[clientId][conf.paidField] = paid;
+    renderTracking();
+    openGroupModal(clientId, group);
+    showToast('บันทึกไม่สำเร็จ', 'error');
+  } else if (data) { taskMap[clientId] = data; renderTrackingSummary(); }
 }
 
 function renderTrackingSummary() {

@@ -98,3 +98,31 @@ ALTER TABLE public.crm_clients
 
 COMMENT ON COLUMN public.crm_clients.registration_date IS 'วันที่จดทะเบียนบริษัท';
 COMMENT ON COLUMN public.crm_clients.has_own_office    IS 'บริษัทมีที่ตั้งสำนักงานของตัวเอง (false = ใช้ที่อยู่สำนักงานบัญชี)';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่มรายการแบบย่อย TAX1 / SSO / TAX2 ใน crm_tax_tasks
+-- (4 states: todo, inprogress, done, na)
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_tax_tasks
+  ADD COLUMN IF NOT EXISTS pnd1  text NOT NULL DEFAULT 'todo'
+    CHECK (pnd1  IN ('todo','inprogress','done','na')),
+  ADD COLUMN IF NOT EXISTS pnd3  text NOT NULL DEFAULT 'todo'
+    CHECK (pnd3  IN ('todo','inprogress','done','na')),
+  ADD COLUMN IF NOT EXISTS pnd53 text NOT NULL DEFAULT 'todo'
+    CHECK (pnd53 IN ('todo','inprogress','done','na')),
+  ADD COLUMN IF NOT EXISTS pnd54 text NOT NULL DEFAULT 'todo'
+    CHECK (pnd54 IN ('todo','inprogress','done','na')),
+  ADD COLUMN IF NOT EXISTS pp36  text NOT NULL DEFAULT 'todo'
+    CHECK (pp36  IN ('todo','inprogress','done','na')),
+  ADD COLUMN IF NOT EXISTS sso   text NOT NULL DEFAULT 'todo'
+    CHECK (sso   IN ('todo','inprogress','done','na')),
+  ADD COLUMN IF NOT EXISTS pp30  text NOT NULL DEFAULT 'todo'
+    CHECK (pp30  IN ('todo','inprogress','done','na'));
+
+COMMENT ON COLUMN public.crm_tax_tasks.pnd1  IS 'ภ.ง.ด.1 — TAX1';
+COMMENT ON COLUMN public.crm_tax_tasks.pnd3  IS 'ภ.ง.ด.3 — TAX1';
+COMMENT ON COLUMN public.crm_tax_tasks.pnd53 IS 'ภ.ง.ด.53 — TAX1';
+COMMENT ON COLUMN public.crm_tax_tasks.pnd54 IS 'ภ.ง.ด.54 — TAX1';
+COMMENT ON COLUMN public.crm_tax_tasks.pp36  IS 'ภ.พ.36 — TAX1';
+COMMENT ON COLUMN public.crm_tax_tasks.sso   IS 'ประกันสังคม — SSO';
+COMMENT ON COLUMN public.crm_tax_tasks.pp30  IS 'ภ.พ.30 — TAX2';
