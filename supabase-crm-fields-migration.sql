@@ -39,3 +39,13 @@ ALTER TABLE public.crm_client_credentials
 
 COMMENT ON COLUMN public.crm_client_credentials.svs_username IS 'กองทุนพัฒนาฝีมือแรงงาน (SVS)';
 COMMENT ON COLUMN public.crm_client_credentials.kys_username IS 'กองทุนเงินให้กู้ยืมเพื่อการศึกษา (กยศ)';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่ม month_sent / month_paid ใน crm_tax_tasks
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_tax_tasks
+  ADD COLUMN IF NOT EXISTS month_sent boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS month_paid boolean NOT NULL DEFAULT false;
+
+COMMENT ON COLUMN public.crm_tax_tasks.month_sent IS 'ส่งรายงาน/บิลให้ลูกค้าแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.month_paid IS 'ลูกค้าชำระค่าบริการแล้ว';
