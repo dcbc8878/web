@@ -24,14 +24,25 @@
 
     .dot {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: 700;
+      width: 22px; height: 22px; border-radius: 5px; flex-shrink: 0;
     }
-    .dot.done { background: #dcfce7; color: #16a34a; }
-    .dot.todo { background: #f1f5f9; color: #94a3b8; border: 2px dashed #cbd5e1; font-size: 9px; }
-    .dot.na   { background: #e2e8f0; color: #94a3b8; font-size: 11px; }
+    .dot.done { background: #16a34a; color: #fff; font-size: 13px; font-weight: 900; }
+    .dot.todo { background: transparent; border: 2px solid #e2e8f0; }
+    .dot.na   { color: #d1d5db; font-size: 13px; }
+
+    .tog-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; letter-spacing: .03em;
+      padding: 3px 8px; border-radius: 5px; border: 1.5px solid;
+      min-width: 46px;
+    }
+    .tog-empty { background: transparent; color: #d1d5db; border-color: #e5e7eb; border-style: dashed; }
+    td.cursor-pointer:hover .tog-empty { border-color: #94a3b8; color: #94a3b8; }
 
     .status-td.clickable { cursor: pointer; }
-    .status-td.clickable:hover { background: #f0f9ff !important; }
+    .status-td.clickable:hover .dot.done { background: #15803d; }
+    .status-td.clickable:hover .dot.todo { border-color: #93c5fd; background: #eff6ff; }
+    .status-td.clickable:hover .dot.na   { color: #94a3b8; }
     .status-td.saving { opacity: .45; pointer-events: none; }
 
     .prog-wrap { display: flex; align-items: center; gap: 8px; }
@@ -298,9 +309,9 @@
         </div>
         <div class="flex items-center gap-5 mt-3 px-1">
           <span class="text-xs font-semibold text-gray-400">สัญลักษณ์:</span>
-          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot done" style="width:16px;height:16px;font-size:9px">✓</span> เสร็จแล้ว</div>
+          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot done" style="width:16px;height:16px;font-size:10px">✓</span> เสร็จแล้ว</div>
           <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot todo" style="width:16px;height:16px"></span> ยังไม่ได้ทำ</div>
-          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot na" style="width:16px;height:16px;font-size:9px">—</span> N/A</div>
+          <div class="flex items-center gap-1.5 text-xs text-gray-500"><span class="dot na" style="width:16px;height:16px">—</span> N/A</div>
         </div>
       </div>
     </div>
@@ -616,7 +627,7 @@ function showToast(msg, type = 'success') {
 function statusDot(v) {
   if (v === 'done') return '<span class="dot done">✓</span>';
   if (v === 'na')   return '<span class="dot na">—</span>';
-  return '<span class="dot todo">○</span>';
+  return '<span class="dot todo"></span>';
 }
 function calcPct(task, fields) {
   const f = fields || FIELDS;
@@ -859,11 +870,19 @@ function renderTracking() {
     const t2State  = (!hasVat) ? '' : (t2Paid  ? 'paid' : t2Sent  ? 'sent' : '');
 
     const mkToggle = (active, label, color, cid, field, off = false, grp = '') => {
-      if (off) return `<td class="px-2 py-2.5 text-center ${grp}"><span class="text-gray-200 text-xs">—</span></td>`;
-      const bg = color==='amber' ? '#fef3c7' : '#dcfce7';
-      const fg = color==='amber' ? '#92400e' : '#15803d';
-      const badge = active ? `<span class="inv-badge" style="background:${bg};color:${fg}">✓ ${label}</span>` : `<span class="text-gray-300 text-xs">—</span>`;
-      return `<td class="px-2 py-2.5 text-center ${grp} ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${badge}</td>`;
+      if (off) return `<td class="px-1 py-2.5 text-center ${grp}"><span class="dot na">—</span></td>`;
+      let inner;
+      if (active) {
+        const [bg, fg, bd] = color === 'amber'
+          ? ['#fef3c7','#92400e','#fcd34d']
+          : ['#dcfce7','#15803d','#86efac'];
+        inner = `<span class="tog-chip" style="background:${bg};color:${fg};border-color:${bd}">✓ ${label}</span>`;
+      } else {
+        inner = canEdit()
+          ? `<span class="tog-chip tog-empty">${label}</span>`
+          : `<span class="dot na">—</span>`;
+      }
+      return `<td class="px-1.5 py-2.5 text-center ${grp} ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${inner}</td>`;
     };
 
     const clientFields = FIELDS.filter(f => (hasVat || f !== 'pp30') && (hasSso || f !== 'sso'));
