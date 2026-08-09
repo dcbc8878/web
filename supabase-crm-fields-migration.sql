@@ -8,13 +8,15 @@
 -- เพิ่ม pnd54 และ rd_download ใน crm_tax_tasks
 -- ──────────────────────────────────────────────────────────
 ALTER TABLE public.crm_tax_tasks
-  ADD COLUMN IF NOT EXISTS pnd54 text NOT NULL DEFAULT 'todo'
+  ADD COLUMN IF NOT EXISTS pnd54       text NOT NULL DEFAULT 'todo'
     CHECK (pnd54 IN ('done','todo','na')),
   ADD COLUMN IF NOT EXISTS rd_download text NOT NULL DEFAULT 'todo'
-    CHECK (rd_download IN ('done','todo','na'));
+    CHECK (rd_download IN ('done','todo','na')),
+  ADD COLUMN IF NOT EXISTS notes       text NOT NULL DEFAULT '';
 
 COMMENT ON COLUMN public.crm_tax_tasks.pnd54       IS 'ภ.ง.ด.54 — ภาษีเงินได้หัก ณ ที่จ่าย (บริษัทต่างประเทศ)';
 COMMENT ON COLUMN public.crm_tax_tasks.rd_download IS 'RD Download — ดาวน์โหลดเอกสารจากกรมสรรพากร';
+COMMENT ON COLUMN public.crm_tax_tasks.notes       IS 'โน๊ตรายเดือน';
 
 -- ──────────────────────────────────────────────────────────
 -- เพิ่มคอลัมน์ปลายปีใน crm_year_end_tasks
@@ -30,6 +32,16 @@ ALTER TABLE public.crm_year_end_tasks
 COMMENT ON COLUMN public.crm_year_end_tasks.pnd1k IS 'ภ.ง.ด.1ก — สรุปการหักภาษี ณ ที่จ่ายรายปี';
 COMMENT ON COLUMN public.crm_year_end_tasks.kt26k IS 'กท.26ก — รายงานเงินสมทบประกันสังคมประจำปี';
 COMMENT ON COLUMN public.crm_year_end_tasks.boj5  IS 'บอจ.5 — รายงานการประชุมผู้ถือหุ้นประจำปี (ส่ง DBD)';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่ม has_vat / has_sso ใน crm_clients
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_clients
+  ADD COLUMN IF NOT EXISTS has_vat boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS has_sso boolean NOT NULL DEFAULT true;
+
+COMMENT ON COLUMN public.crm_clients.has_vat IS 'บริษัทมีภาษีมูลค่าเพิ่ม (PP.30)';
+COMMENT ON COLUMN public.crm_clients.has_sso IS 'บริษัทมีการส่งประกันสังคม (SSO)';
 
 -- ──────────────────────────────────────────────────────────
 -- เพิ่มรหัสผ่าน SVS และ กยศ ใน crm_client_credentials

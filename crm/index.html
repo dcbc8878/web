@@ -262,6 +262,7 @@
                 <th colspan="3" class="px-2 py-1.5 text-xs font-bold text-purple-500 bg-purple-50 border-b border-gray-200 border-l border-gray-200">TAX 2</th>
                 <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-slate-500 bg-slate-50 border-b border-gray-200 border-l border-gray-200">RD</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">Acct<br>Fee</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">โน๊ต</th>
                 <th rowspan="2" class="px-3 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="vertical-align:middle;min-width:110px">ความคืบหน้า</th>
               </tr>
               <tr>
@@ -283,7 +284,7 @@
               </tr>
             </thead>
             <tbody id="tracking-tbody">
-              <tr><td colspan="20" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              <tr><td colspan="21" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
             </tbody>
           </table>
         </div>
@@ -571,6 +572,7 @@ const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รา�
 let profile      = null;
 let clients      = [];
 let taskMap      = {};
+let prevTaskMap  = {};
 let credMap      = {};
 let invoiceMap   = {};
 let yearEndMap   = {};
@@ -614,6 +616,37 @@ function calcPct(task, fields) {
   const active = vals.filter(v => v !== 'na').length;
   const done   = vals.filter(v => v === 'done').length;
   return active ? Math.round(done / active * 100) : 0;
+}
+function noteCell(clientId, note, prevNote) {
+  if (note) {
+    return `<div class="text-xs text-gray-700 leading-tight cursor-pointer hover:text-blue-600 truncate" title="${e(note)}" onclick="editNote(${clientId},'${e(note).replace(/'/g,'&#39;')}','${e(prevNote).replace(/'/g,'&#39;')}')">${e(note)}</div>`;
+  }
+  if (!canEdit()) {
+    return prevNote ? `<div class="text-xs text-gray-300 italic leading-tight truncate" title="โน๊ตเดือนก่อน: ${e(prevNote)}">${e(prevNote)}</div>` : '';
+  }
+  return `<button onclick="editNote(${clientId},'','${e(prevNote).replace(/'/g,'&#39;')}')" class="text-xs text-gray-300 hover:text-blue-500 border border-dashed border-gray-200 hover:border-blue-300 px-1.5 py-0.5 rounded transition-colors whitespace-nowrap">+ โน๊ต</button>`;
+}
+function editNote(clientId, current, prevNote) {
+  if (!canEdit()) return;
+  const wrapper = document.querySelector(`tr [onclick*="editNote(${clientId},"] td`)?.closest('tr')?.querySelector('td:nth-last-child(2)');
+  if (!wrapper) return;
+  const ph = prevNote ? `เดือนก่อน: ${prevNote}` : 'พิมพ์โน๊ต…';
+  wrapper.innerHTML = `<input id="note-inp-${clientId}" type="text" value="${e(current)}" placeholder="${e(ph)}"
+    class="w-full text-xs px-1.5 py-1 border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+    onblur="saveNote(${clientId},this.value)"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${e(current)}';this.blur();}">`;
+  wrapper.querySelector('input').focus();
+}
+async function saveNote(clientId, val) {
+  const note = val.trim();
+  if (!taskMap[clientId]) taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
+  taskMap[clientId].notes = note;
+  const { data, error } = await sb.from('crm_tax_tasks')
+    .upsert({ client_id: clientId, year: curYear, month: curMonth, notes: note }, { onConflict: 'client_id,year,month' })
+    .select().single();
+  if (error) { showToast('บันทึกโน๊ตไม่สำเร็จ', 'error'); return; }
+  if (data) taskMap[clientId] = data;
+  renderTracking();
 }
 function progressBar(pct) {
   const col = pct === 100 ? '#16a34a' : pct > 50 ? '#2563eb' : '#d97706';
@@ -705,9 +738,16 @@ async function loadClients() {
   clients = data || [];
 }
 async function loadTasks() {
-  const { data } = await sb.from('crm_tax_tasks').select('*').eq('year', curYear).eq('month', curMonth);
+  const prevM = curMonth === 1 ? 12 : curMonth - 1;
+  const prevY = curMonth === 1 ? curYear - 1 : curYear;
+  const [{ data }, { data: prevData }] = await Promise.all([
+    sb.from('crm_tax_tasks').select('*').eq('year', curYear).eq('month', curMonth),
+    sb.from('crm_tax_tasks').select('client_id,notes').eq('year', prevY).eq('month', prevM),
+  ]);
   taskMap = {};
+  prevTaskMap = {};
   (data || []).forEach(t => { taskMap[t.client_id] = t; });
+  (prevData || []).forEach(t => { if (t.notes) prevTaskMap[t.client_id] = t.notes; });
 }
 async function loadCreds() {
   const { data } = await sb.from('crm_client_credentials').select('*');
@@ -777,8 +817,7 @@ function renderTracking() {
   const gb = 'border-l border-gray-200';
   let rows = '';
   clients.forEach(c => {
-    const t   = taskMap[c.id] || {};
-    const pct = calcPct(t);
+    const t = taskMap[c.id] || {};
     const docCell = t.doc_date
       ? `<span onclick="editDocDate(${c.id})" title="คลิกเพื่อแก้ไข"
            class="inline-block bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-0.5 rounded cursor-pointer hover:bg-green-100">
@@ -789,7 +828,11 @@ function renderTracking() {
                + เพิ่ม</button>`
           : '<span class="text-gray-300 text-xs">—</span>');
 
-    const mkCell = (f, bc = '') => {
+    const hasVat = c.has_vat !== false;
+    const hasSso = c.has_sso !== false;
+
+    const mkCell = (f, bc = '', off = false) => {
+      if (off) return `<td class="px-1 py-2.5 ${bc}"><span class="dot na">—</span></td>`;
       const v = t[f] || 'todo';
       return `<td class="status-td px-1 py-2.5 ${bc} ${canEdit() ? 'clickable' : ''}"
                   data-cid="${c.id}" data-field="${f}"
@@ -803,15 +846,20 @@ function renderTracking() {
     const ssoPaid = t.sso_client_paid || false;
     const t2Sent = t.tax2_sent || false;
     const t2Paid = t.tax2_paid || false;
-    const allPaid = t1Paid && ssoPaid && t2Paid;
-    const anySent = t1Sent || ssoSent || t2Sent;
+    const allPaid = t1Paid && (!hasSso || ssoPaid) && (!hasVat || t2Paid);
+    const anySent = t1Sent || (hasSso && ssoSent) || (hasVat && t2Sent);
     const rowCls = allPaid ? 'row-paid' : anySent ? 'row-sent' : '';
-    const mkToggle = (active, label, color, cid, field, extraCls='') => {
+
+    const mkToggle = (active, label, color, cid, field, off = false) => {
+      if (off) return `<td class="px-2 py-2.5 text-center"><span class="text-gray-200 text-xs">—</span></td>`;
       const bg = color==='amber' ? '#fef3c7' : '#dcfce7';
       const fg = color==='amber' ? '#92400e' : '#15803d';
       const badge = active ? `<span class="inv-badge" style="background:${bg};color:${fg}">✓ ${label}</span>` : `<span class="text-gray-300 text-xs">—</span>`;
-      return `<td class="px-2 py-2.5 text-center ${extraCls} ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${badge}</td>`;
+      return `<td class="px-2 py-2.5 text-center ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${badge}</td>`;
     };
+
+    const clientFields = FIELDS.filter(f => (hasVat || f !== 'pp30') && (hasSso || f !== 'sso'));
+    const pct = calcPct(t, clientFields);
 
     rows += `<tr class="border-b border-gray-100 ${rowCls}">
       <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
@@ -822,17 +870,20 @@ function renderTracking() {
       ${mkCell('stm',gb)}
       ${mkCell('pnd1',gb)}${mkCell('pnd3')}${mkCell('pnd53')}${mkCell('pnd54')}${mkCell('pp36')}
       ${mkToggle(t1Sent,'ส่ง','amber',c.id,'tax1_sent')}${mkToggle(t1Paid,'รับ','green',c.id,'tax1_paid')}
-      ${mkCell('sso',gb)}
-      ${mkToggle(ssoSent,'ส่ง','amber',c.id,'sso_sent')}${mkToggle(ssoPaid,'รับ','green',c.id,'sso_client_paid')}
-      ${mkCell('pp30',gb)}
-      ${mkToggle(t2Sent,'ส่ง','amber',c.id,'tax2_sent')}${mkToggle(t2Paid,'รับ','green',c.id,'tax2_paid')}
+      ${mkCell('sso',gb,!hasSso)}
+      ${mkToggle(ssoSent,'ส่ง','amber',c.id,'sso_sent',!hasSso)}${mkToggle(ssoPaid,'รับ','green',c.id,'sso_client_paid',!hasSso)}
+      ${mkCell('pp30',gb,!hasVat)}
+      ${mkToggle(t2Sent,'ส่ง','amber',c.id,'tax2_sent',!hasVat)}${mkToggle(t2Paid,'รับ','green',c.id,'tax2_paid',!hasVat)}
       ${mkCell('rd_download',gb)}${mkCell('rd_keyed')}
       ${mkCell('acct_fee',gb)}
+      <td class="px-2 py-2 border-l border-gray-200" style="min-width:120px;max-width:180px">
+        ${noteCell(c.id, t.notes||'', prevTaskMap[c.id]||'')}
+      </td>
       <td class="px-3 py-2.5">${progressBar(pct)}</td>
     </tr>`;
   });
 
-  if (!rows) rows = `<tr><td colspan="20" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  if (!rows) rows = `<tr><td colspan="21" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
   document.getElementById('tracking-tbody').innerHTML = rows;
 }
 
@@ -1250,6 +1301,8 @@ function renderPanelInfo() {
             ])}
           ${numField('ค่าบริการ (บาท/เดือน)', 'monthly_fee', c.monthly_fee)}
           ${chkField('หัก ณ ที่จ่าย 3%', 'has_wht', c.has_wht !== false)}
+          ${chkField('มี VAT (PP.30)', 'has_vat', c.has_vat !== false)}
+          ${chkField('มี SSO (ประกันสังคม)', 'has_sso', c.has_sso !== false)}
         </div>
       </div>
       <div class="border-t border-gray-100 pt-4 mt-4">
@@ -1739,9 +1792,16 @@ function openAddClient() {
               class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
         </div>
-        <div class="flex items-center gap-2 mt-2">
-          <input id="nc-wht" type="checkbox" checked class="w-4 h-4 rounded text-blue-600">
-          <label class="text-sm text-gray-700">หัก ณ ที่จ่าย 3%</label>
+        <div class="flex flex-wrap gap-x-5 gap-y-1.5 mt-2">
+          <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input id="nc-wht" type="checkbox" checked class="w-4 h-4 rounded text-blue-600"> หัก ณ ที่จ่าย 3%
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input id="nc-vat" type="checkbox" checked class="w-4 h-4 rounded text-blue-600"> มี VAT (PP.30)
+          </label>
+          <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+            <input id="nc-sso" type="checkbox" checked class="w-4 h-4 rounded text-blue-600"> มี SSO
+          </label>
         </div>
       </div>
       <div>
@@ -1770,6 +1830,8 @@ async function saveNewClient() {
     billing_type: document.getElementById('nc-btype').value,
     monthly_fee:  parseFloat(document.getElementById('nc-fee').value) || 0,
     has_wht:      document.getElementById('nc-wht').checked,
+    has_vat:      document.getElementById('nc-vat').checked,
+    has_sso:      document.getElementById('nc-sso').checked,
     client_email: document.getElementById('nc-email').value.trim(),
   };
 
