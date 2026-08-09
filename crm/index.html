@@ -620,6 +620,7 @@
 const SB_URL  = 'https://dqegkyobclqqichhnxfm.supabase.co';
 const SB_ANON = 'sb_publishable_4U_v9BIrQjKppfchaevA6Q_zWj3zkxE';
 const sb = supabase.createClient(SB_URL, SB_ANON);
+const ADMIN_STAFF_FN = 'swift-handler'; // Edge Function slug for admin-staff/index.ts (Supabase keeps the original slug even after renaming "Name" in the dashboard)
 
 const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
   'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -725,6 +726,16 @@ function showToast(msg, type = 'success') {
   t.style.color = 'white';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+async function invokeErrorMessage(error) {
+  if (!error) return '';
+  try {
+    if (error.context && typeof error.context.json === 'function') {
+      const body = await error.context.clone().json();
+      if (body?.error) return body.error;
+    }
+  } catch (_) {}
+  return error.message || String(error);
 }
 async function logActivity(action, entityType, entityId, summary) {
   await sb.from('crm_activity_log').insert({
@@ -1596,12 +1607,12 @@ async function submitAddStaff() {
   const btn = document.getElementById('as-submit-btn');
   btn.disabled = true; btn.textContent = 'กำลังเพิ่ม…';
 
-  const { data, error } = await sb.functions.invoke('admin-staff', {
+  const { data, error } = await sb.functions.invoke(ADMIN_STAFF_FN, {
     body: { action: 'create', username, display_name, role: roleVal },
   });
 
   if (error || data?.error) {
-    errEl.textContent = data?.error || 'สร้างพนักงานไม่สำเร็จ — Edge Function "admin-staff" อาจยังไม่ได้ deploy (ดูวิธีใน supabase/functions/admin-staff/README.md)';
+    errEl.textContent = data?.error || await invokeErrorMessage(error) || 'สร้างพนักงานไม่สำเร็จ — Edge Function อาจยังไม่ได้ deploy (ดูวิธีใน supabase/functions/admin-staff/README.md)';
     errEl.classList.remove('hidden');
     btn.disabled = false; btn.textContent = 'เพิ่มพนักงาน';
     return;
@@ -1648,12 +1659,12 @@ async function resetStaffPassword(staffId, displayName) {
   if (!canManageStaff()) return;
   if (!confirm(`รีเซ็ทรหัสผ่านของ ${displayName} กลับเป็น 1234 ใช่หรือไม่?`)) return;
 
-  const { data, error } = await sb.functions.invoke('admin-staff', {
+  const { data, error } = await sb.functions.invoke(ADMIN_STAFF_FN, {
     body: { action: 'reset', staff_id: staffId },
   });
 
   if (error || data?.error) {
-    showToast(data?.error || 'รีเซ็ทไม่สำเร็จ — Edge Function "admin-staff" อาจยังไม่ได้ deploy', 'error');
+    showToast(data?.error || await invokeErrorMessage(error) || 'รีเซ็ทไม่สำเร็จ — Edge Function อาจยังไม่ได้ deploy', 'error');
     return;
   }
 
