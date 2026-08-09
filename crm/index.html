@@ -545,7 +545,13 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">วันเดือนปีเกิด</label>
-                <input id="prof-birthdate" type="date" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="relative">
+                  <input id="prof-birthdate-disp" type="text" readonly placeholder="วว/ดด/ปปปป"
+                    onclick="openDatePicker('prof-birthdate-disp','prof-birthdate')"
+                    class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer pr-8">
+                  <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <input type="hidden" id="prof-birthdate" value="">
+                </div>
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อผู้ใช้ (username)</label>
@@ -632,6 +638,7 @@
 </div>
 
 <div id="modal-area"></div>
+<div id="dp-popup" class="hidden" style="position:absolute;z-index:60"></div>
 <div id="toast"></div>
 
 <script>
@@ -734,6 +741,7 @@ const canEditBasic  = () => myLevel() <= 3;              // LV1-3: basic info + 
 const canSeeServiceDates = () => myLevel() <= 3;          // LV1-3: registration/start/end date fields
 const canCred   = () => true;                            // everyone can view credentials (read-only below LV3)
 const canSeeDashboard = () => myLevel() <= 3;             // LV1-3: รายได้สรุป
+const canManageOwnCompany = () => myLevel() <= 2;         // LV1-2: บริษัทของตัวเอง
 
 // ─────────────────────────────────────────────────────────────
 // UTILITIES
@@ -939,7 +947,7 @@ async function init() {
   if (canAddStaff()) document.getElementById('nav-staff').classList.remove('hidden');
   if (canAddStaff()) document.getElementById('add-staff-btn').classList.remove('hidden');
   if (isOwner()) document.getElementById('add-client-btn').classList.remove('hidden');
-  if (isOwner()) document.getElementById('own-company-section').classList.remove('hidden');
+  if (canManageOwnCompany()) document.getElementById('own-company-section').classList.remove('hidden');
   if (canSeeAuditLog()) document.getElementById('activity-log-section').classList.remove('hidden');
   document.getElementById('nav-dashboard').classList.toggle('hidden', !canSeeDashboard());
   document.getElementById('settings-btn').classList.remove('hidden');
@@ -1034,7 +1042,7 @@ function navigate(p) {
   else if (p === 'dashboard') loadDashboard();
   else if (p === 'settings') {
     renderOwnProfile();
-    if (isOwner()) renderOwnCompanies();
+    if (canManageOwnCompany()) renderOwnCompanies();
     if (canSeeAuditLog()) renderActivityLog();
   }
 }
@@ -1374,9 +1382,10 @@ function openDocModal(clientId) {
     <div class="p-5" style="min-width:320px;max-width:400px">
       <h3 class="text-base font-semibold text-gray-800 mb-4">รับเอกสาร</h3>
       <div class="mb-4">
-        <label class="block text-xs font-medium text-gray-500 mb-1">วันที่รับเอกสาร</label>
-        <input id="doc-date-input" type="date" value="${isoDate}"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+        ${dateFieldHtml({
+          label: 'วันที่รับเอกสาร', textId: 'doc-date-input-disp', hiddenId: 'doc-date-input', isoVal: isoDate,
+          cls: 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300',
+        })}
       </div>
       <div class="mb-5">
         <label class="block text-xs font-medium text-gray-500 mb-1">รายการที่ได้รับ</label>
@@ -1922,13 +1931,9 @@ function renderPanelInfo() {
         ${ro ? '' : 'oninput="markDirty()"'}>
     </div>`;
 
-  const dtField = (label, key, val) => `
-    <div>
-      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <input type="date" value="${e(val)}" ${ro ? 'readonly disabled' : ''} data-key="${key}"
-        class="editable-field w-full text-sm text-gray-800"
-        ${ro ? '' : 'oninput="markDirty()"'}>
-    </div>`;
+  const dtField = (label, key, val) => dateFieldHtml({
+    label, textId: `pinf-${key}-disp`, hiddenId: `pinf-${key}`, isoVal: val, ro, dataKey: key,
+  });
 
   const taField = (label, key, val, rows, ph='') => `
     <div>
@@ -1939,7 +1944,6 @@ function renderPanelInfo() {
       >${e(val)}</textarea>
     </div>`;
 
-  const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
   const showServiceDates = panelOrigin === 'full' && canSeeServiceDates();
   const [fyeDay, fyeMonth] = (c.fiscal_year_end || '31/12').split('/').map(n => parseInt(n) || 0);
 
@@ -1948,7 +1952,7 @@ function renderPanelInfo() {
       <div class="grid grid-cols-2 gap-4">
         <div>
           <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">NO.</div>
-          <div class="text-sm text-gray-500 py-2">${seqNum || '—'}</div>
+          <div class="text-sm text-gray-500 py-2">${e(c.code) || '—'}</div>
         </div>
         <div>
           <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">CODE</div>
@@ -1980,7 +1984,7 @@ function renderPanelInfo() {
         </div>
         <div class="col-span-2">${taField('ADDRESS', 'address', c.address||'', 2, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
         ${showServiceDates ? `
-          ${tf('Registration date', 'registration_date', c.registration_date||'')}
+          ${dtField('Registration date', 'registration_date', c.registration_date||'')}
           <div></div>
           ${dtField('Service start Month', 'start_date', c.start_date || '')}
           ${dtField('Service End Month', 'end_date', c.end_date || '')}
@@ -2068,11 +2072,10 @@ async function renderPanelChanges() {
             ${changeTypeOpts}
           </select>
         </div>
-        <div>
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">วันที่มีผล</div>
-          <input id="change-date-inp" type="date"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
-        </div>
+        ${dateFieldHtml({
+          label: 'วันที่มีผล', textId: 'change-date-inp-disp', hiddenId: 'change-date-inp', isoVal: '',
+          cls: 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300',
+        })}
         <div id="change-val-wrap" class="hidden">
           <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ค่าใหม่</div>
           <div id="change-val-container"></div>
@@ -2139,11 +2142,10 @@ function editChangeLog(logId) {
           ${typeOpts}
         </select>
       </div>
-      <div>
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">วันที่มีผล</div>
-        <input id="edit-change-date" type="date" value="${e(ch.change_date)}"
-          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm">
-      </div>
+      ${dateFieldHtml({
+        label: 'วันที่มีผล', textId: 'edit-change-date-disp', hiddenId: 'edit-change-date', isoVal: ch.change_date,
+        cls: 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm',
+      })}
       <div>
         <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ค่าใหม่</div>
         <input id="edit-change-val" type="text" value="${e(ch.new_value)}"
@@ -2803,6 +2805,124 @@ function syncFiscalYearEnd() {
   document.getElementById('fye-hidden').value = `${d}/${m}`;
   markDirty();
 }
+
+// ─────────────────────────────────────────────────────────────
+// DATE PICKER — reusable calendar widget for every date field.
+// A visible readonly text input shows dd/mm/yyyy; a paired hidden
+// input holds the real ISO (yyyy-mm-dd) value that gets saved.
+// ─────────────────────────────────────────────────────────────
+function fmtDDMMYYYY(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  if (!y || !m || !d) return '';
+  return `${d}/${m}/${y}`;
+}
+
+function dateFieldHtml(opts) {
+  const { label, textId, hiddenId, isoVal, ro, dataKey, cls, wrapClass, onChangeExtra } = opts;
+  const inputCls = cls || 'editable-field w-full text-sm text-gray-800';
+  return `
+    <div class="${wrapClass || ''}">
+      ${label ? `<div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>` : ''}
+      <div class="relative">
+        <input type="text" id="${textId}" readonly value="${fmtDDMMYYYY(isoVal)}" placeholder="วว/ดด/ปปปป"
+          ${ro ? 'disabled' : `onclick="openDatePicker('${textId}','${hiddenId}'${onChangeExtra ? `,'${onChangeExtra}'` : ''})"`}
+          class="${inputCls} ${ro ? '' : 'cursor-pointer'} pr-8">
+        <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <input type="hidden" id="${hiddenId}" ${dataKey ? `data-key="${dataKey}"` : ''} value="${e(isoVal || '')}">
+      </div>
+    </div>`;
+}
+
+let dpTextId = null, dpHiddenId = null, dpOnChangeExtra = null, dpViewYear = 0, dpViewMonth = 0;
+
+function openDatePicker(textId, hiddenId, onChangeExtra) {
+  dpTextId = textId; dpHiddenId = hiddenId; dpOnChangeExtra = onChangeExtra || null;
+  const hidden = document.getElementById(hiddenId);
+  const iso = hidden ? hidden.value : '';
+  const now = new Date();
+  if (iso) {
+    const [y, m] = iso.split('-').map(Number);
+    dpViewYear = y; dpViewMonth = m;
+  } else {
+    dpViewYear = now.getFullYear(); dpViewMonth = now.getMonth() + 1;
+  }
+  renderDatePickerCalendar();
+  const textEl = document.getElementById(textId);
+  const rect = textEl.getBoundingClientRect();
+  const popup = document.getElementById('dp-popup');
+  popup.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  popup.style.left = (rect.left + window.scrollX) + 'px';
+  popup.classList.remove('hidden');
+}
+
+function closeDatePicker() {
+  document.getElementById('dp-popup').classList.add('hidden');
+  dpTextId = null; dpHiddenId = null; dpOnChangeExtra = null;
+}
+
+document.addEventListener('click', (ev) => {
+  const popup = document.getElementById('dp-popup');
+  if (popup.classList.contains('hidden')) return;
+  if (popup.contains(ev.target) || ev.target.id === dpTextId) return;
+  closeDatePicker();
+});
+
+function dpChangeMonth(delta) {
+  dpViewMonth += delta;
+  if (dpViewMonth < 1) { dpViewMonth = 12; dpViewYear--; }
+  if (dpViewMonth > 12) { dpViewMonth = 1; dpViewYear++; }
+  renderDatePickerCalendar();
+}
+
+function renderDatePickerCalendar() {
+  const hidden = document.getElementById(dpHiddenId);
+  const selectedIso = hidden ? hidden.value : '';
+  const firstDay = new Date(dpViewYear, dpViewMonth - 1, 1).getDay();
+  const daysInMonth = new Date(dpViewYear, dpViewMonth, 0).getDate();
+  const thYear = dpViewYear + 543;
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += `<div></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${dpViewYear}-${String(dpViewMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSel = iso === selectedIso;
+    cells += `<div onclick="dpSelectDay(${d})" class="w-7 h-7 flex items-center justify-center text-xs rounded cursor-pointer hover:bg-blue-50 ${isSel ? 'bg-blue-600 text-white hover:bg-blue-600' : 'text-gray-700'}">${d}</div>`;
+  }
+  document.getElementById('dp-popup').innerHTML = `
+    <div class="bg-white border border-gray-200 rounded-xl shadow-lg p-3" style="width:240px" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-2">
+        <button type="button" onclick="dpChangeMonth(-1)" class="p-1 text-gray-400 hover:text-gray-700">‹</button>
+        <span class="text-xs font-semibold text-gray-700">${THAI_MONTHS[dpViewMonth]} ${thYear}</span>
+        <button type="button" onclick="dpChangeMonth(1)" class="p-1 text-gray-400 hover:text-gray-700">›</button>
+      </div>
+      <div class="grid grid-cols-7 gap-0.5 text-center text-[10px] text-gray-400 mb-1">
+        <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div>ส</div>
+      </div>
+      <div class="grid grid-cols-7 gap-0.5">${cells}</div>
+      <div class="flex justify-between mt-2 pt-2 border-t border-gray-100">
+        <button type="button" onclick="dpClear()" class="text-[11px] text-gray-400 hover:text-red-500">ล้างค่า</button>
+        <button type="button" onclick="closeDatePicker()" class="text-[11px] text-gray-400 hover:text-gray-700">ปิด</button>
+      </div>
+    </div>`;
+}
+
+function dpApplyValue(iso) {
+  document.getElementById(dpHiddenId).value = iso;
+  document.getElementById(dpTextId).value = fmtDDMMYYYY(iso);
+  const extra = dpOnChangeExtra;
+  closeDatePicker();
+  if (extra && typeof window[extra] === 'function') window[extra]();
+  else markDirty();
+}
+
+function dpSelectDay(d) {
+  const iso = `${dpViewYear}-${String(dpViewMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  dpApplyValue(iso);
+}
+
+function dpClear() {
+  dpApplyValue('');
+}
 function discardPanelEdits() {
   panelDirty = false;
   document.getElementById('panel-save-bar').classList.add('hidden');
@@ -2943,14 +3063,12 @@ function openAddClient() {
         <textarea id="nc-address" rows="2" class="${inp} resize-none"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">วันที่จดทะเบียน</label>
-          <input id="nc-regdate" type="text" placeholder="เช่น 1 ม.ค. 2560" class="${inp}">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">วันที่เริ่มให้บริการ</label>
-          <input id="nc-svcdate" type="date" class="${inp}">
-        </div>
+        ${dateFieldHtml({
+          label: 'วันที่จดทะเบียน', textId: 'nc-regdate-disp', hiddenId: 'nc-regdate', isoVal: '', cls: inp,
+        })}
+        ${dateFieldHtml({
+          label: 'วันที่เริ่มให้บริการ', textId: 'nc-svcdate-disp', hiddenId: 'nc-svcdate', isoVal: '', cls: inp,
+        })}
       </div>
       <div class="border-t border-gray-100 pt-3">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">ค่าบริการ</div>
@@ -3108,7 +3226,7 @@ async function renderActivityLog() {
 }
 
 function openAddOwnCompany() {
-  if (!isOwner()) return;
+  if (!canManageOwnCompany()) return;
   const entityOptions = ENTITY_TYPES.map(t => `<option value="${e(t)}">${e(t)}</option>`).join('');
   const inp = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   openModal(`
@@ -3319,6 +3437,7 @@ async function signOut() { await sb.auth.signOut(); location.reload(); }
 async function renderOwnProfile() {
   document.getElementById('prof-name').value = profile?.display_name || '';
   document.getElementById('prof-birthdate').value = profile?.birthdate || '';
+  document.getElementById('prof-birthdate-disp').value = fmtDDMMYYYY(profile?.birthdate || '');
   const { data: { user } } = await sb.auth.getUser();
   const email = user?.email || '';
   document.getElementById('prof-username').value = email.endsWith('@staff.dcbc.co.th')
