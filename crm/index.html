@@ -12,6 +12,13 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Noto Sans Thai', system-ui, sans-serif; font-size: 14px; }
 
+    #doc-print-area { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #doc-print-area, #doc-print-area * { visibility: visible; }
+      #doc-print-area { display: block; position: absolute; top: 0; left: 0; width: 100%; }
+    }
+
     .nav-item {
       display: flex; align-items: center; gap: 6px;
       padding: 6px 11px; border-radius: 7px; cursor: pointer;
@@ -639,6 +646,7 @@
 
 <div id="modal-area"></div>
 <div id="dp-popup" class="hidden" style="position:absolute;z-index:60"></div>
+<div id="doc-print-area"></div>
 <div id="toast"></div>
 
 <script>
@@ -1346,11 +1354,15 @@ function renderTrackingSummary() {
 }
 
 const DOC_ITEMS = [
-  'สลิปเงินเดือน',
-  'ใบเสร็จค่าใช้จ่าย',
-  'Statement ธนาคาร',
-  'ใบกำกับภาษี',
-  'เอกสารอื่นๆ',
+  'สรุปรายได้',
+  'สำเนาใบกำกับภาษีขาย',
+  'สำเนาใบเสร็จรับเงิน',
+  'หนังสือรับรองถูกหัก ณ ที่จ่าย',
+  'สรุปค่าใช้จ่าย',
+  'ค่าใช้จ่าย',
+  'ใบกำกับภาษีซื้อ',
+  'หนังสือรับรองหัก ณ ที่จ่าย',
+  'รายละเอียดการจ่ายเงินเดือน',
 ];
 
 
@@ -1362,26 +1374,36 @@ function thaiDate(v) {
   return `${+m[3]} ${mo} ${(+m[1]+543)%100}`;
 }
 
-function openDocModal(clientId) {
+// ── Document Receipt Modal (หน้าตรวจเอกสาร) ──
+let docModalClientId = null;
+let docModalBanks = [];          // [{id, bank_name, account_no}]
+let docModalBankChecked = new Set();
+let docModalOtherItems = [];     // current (possibly edited) template item labels
+let docModalOtherChecked = new Set();
+let docModalOrigTemplate = [];   // original template, to detect removals on save
+
+function bankLabel(b) { return `BANK ${b.bank_name || '—'} ${b.account_no || ''}`.trim(); }
+
+async function openDocModal(clientId) {
   if (!canEdit()) return;
+  docModalClientId = clientId;
   const t = taskMap[clientId] || {};
   const c = clients.find(x => x.id === clientId);
   const clientTemplates = (c?.doc_item_templates || '').split(',').filter(Boolean);
-  const itemList = clientTemplates.length ? clientTemplates : DOC_ITEMS;
+  docModalOtherItems = clientTemplates.length ? [...clientTemplates] : [...DOC_ITEMS];
+  docModalOrigTemplate = [...docModalOtherItems];
+  docModalOtherChecked = new Set((t.doc_items || '').split(',').filter(Boolean));
+  docModalBankChecked = new Set((t.doc_items_bank || '').split(',').filter(Boolean));
+
+  const { data: banks } = await sb.from('crm_client_bank_accounts')
+    .select('*').eq('client_id', clientId).order('created_at');
+  docModalBanks = banks || [];
+
   const curDate = t.doc_date || '';
   const isoDate = /^\d{4}-\d{2}-\d{2}$/.test(curDate) ? curDate : '';
-  const curItems = (t.doc_items || '').split(',').filter(Boolean);
-  const checkboxes = itemList.map((item, i) => {
-    const checked = curItems.includes(item) ? 'checked' : '';
-    return `<label class="flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-50 rounded px-1">
-      <input type="checkbox" id="doci-${i}" value="${e(item)}" ${checked}
-        class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer">
-      <span class="text-sm text-gray-700">${e(item)}</span>
-    </label>`;
-  }).join('');
 
   openModal(`
-    <div class="p-5" style="min-width:320px;max-width:400px">
+    <div class="p-5" style="min-width:600px;max-width:720px">
       <h3 class="text-base font-semibold text-gray-800 mb-4">รับเอกสาร</h3>
       <div class="mb-4">
         ${dateFieldHtml({
@@ -1389,39 +1411,245 @@ function openDocModal(clientId) {
           cls: 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300',
         })}
       </div>
-      <div class="mb-5">
-        <label class="block text-xs font-medium text-gray-500 mb-1">รายการที่ได้รับ</label>
-        <div class="border border-gray-200 rounded-lg px-2 py-1">${checkboxes}</div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Bank Statement</label>
+          <div id="doc-bank-section"></div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">เอกสารประกอบการบันทึกบัญชี</label>
+          <div id="doc-other-section"></div>
+        </div>
       </div>
-      <div class="flex gap-2 justify-end">
-        <button onclick="closeModal()"
-          class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ยกเลิก</button>
-        <button onclick="saveDocModal(${clientId})"
-          class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">บันทึก</button>
+      <div class="flex gap-2 justify-between items-center mt-5">
+        <button onclick="closeModal();printDocReceipt(${clientId})"
+          class="px-3 py-2 text-xs rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">🖨️ พิมพ์ / ดาวน์โหลด</button>
+        <div class="flex gap-2">
+          <button onclick="closeModal()"
+            class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ยกเลิก</button>
+          <button onclick="saveDocModal(${clientId})"
+            class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">บันทึก</button>
+        </div>
       </div>
     </div>
   `);
+  renderDocBankSection();
+  renderDocOtherSection();
+}
+
+function renderDocBankSection() {
+  const el = document.getElementById('doc-bank-section');
+  if (!el) return;
+  const anyChecked = docModalBankChecked.size > 0;
+  const rows = docModalBanks.map(b => `
+    <div class="flex items-center gap-2 py-1 group">
+      <label class="flex items-center gap-2 flex-1 cursor-pointer">
+        <input type="checkbox" ${docModalBankChecked.has(String(b.id)) ? 'checked' : ''}
+          onchange="docToggleBankChecked('${b.id}')"
+          class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer">
+        <span class="text-sm text-gray-700">${e(bankLabel(b))}</span>
+      </label>
+      <button type="button" onclick="docRemoveBankAccount(${b.id})"
+        class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1">✕</button>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="border ${!anyChecked ? 'border-red-300 bg-red-50' : 'border-gray-200'} rounded-lg px-2 py-1.5">
+      ${docModalBanks.length ? rows : '<div class="text-xs text-gray-400 py-1.5 px-1">ยังไม่มีบัญชีธนาคาร</div>'}
+      ${!anyChecked ? '<div class="text-xs text-red-500 px-1 pb-1 font-medium">⚠ ยังไม่ได้รับ Bank Statement</div>' : ''}
+    </div>
+    <button type="button" onclick="docAddBankAccount()"
+      class="text-xs text-blue-600 hover:text-blue-800 font-medium mt-1.5 px-1">+ เพิ่มบัญชีธนาคาร</button>`;
+}
+
+function renderDocOtherSection() {
+  const el = document.getElementById('doc-other-section');
+  if (!el) return;
+  const rows = docModalOtherItems.map(item => `
+    <div class="flex items-center gap-2 py-1 group">
+      <label class="flex items-center gap-2 flex-1 cursor-pointer">
+        <input type="checkbox" data-item="${e(item)}" ${docModalOtherChecked.has(item) ? 'checked' : ''}
+          onchange="docToggleOtherChecked(this.dataset.item)"
+          class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer">
+        <span class="text-sm text-gray-700">${e(item)}</span>
+      </label>
+      <button type="button" data-item="${e(item)}" onclick="docRemoveOtherItem(this.dataset.item)"
+        class="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity text-xs px-1">✕</button>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="border border-gray-200 rounded-lg px-2 py-1.5 max-h-48 overflow-y-auto">
+      ${rows || '<div class="text-xs text-gray-400 py-1.5 px-1">ไม่มีรายการ</div>'}
+    </div>
+    <button type="button" onclick="docAddOtherItem()"
+      class="text-xs text-blue-600 hover:text-blue-800 font-medium mt-1.5 px-1">+ เพิ่มรายการ (เดือนนี้เท่านั้น)</button>`;
+}
+
+function docToggleBankChecked(bankId) {
+  bankId = String(bankId);
+  if (docModalBankChecked.has(bankId)) docModalBankChecked.delete(bankId);
+  else docModalBankChecked.add(bankId);
+  renderDocBankSection();
+}
+
+function docToggleOtherChecked(item) {
+  if (docModalOtherChecked.has(item)) docModalOtherChecked.delete(item);
+  else docModalOtherChecked.add(item);
+  renderDocOtherSection();
+}
+
+async function docAddBankAccount() {
+  const bankName = prompt('ชื่อธนาคาร (เช่น KBANK, SCB)');
+  if (!bankName || !bankName.trim()) return;
+  const accountNo = prompt('เลขที่บัญชี') || '';
+  const { data, error } = await sb.from('crm_client_bank_accounts')
+    .insert({ client_id: docModalClientId, bank_name: bankName.trim(), account_no: accountNo.trim() })
+    .select().single();
+  if (error) { showToast('เพิ่มบัญชีธนาคารไม่สำเร็จ: ' + error.message, 'error'); return; }
+  docModalBanks.push(data);
+  renderDocBankSection();
+}
+
+async function docRemoveBankAccount(bankId) {
+  if (!confirm('ลบบัญชีธนาคารนี้ใช่หรือไม่? (จะลบออกจากทุกเดือน)')) return;
+  const { error } = await sb.from('crm_client_bank_accounts').delete().eq('id', bankId);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  docModalBanks = docModalBanks.filter(b => b.id !== bankId);
+  docModalBankChecked.delete(String(bankId));
+  renderDocBankSection();
+}
+
+function docAddOtherItem() {
+  const name = prompt('ชื่อเอกสารเพิ่มเติม (สำหรับเดือนนี้เท่านั้น)');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (!docModalOtherItems.includes(trimmed)) docModalOtherItems.push(trimmed);
+  docModalOtherChecked.add(trimmed);
+  renderDocOtherSection();
+}
+
+function docRemoveOtherItem(item) {
+  docModalOtherItems = docModalOtherItems.filter(x => x !== item);
+  docModalOtherChecked.delete(item);
+  renderDocOtherSection();
 }
 
 async function saveDocModal(clientId) {
   const dateVal = (document.getElementById('doc-date-input')?.value || '').trim();
-  const checked = [...document.querySelectorAll('[id^="doci-"]:checked')].map(el => el.value);
-  const itemsStr = checked.join(',');
+  const itemsStr = [...docModalOtherChecked].filter(i => docModalOtherItems.includes(i)).join(',');
+  const bankStr = [...docModalBankChecked].join(',');
+  // Persist template edits: keep original items that weren't removed; ad-hoc additions don't join the template.
+  const newTemplate = docModalOrigTemplate.filter(i => docModalOtherItems.includes(i));
+  const templateChanged = newTemplate.length !== docModalOrigTemplate.length;
   closeModal();
+
   if (!taskMap[clientId]) {
     taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
     FIELDS.forEach(f => { taskMap[clientId][f] = 'todo'; });
   }
   taskMap[clientId].doc_date = dateVal;
   taskMap[clientId].doc_items = itemsStr;
+  taskMap[clientId].doc_items_bank = bankStr;
   renderTracking();
+
   const { data, error } = await sb.from('crm_tax_tasks')
-    .upsert({ client_id: clientId, year: curYear, month: curMonth, doc_date: dateVal, doc_items: itemsStr },
+    .upsert({ client_id: clientId, year: curYear, month: curMonth, doc_date: dateVal, doc_items: itemsStr, doc_items_bank: bankStr },
       { onConflict: 'client_id,year,month' })
     .select().single();
   if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
   if (data) taskMap[clientId] = data;
+
+  if (templateChanged) {
+    const { error: tplErr } = await sb.from('crm_clients')
+      .update({ doc_item_templates: newTemplate.join(',') }).eq('id', clientId);
+    if (!tplErr) {
+      const c = clients.find(x => x.id === clientId);
+      if (c) c.doc_item_templates = newTemplate.join(',');
+    }
+  }
   renderTracking();
+}
+
+async function printDocReceipt(clientId) {
+  const c = clients.find(x => x.id === clientId);
+  const t = taskMap[clientId] || {};
+  if (!c) return;
+
+  const { data: banks } = await sb.from('crm_client_bank_accounts')
+    .select('*').eq('client_id', clientId).order('created_at');
+  const bankList = banks || [];
+  const bankChecked = new Set((t.doc_items_bank || '').split(',').filter(Boolean));
+  const otherChecked = new Set((t.doc_items || '').split(',').filter(Boolean));
+  const templates = (c.doc_item_templates || '').split(',').filter(Boolean);
+  const otherList = templates.length ? templates : DOC_ITEMS;
+
+  const lines = [];
+  lines.push(`รายการรับเอกสารจากลูกค้า ประจำเดือน${THAI_MONTHS[curMonth]} ปี${curYear + 543}`);
+  lines.push('');
+  lines.push(`รับเอกสารวันที่ ${t.doc_date ? fmtDDMMYYYY(t.doc_date) : '—'} โดยมีรายการดังนี้`);
+  lines.push('');
+  lines.push('bank statement');
+  let n = 1;
+  if (bankList.length) {
+    bankList.forEach(b => {
+      lines.push(`${n}. ${bankLabel(b)} — ${bankChecked.has(String(b.id)) ? 'ได้รับ' : 'ยังไม่ได้'}`);
+      n++;
+    });
+  } else {
+    lines.push(`${n}. (ไม่มีบัญชีธนาคาร)`);
+    n++;
+  }
+  otherList.forEach(item => {
+    lines.push(`${n}. ${item} — ${otherChecked.has(item) ? 'ได้รับ' : 'ยังไม่ได้'}`);
+    n++;
+  });
+  lines.push('');
+  lines.push(`ตรวจสอบเอกสารโดย ${profile?.display_name || ''}`);
+
+  openDocReceiptPrintView(c, lines.join('\n'));
+}
+
+let docReceiptText = '';
+let docReceiptTitle = '';
+
+function openDocReceiptPrintView(c, text) {
+  docReceiptText = text;
+  docReceiptTitle = c.thai_name || 'receipt';
+  document.getElementById('doc-print-area').innerHTML =
+    `<div style="white-space:pre-wrap;font-size:14px;line-height:1.8;padding:24px">${e(text)}</div>`;
+  openModal(`
+    <div class="p-5" style="min-width:420px;max-width:520px">
+      <h3 class="text-base font-semibold text-gray-800 mb-3">${e(c.thai_name)}</h3>
+      <pre class="text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-3" style="white-space:pre-wrap;max-height:360px;overflow-y:auto;font-family:inherit">${e(text)}</pre>
+      <div class="flex gap-2 justify-end mt-4">
+        <button onclick="closeModal()" class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ปิด</button>
+        <button onclick="downloadDocReceiptJpg()" class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ดาวน์โหลด JPG</button>
+        <button onclick="window.print()" class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">พิมพ์ / บันทึก PDF</button>
+      </div>
+    </div>`);
+}
+
+function downloadDocReceiptJpg() {
+  const lines = docReceiptText.split('\n');
+  const fontSize = 20, lineHeight = 32, padding = 40;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = `${fontSize}px sans-serif`;
+  const widest = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
+  canvas.width = Math.min(Math.max(600, widest + padding * 2), 1000);
+  canvas.height = lines.length * lineHeight + padding * 2;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#1f2937';
+  ctx.font = `${fontSize}px sans-serif`;
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i) => ctx.fillText(line, padding, padding + i * lineHeight));
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${docReceiptTitle}.jpg`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/jpeg', 0.92);
 }
 
 // ─────────────────────────────────────────────────────────────
