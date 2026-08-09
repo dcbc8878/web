@@ -1,0 +1,114 @@
+// Supabase Edge Function: admin-staff
+//
+// Handles the two actions that require the service-role key
+// (never exposed to the browser):
+//   - action "create": make a new auth user + crm_staff row, default
+//     password "1234", must_change_password = true
+//   - action "reset":  reset an existing staff member's password back
+//     to "1234" and set must_change_password = true
+//
+// Both actions re-check the caller's role server-side (never trust the
+// client) using the caller's own JWT to look up their crm_staff row.
+//
+// Deploy via the Supabase Dashboard: Edge Functions → Create a function
+// → name it "admin-staff" → paste this file's contents → Deploy.
+// No secrets to configure — SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
+// are automatically available to every Edge Function.
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const STAFF_EMAIL_DOMAIN = "staff.dcbc.co.th";
+const DEFAULT_PASSWORD = "1234";
+
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
+
+  try {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const callerClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+    const { data: { user: caller }, error: callerErr } = await callerClient.auth.getUser();
+    if (callerErr || !caller) return json({ error: "ไม่ได้เข้าสู่ระบบ" }, 401);
+
+    const { data: callerStaff } = await admin
+      .from("crm_staff").select("role, is_active").eq("id", caller.id).single();
+    if (!callerStaff?.is_active) return json({ error: "บัญชีถูกปิดใช้งาน" }, 403);
+
+    const body = await req.json();
+    const action = body.action;
+
+    if (action === "create") {
+      if (!["owner", "manager", "senior"].includes(callerStaff.role)) {
+        return json({ error: "ไม่มีสิทธิ์เพิ่มพนักงาน (ต้องเป็น LV1-3)" }, 403);
+      }
+      const username = String(body.username || "").trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+      const displayName = String(body.display_name || "").trim();
+      const role = String(body.role || "junior");
+      if (!username) return json({ error: "กรุณากรอกชื่อผู้ใช้" }, 400);
+      if (!displayName) return json({ error: "กรุณากรอกชื่อแสดง" }, 400);
+      if (!["owner", "manager", "senior", "junior", "parttime"].includes(role)) {
+        return json({ error: "สิทธิ์ไม่ถูกต้อง" }, 400);
+      }
+      // Only owner/manager may create an owner or manager account.
+      if (["owner", "manager"].includes(role) && !["owner", "manager"].includes(callerStaff.role)) {
+        return json({ error: "ไม่มีสิทธิ์ตั้งค่าระดับนี้" }, 403);
+      }
+
+      const email = `${username}@${STAFF_EMAIL_DOMAIN}`;
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email, password: DEFAULT_PASSWORD, email_confirm: true,
+      });
+      if (createErr || !created?.user) {
+        return json({ error: createErr?.message || "สร้างบัญชีไม่สำเร็จ" }, 400);
+      }
+
+      const { error: insertErr } = await admin.from("crm_staff").insert({
+        id: created.user.id, display_name: displayName, role,
+        is_active: true, must_change_password: true,
+      });
+      if (insertErr) {
+        await admin.auth.admin.deleteUser(created.user.id); // roll back the auth user
+        return json({ error: insertErr.message }, 400);
+      }
+
+      return json({ ok: true, username, default_password: DEFAULT_PASSWORD });
+    }
+
+    if (action === "reset") {
+      if (!["owner", "manager"].includes(callerStaff.role)) {
+        return json({ error: "ไม่มีสิทธิ์รีเซ็ทรหัสผ่าน (ต้องเป็น LV1-2)" }, 403);
+      }
+      const staffId = String(body.staff_id || "");
+      if (!staffId) return json({ error: "ไม่พบพนักงาน" }, 400);
+
+      const { error: updErr } = await admin.auth.admin.updateUserById(staffId, {
+        password: DEFAULT_PASSWORD,
+      });
+      if (updErr) return json({ error: updErr.message }, 400);
+
+      await admin.from("crm_staff").update({ must_change_password: true }).eq("id", staffId);
+      return json({ ok: true, default_password: DEFAULT_PASSWORD });
+    }
+
+    return json({ error: "ไม่รู้จักคำสั่งนี้" }, 400);
+  } catch (e) {
+    return json({ error: String(e?.message || e) }, 500);
+  }
+});

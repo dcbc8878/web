@@ -162,6 +162,40 @@
   </div>
 </div>
 
+<!-- FIRST LOGIN SCREEN (forced password change for new staff) -->
+<div id="first-login-screen" class="hidden fixed inset-0 bg-slate-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 w-full max-w-sm mx-4">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
+        <span class="text-white text-sm font-bold">!</span>
+      </div>
+      <div>
+        <div class="text-base font-bold text-gray-900">ตั้งค่าบัญชีครั้งแรก</div>
+        <div class="text-xs text-gray-400">กรุณาตั้งรหัสผ่านใหม่และชื่อของคุณก่อนใช้งาน</div>
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อแสดง</label>
+        <input id="fl-name" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">รหัสผ่านใหม่</label>
+        <input id="fl-pass" type="password" autocomplete="new-password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ยืนยันรหัสผ่านใหม่</label>
+        <input id="fl-pass2" type="password" autocomplete="new-password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div id="fl-err" class="hidden text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg"></div>
+      <button id="fl-btn" onclick="completeFirstLogin()"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
+        บันทึกและเข้าใช้งาน
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app" class="hidden flex flex-col h-screen w-full overflow-hidden">
 
@@ -385,7 +419,7 @@
     <div id="page-staff" class="hidden">
       <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <h2 class="text-base font-bold text-gray-900">จัดการทีมงาน</h2>
-        <button id="add-staff-btn" onclick="showAddStaffGuide()" class="hidden bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">+ เพิ่มพนักงาน</button>
+        <button id="add-staff-btn" onclick="openAddStaffForm()" class="hidden bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">+ เพิ่มพนักงาน</button>
       </div>
       <div id="staff-list" class="p-6 max-w-3xl space-y-3"></div>
     </div>
@@ -857,6 +891,13 @@ async function init() {
   const { data: prof, error: profErr } = await sb.from('crm_staff').select('*').eq('id', session.user.id).single();
   if (profErr || !prof || !prof.is_active) { await sb.auth.signOut(); location.reload(); return; }
   profile = prof;
+
+  if (prof.must_change_password) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('fl-name').value = prof.display_name || '';
+    document.getElementById('first-login-screen').classList.remove('hidden');
+    return;
+  }
 
   document.getElementById('user-name').textContent        = prof.display_name;
   document.getElementById('user-initial').textContent     = prof.display_name[0] || '?';
@@ -1509,24 +1550,67 @@ function renderStaff() {
   }).join('');
 }
 
-function showAddStaffGuide() {
+function openAddStaffForm() {
   if (!canAddStaff()) return;
+  const roleOptions = [
+    ['owner','เจ้าของ (LV1)'], ['manager','ผู้จัดการ (LV2)'], ['senior','พนักงานอาวุโส (LV3)'],
+    ['junior','พนักงาน (LV4)'], ['parttime','นักศึกษาฝึกงาน (LV5)'],
+  ].filter(([v]) => (v==='owner'||v==='manager') ? ['owner','manager'].includes(role()) : true);
   openModal(`
-    <h3 class="text-base font-bold text-gray-900 mb-3">เพิ่มพนักงานใหม่</h3>
-    <div class="space-y-3 text-sm text-gray-700">
-      <p>เพื่อเพิ่มพนักงาน ให้สร้างบัญชีผู้ใช้ใน <strong>Supabase Dashboard</strong> ก่อน:</p>
-      <ol class="list-decimal ml-5 space-y-1.5 text-gray-600">
-        <li>เข้า Supabase Dashboard → Authentication → Users</li>
-        <li>คลิก <strong>Add User</strong></li>
-        <li>Email: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-blue-700">{ชื่อผู้ใช้}@staff.dcbc.co.th</code></li>
-        <li>ตั้งรหัสผ่านให้พนักงาน</li>
-        <li>ระบบจะสร้างข้อมูลพนักงานอัตโนมัติ</li>
-        <li>กลับมาตั้งสิทธิ์ใน CRM ได้เลย</li>
-      </ol>
+    <h3 class="text-base font-bold text-gray-900 mb-4">เพิ่มพนักงานใหม่</h3>
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อผู้ใช้ (username)</label>
+        <input id="as-username" type="text" placeholder="เช่น somchai" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <p class="text-xs text-gray-400 mt-1">ระบบจะสร้างอีเมลล็อกอินเป็น {username}@staff.dcbc.co.th</p>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อแสดง</label>
+        <input id="as-name" type="text" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1.5">สิทธิ์</label>
+        <select id="as-role" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          ${roleOptions.map(([v,l]) => `<option value="${v}" ${v==='junior'?'selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>
+      <div id="as-err" class="hidden text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg"></div>
+      <p class="text-xs text-gray-400">รหัสผ่านเริ่มต้นคือ <code class="bg-gray-100 px-1 py-0.5 rounded">1234</code> — พนักงานต้องเปลี่ยนรหัสผ่านทันทีที่ล็อกอินครั้งแรก</p>
     </div>
-    <div class="flex justify-end mt-6">
-      <button onclick="closeModal()" class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เข้าใจแล้ว</button>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button id="as-submit-btn" onclick="submitAddStaff()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เพิ่มพนักงาน</button>
     </div>`);
+}
+
+async function submitAddStaff() {
+  const username = document.getElementById('as-username').value.trim();
+  const display_name = document.getElementById('as-name').value.trim();
+  const roleVal = document.getElementById('as-role').value;
+  const errEl = document.getElementById('as-err');
+  if (!username || !display_name) {
+    errEl.textContent = 'กรุณากรอกชื่อผู้ใช้และชื่อแสดง';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  const btn = document.getElementById('as-submit-btn');
+  btn.disabled = true; btn.textContent = 'กำลังเพิ่ม…';
+
+  const { data, error } = await sb.functions.invoke('admin-staff', {
+    body: { action: 'create', username, display_name, role: roleVal },
+  });
+
+  if (error || data?.error) {
+    errEl.textContent = data?.error || 'สร้างพนักงานไม่สำเร็จ — Edge Function "admin-staff" อาจยังไม่ได้ deploy (ดูวิธีใน supabase/functions/admin-staff/README.md)';
+    errEl.classList.remove('hidden');
+    btn.disabled = false; btn.textContent = 'เพิ่มพนักงาน';
+    return;
+  }
+
+  await logActivity('staff_create', 'staff', username, `เพิ่มพนักงานใหม่: ${display_name} (${ROLE_LABEL[roleVal]||roleVal})`);
+  closeModal();
+  showToast(`เพิ่มพนักงานสำเร็จ — รหัสผ่านเริ่มต้น: 1234`);
+  await loadStaff(); renderStaff();
 }
 
 function editStaff(s) {
@@ -1560,8 +1644,21 @@ function editStaff(s) {
     </div>`);
 }
 
-function resetStaffPassword(staffId, displayName) {
-  showToast('ฟีเจอร์นี้ต้องตั้งค่า Supabase Edge Function ก่อน (อยู่ระหว่างดำเนินการ)', 'error');
+async function resetStaffPassword(staffId, displayName) {
+  if (!canManageStaff()) return;
+  if (!confirm(`รีเซ็ทรหัสผ่านของ ${displayName} กลับเป็น 1234 ใช่หรือไม่?`)) return;
+
+  const { data, error } = await sb.functions.invoke('admin-staff', {
+    body: { action: 'reset', staff_id: staffId },
+  });
+
+  if (error || data?.error) {
+    showToast(data?.error || 'รีเซ็ทไม่สำเร็จ — Edge Function "admin-staff" อาจยังไม่ได้ deploy', 'error');
+    return;
+  }
+
+  await logActivity('staff_password_reset', 'staff', staffId, `รีเซ็ทรหัสผ่าน ${displayName} กลับเป็นค่าเริ่มต้น`);
+  showToast(`รีเซ็ทรหัสผ่านสำเร็จ — รหัสผ่านใหม่: 1234`);
 }
 
 async function saveStaff(staffId) {
@@ -1820,7 +1917,8 @@ function renderPanelInfo() {
         <div class="col-span-2">${tf('NAME (ไทย)', 'thai_name', c.thai_name)}</div>
         <div class="col-span-2">${tf('NAME (English)', 'eng_name', c.eng_name||'')}</div>
         ${tf('TAX ID', 'tax_id', c.tax_id || c.tax_number || '')}
-        <div>
+        ${tf('BRANCH', 'branch', c.branch || '')}
+        <div class="col-span-2">
           <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Type of Operation</div>
           <select data-key="category" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
             class="select-field text-sm text-gray-800">
@@ -3154,6 +3252,31 @@ async function changePassword() {
   showToast('เปลี่ยนรหัสผ่านสำเร็จ');
   document.getElementById('new-pass').value  = '';
   document.getElementById('new-pass2').value = '';
+}
+
+async function completeFirstLogin() {
+  const name = document.getElementById('fl-name').value.trim();
+  const p1 = document.getElementById('fl-pass').value;
+  const p2 = document.getElementById('fl-pass2').value;
+  const errEl = document.getElementById('fl-err');
+  errEl.classList.add('hidden');
+  if (!name) { errEl.textContent = 'กรุณากรอกชื่อแสดง'; errEl.classList.remove('hidden'); return; }
+  if (!p1 || p1 !== p2) { errEl.textContent = 'รหัสผ่านไม่ตรงกัน'; errEl.classList.remove('hidden'); return; }
+  if (p1.length < 6) { errEl.textContent = 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'; errEl.classList.remove('hidden'); return; }
+  if (p1 === '1234') { errEl.textContent = 'กรุณาตั้งรหัสผ่านใหม่ ไม่ใช้รหัสผ่านเริ่มต้น'; errEl.classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('fl-btn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+
+  const { error: pwErr } = await sb.auth.updateUser({ password: p1 });
+  if (pwErr) { errEl.textContent = pwErr.message; errEl.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'บันทึกและเข้าใช้งาน'; return; }
+
+  const { error: rpcErr } = await sb.rpc('crm_complete_first_login', { new_display_name: name });
+  if (rpcErr) { errEl.textContent = rpcErr.message; errEl.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'บันทึกและเข้าใช้งาน'; return; }
+
+  document.getElementById('first-login-screen').classList.add('hidden');
+  document.getElementById('loading').classList.remove('hidden');
+  await init();
 }
 
 // ─────────────────────────────────────────────────────────────
