@@ -4,6 +4,17 @@
 -- SAFE TO RE-RUN — uses IF NOT EXISTS
 -- ============================================================
 
+-- ──────────────────────────────────────────────────────────
+-- เพิ่ม address ใน crm_clients
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_clients
+  ADD COLUMN IF NOT EXISTS address text NOT NULL DEFAULT '';
+
+COMMENT ON COLUMN public.crm_clients.address IS 'ที่อยู่บริษัท';
+
+-- ──────────────────────────────────────────────────────────
+-- crm_client_change_log
+-- ──────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.crm_client_change_log (
   id          bigserial   PRIMARY KEY,
   client_id   bigint      NOT NULL REFERENCES public.crm_clients(id) ON DELETE CASCADE,

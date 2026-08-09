@@ -1616,10 +1616,11 @@ function renderPanelInfo() {
       >${e(val)}</textarea>
     </div>`;
 
-  const clientNoDisplay = c.client_no
+  const codePrefix = (c.code || '').match(/^([A-Z]+)/)?.[1] || '';
+  const clientNoDisplay = c.code
     ? `<div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
-         <span class="text-blue-700 font-bold text-sm">${e(c.client_no)}</span>
-         <span class="text-blue-400 text-xs">${e(CLIENT_TYPE_MAP[c.client_type||'M']||'')}</span>
+         <span class="text-blue-700 font-bold text-sm">${e(c.code)}</span>
+         <span class="text-blue-400 text-xs">${e(CLIENT_TYPE_MAP[codePrefix]||'')}</span>
        </div>`
     : `<span class="text-xs text-gray-300 italic">ยังไม่ได้กำหนด</span>`;
 
@@ -1681,8 +1682,6 @@ function renderPanelInfo() {
           <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">รหัสลูกค้า</div>
           <div class="flex items-center gap-3">
             ${clientNoDisplay}
-            ${!ro && c.client_no ? `<button onclick="editClientSeqFromPanel(${c.id},'${e(c.client_no)}')"
-              class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50">แก้ไขลำดับ</button>` : ''}
           </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -1696,10 +1695,10 @@ function renderPanelInfo() {
           </div>
           <div>
             <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทนิติบุคคล</div>
-            <select data-key="entity_type" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
+            <select data-key="type" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
               class="select-field text-sm text-gray-800">
               <option value="">-- เลือก --</option>
-              ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.entity_type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
+              ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
             </select>
           </div>
           <div class="col-span-2">${tf('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
@@ -1708,7 +1707,7 @@ function renderPanelInfo() {
           <div></div>
           <div class="col-span-2">${taField('ที่อยู่', 'address', c.address||'', 2, ro, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
           ${tf('วันที่จดทะเบียน', 'registration_date', c.registration_date||'')}
-          ${tf('วันที่เริ่มให้บริการ', 'service_start_date', c.service_start_date || c.start_date || '')}
+          ${tf('วันที่เริ่มให้บริการ', 'start_date', c.start_date || '')}
           ${tf('วันที่สิ้นสุดให้บริการ', 'end_date', c.end_date||'')}
           <div class="col-span-2">${tf('หมายเหตุ', 'notes', c.notes||'')}</div>
         </div>
@@ -1792,6 +1791,7 @@ async function savePanelInfo() {
   });
 
   if (fields.tax_id !== undefined) { fields.tax_number = fields.tax_id; delete fields.tax_id; }
+  ['start_date', 'end_date'].forEach(f => { if (f in fields && fields[f] === '') fields[f] = null; });
 
   if (!Object.keys(fields).length) {
     panelDirty = false;
@@ -1845,6 +1845,7 @@ async function applyClientChange() {
 
   const { error: logErr } = await sb.from('crm_client_change_log').insert({
     client_id: panelClientId, change_type: ct, change_date: cd, new_value: newValue, note,
+    created_by: profile?.id,
   });
   if (logErr) { showToast('บันทึกไม่สำเร็จ: ' + logErr.message, 'error'); return; }
 
@@ -1869,6 +1870,7 @@ async function applyClientChange() {
         billing_type: c?.billing_type || 'monthly',
         fee_amount: updates.monthly_fee,
         has_wht: c?.has_wht !== false,
+        effective_from: cd,
         notes: `เปลี่ยนค่าบริการ: ${newValue} บาท (${cd})`
       });
     }
@@ -1878,6 +1880,8 @@ async function applyClientChange() {
   }
 
   showToast('บันทึกการเปลี่ยนแปลงสำเร็จ');
+  panelDirty = false;
+  document.getElementById('panel-save-bar').classList.add('hidden');
   renderPanelInfo();
 }
 
