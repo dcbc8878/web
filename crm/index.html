@@ -214,7 +214,7 @@
     <div class="w-px h-6 bg-gray-200 mr-1 flex-shrink-0"></div>
     <!-- Nav -->
     <nav class="flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto" style="scrollbar-width:none">
-      <div class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+      <div class="nav-item" id="nav-dashboard" data-page="dashboard" onclick="navigate('dashboard')">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="8" rx="1"/><rect x="10" y="3" width="6" height="5" rx="1"/><rect x="10" y="10" width="6" height="8" rx="1"/><rect x="2" y="13" width="6" height="5" rx="1"/><rect x="18" y="3" width="4" height="15" rx="1"/></svg>
         รายได้สรุป
       </div>
@@ -246,7 +246,7 @@
           <div id="user-role-badge" class="text-[10px] text-gray-400">—</div>
         </div>
       </div>
-      <button onclick="navigate('settings')" class="text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">ตั้งค่า</button>
+      <button id="settings-btn" onclick="navigate('settings')" class="hidden text-xs text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0">ตั้งค่า</button>
       <button onclick="signOut()" class="text-xs text-gray-400 hover:text-red-500 transition-colors">ออก</button>
     </div>
   </header>
@@ -712,6 +712,8 @@ const canEdit   = () => myLevel() <= 3;                  // LV1-3: tax tasks, in
 const canEditBasic  = () => myLevel() <= 3;              // LV1-3: basic info + credentials edit
 const canSeeServiceDates = () => myLevel() <= 3;          // LV1-3: registration/start/end date fields
 const canCred   = () => true;                            // everyone can view credentials (read-only below LV3)
+const canSeeDashboard = () => myLevel() <= 3;             // LV1-3: รายได้สรุป
+const canSeeSettings  = () => myLevel() <= 3;             // LV1-3: ตั้งค่า (LV4-5 only get งานภาษี/ปลายปี/ลูกค้า)
 
 // ─────────────────────────────────────────────────────────────
 // UTILITIES
@@ -919,6 +921,8 @@ async function init() {
   if (isOwner()) document.getElementById('add-client-btn').classList.remove('hidden');
   if (isOwner()) document.getElementById('own-company-section').classList.remove('hidden');
   if (canSeeAuditLog()) document.getElementById('activity-log-section').classList.remove('hidden');
+  document.getElementById('nav-dashboard').classList.toggle('hidden', !canSeeDashboard());
+  if (canSeeSettings()) document.getElementById('settings-btn').classList.remove('hidden');
   if (canEdit()) {
     const bib = document.getElementById('batch-inv-btn');
     bib.classList.remove('hidden');
@@ -995,6 +999,7 @@ async function loadStaff() {
 // NAVIGATION
 // ─────────────────────────────────────────────────────────────
 function navigate(p) {
+  if (myLevel() > 3 && !['tracking','yearend','clients'].includes(p)) p = 'tracking';
   curPage = p;
   ['dashboard','tracking','yearend','clients','staff','settings'].forEach(pg => {
     document.getElementById(`page-${pg}`).classList.toggle('hidden', pg !== p);
@@ -1547,7 +1552,10 @@ function renderStaff() {
         <span class="text-${col}-700 text-sm font-bold">${(s.display_name||'?')[0]}</span>
       </div>
       <div class="flex-1 min-w-0">
-        <div class="font-semibold text-gray-900">${e(s.display_name)}</div>
+        <div class="font-semibold text-gray-900 flex items-center gap-2">
+          ${s.staff_code ? `<span class="bg-indigo-50 text-indigo-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(s.staff_code)}</span>` : ''}
+          ${e(s.display_name)}
+        </div>
         <div class="text-xs text-gray-400">@${e(s.username)}</div>
       </div>
       <div class="flex items-center gap-2">
@@ -1630,6 +1638,9 @@ function editStaff(s) {
   openModal(`
     <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขพนักงาน: ${e(s.display_name)}</h3>
     <div class="space-y-4">
+      <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">รหัสพนักงาน</label>
+        <input id="edit-staff-code" type="text" value="${e(s.staff_code)}" placeholder="เช่น EMP001"
+          class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
       <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อแสดง</label>
         <input id="edit-staff-name" type="text" value="${e(s.display_name)}"
           class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
@@ -1675,14 +1686,19 @@ async function resetStaffPassword(staffId, displayName) {
 
 async function saveStaff(staffId) {
   if (!canManageStaff()) return;
+  const staffCode = document.getElementById('edit-staff-code').value.trim();
   const name   = document.getElementById('edit-staff-name').value.trim();
   const role2  = document.getElementById('edit-staff-role').value;
   const active = document.getElementById('edit-staff-active').checked;
   if (!name) { showToast('กรุณากรอกชื่อ', 'error'); return; }
 
   const before = staffList.find(x => x.id === staffId);
-  const { error } = await sb.from('crm_staff').update({ display_name: name, role: role2, is_active: active }).eq('id', staffId);
-  if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
+  const { error } = await sb.from('crm_staff')
+    .update({ staff_code: staffCode, display_name: name, role: role2, is_active: active }).eq('id', staffId);
+  if (error) {
+    showToast(error.code === '23505' ? 'รหัสพนักงานนี้ถูกใช้แล้ว' : 'บันทึกไม่สำเร็จ: ' + error.message, 'error');
+    return;
+  }
 
   if (before && before.is_active && !active) {
     await logActivity('staff_deactivate', 'staff', staffId, `เลิกจ้าง ${name}`);
@@ -1690,6 +1706,8 @@ async function saveStaff(staffId) {
     await logActivity('staff_reactivate', 'staff', staffId, `ปรับ ${name} กลับมาทำงาน`);
   } else if (before && before.role !== role2) {
     await logActivity('staff_role_change', 'staff', staffId, `เปลี่ยนสิทธิ์ ${name}: ${ROLE_LABEL[before.role]||before.role} → ${ROLE_LABEL[role2]||role2}`);
+  } else if (before && before.staff_code !== staffCode) {
+    await logActivity('staff_code_change', 'staff', staffId, `เปลี่ยนรหัสพนักงาน ${name}: ${before.staff_code||'—'} → ${staffCode||'—'}`);
   } else {
     await logActivity('staff_update', 'staff', staffId, `แก้ไขข้อมูล ${name}`);
   }
@@ -3010,8 +3028,11 @@ const ACTIVITY_ACTION_LABEL = {
   client_delete: 'ลบลูกค้าถาวร',
   staff_update: 'แก้ไขพนักงาน',
   staff_role_change: 'เปลี่ยนสิทธิ์พนักงาน',
+  staff_code_change: 'เปลี่ยนรหัสพนักงาน',
   staff_deactivate: 'เลิกจ้างพนักงาน',
   staff_reactivate: 'ปรับพนักงานกลับมาทำงาน',
+  staff_create: 'เพิ่มพนักงานใหม่',
+  staff_password_reset: 'รีเซ็ทรหัสผ่านพนักงาน',
 };
 
 async function renderActivityLog() {
