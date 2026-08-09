@@ -263,33 +263,26 @@
       </div>
       <div class="px-6 pb-8 overflow-x-auto">
         <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <table class="text-center" style="table-layout:fixed;width:988px;min-width:988px">
+          <table class="text-center" style="table-layout:fixed;width:847px;min-width:847px">
             <colgroup>
               <col style="width:190px"><!-- ลูกค้า -->
-              <col style="width:80px"> <!-- รับเอกสาร -->
-              <col style="width:46px"> <!-- STM -->
+              <col style="width:150px"><!-- โน๊ต -->
+              <col style="width:85px"> <!-- รับเอกสาร -->
               <col style="width:120px"><!-- TAX1 -->
-              <col style="width:76px"> <!-- SSO -->
-              <col style="width:76px"> <!-- TAX2 -->
-              <col style="width:60px"> <!-- Download -->
-              <col style="width:46px"> <!-- Key -->
-              <col style="width:54px"> <!-- Acct Fee -->
-              <col style="width:140px"><!-- โน๊ต -->
-              <col style="width:100px"><!-- ความคืบหน้า -->
+              <col style="width:80px"> <!-- SSO -->
+              <col style="width:80px"> <!-- TAX2 -->
+              <col style="width:71px"> <!-- RD-DL -->
+              <col style="width:71px"> <!-- RD-Key -->
             </colgroup>
             <thead>
               <tr>
                 <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 col-sticky" style="vertical-align:middle">ลูกค้า</th>
+                <th class="text-left px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">โน๊ต</th>
                 <th class="px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">รับเอกสาร</th>
-                <th class="px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">STM</th>
-                <th class="px-2 py-3 text-xs font-bold text-blue-600 bg-blue-50 border-b-2 border-gray-200 border-l border-gray-200">TAX 1<div class="text-[10px] font-normal text-blue-400 mt-0.5">PND1 · PND3 · PND53 · PND54 · PP36</div></th>
-                <th class="px-2 py-3 text-xs font-bold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200">SSO<div class="text-[10px] font-normal text-green-400 mt-0.5">SSO</div></th>
+                <th class="px-2 py-3 text-xs font-bold text-blue-600 bg-blue-50 border-b-2 border-gray-200 border-l border-gray-200">TAX 1<div class="text-[9px] font-normal text-blue-400 mt-0.5">PND1 · PND3 · PND53 · PND54 · PP36</div></th>
+                <th class="px-2 py-3 text-xs font-bold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">SSO</th>
                 <th class="px-2 py-3 text-xs font-bold text-purple-500 bg-purple-50 border-b-2 border-gray-200 border-l border-gray-200">TAX 2<div class="text-[10px] font-normal text-purple-400 mt-0.5">PP30</div></th>
-                <th class="px-2 py-3 text-xs font-semibold text-slate-500 bg-slate-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">Download</th>
-                <th class="px-2 py-3 text-xs font-semibold text-slate-500 bg-slate-50 border-b-2 border-gray-200" style="vertical-align:middle">Key</th>
-                <th class="px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">Acct Fee</th>
-                <th class="px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">โน๊ต</th>
-                <th class="px-3 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:90px;vertical-align:middle">ความคืบหน้า</th>
+                <th colspan="2" class="px-2 py-3 text-xs font-semibold text-slate-600 bg-slate-50 border-b-2 border-gray-200 border-l border-gray-200">RD<div class="text-[10px] font-normal text-slate-400 mt-0.5">DL · Key</div></th>
               </tr>
             </thead>
             <tbody id="tracking-tbody">
@@ -570,7 +563,7 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
   'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const ROLE_LABEL = { owner:'เจ้าของ', senior:'พนักงานอาวุโส', staff:'พนักงาน' };
-const FIELDS = ['stm','rd_download','rd_keyed','acct_fee'];
+const FIELDS = ['rd_download','rd_keyed'];
 const YE_FIELDS = ['pnd51','pnd1k','kt26k','pnd50','fin_stmt','audit','dbd_submit','boj5'];
 const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', paid:'ชำระแล้ว', cancelled:'ยกเลิก' };
 const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
@@ -628,13 +621,11 @@ function calcPct(task, fields) {
 }
 function calcRowPct(t, hasVat, hasSso) {
   const checks = [
-    (t.stm || 'todo') === 'done',
     t.tax1_paid === true,
     ...(hasSso ? [t.sso_client_paid === true] : []),
     ...(hasVat ? [t.tax2_paid === true] : []),
     (t.rd_download || 'todo') === 'done',
     (t.rd_keyed || 'todo') === 'done',
-    (t.acct_fee || 'todo') === 'done',
   ];
   const done = checks.filter(Boolean).length;
   return checks.length ? Math.round(done / checks.length * 100) : 0;
@@ -890,28 +881,23 @@ function renderTracking() {
       return `<td class="px-1 py-2 text-center border-l border-gray-200 ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="cycleGroupState(${cid},'${sentField}','${paidField}')"`:''}>${chip}</td>`;
     };
 
-    const pct = calcRowPct(t, hasVat, hasSso);
-
     rows += `<tr class="border-b border-gray-100">
       <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors col-sticky" onclick="openPanel(${c.id})" style="border-right:1px solid #f1f5f9">
         <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(c.code)}</span>
         <div class="text-sm text-gray-800 mt-0.5 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">${e(c.thai_name)}</div>
       </td>
+      <td class="px-2 py-2 text-left border-l border-gray-200" style="overflow:hidden">
+        ${noteCell(c.id, t.notes||'', prevTaskMap[c.id]||'')}
+      </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
-      ${mkCell('stm',gb)}
       ${mkGroupCell(t1Sent, t1Paid, c.id, 'tax1_sent', 'tax1_paid', false)}
       ${mkGroupCell(ssoSent, ssoPaid, c.id, 'sso_sent', 'sso_client_paid', !hasSso)}
       ${mkGroupCell(t2Sent, t2Paid, c.id, 'tax2_sent', 'tax2_paid', !hasVat)}
       ${mkCell('rd_download',gb)}${mkCell('rd_keyed')}
-      ${mkCell('acct_fee',gb)}
-      <td class="px-2 py-2 border-l border-gray-200" style="overflow:hidden">
-        ${noteCell(c.id, t.notes||'', prevTaskMap[c.id]||'')}
-      </td>
-      <td class="px-3 py-2.5">${progressBar(pct)}</td>
     </tr>`;
   });
 
-  if (!rows) rows = `<tr><td colspan="11" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  if (!rows) rows = `<tr><td colspan="8" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
   document.getElementById('tracking-tbody').innerHTML = rows;
 }
 
@@ -934,11 +920,6 @@ async function toggleField(clientId, field, cell) {
   taskMap[clientId][field] = next;
   cell.innerHTML = statusDot(next);
   cell.classList.add('saving');
-  const row   = cell.closest('tr');
-  const lastTd = row.querySelector('td:last-child');
-  const _cl = clients.find(cl => cl.id === clientId);
-  const _hv = _cl?.has_vat !== false, _hs = _cl?.has_sso !== false;
-  if (lastTd) lastTd.innerHTML = progressBar(calcRowPct(taskMap[clientId], _hv, _hs));
 
   const { data, error } = await sb.from('crm_tax_tasks')
     .upsert({ client_id: clientId, year: curYear, month: curMonth, [field]: next }, { onConflict: 'client_id,year,month' })
@@ -947,7 +928,6 @@ async function toggleField(clientId, field, cell) {
   if (error) {
     taskMap[clientId][field] = cur;
     cell.innerHTML = statusDot(cur);
-    if (lastTd) lastTd.innerHTML = progressBar(calcRowPct(taskMap[clientId], _hv, _hs));
     showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error');
   } else if (data) { taskMap[clientId] = data; }
   renderTrackingSummary();
