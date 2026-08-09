@@ -1013,9 +1013,12 @@ const DOC_ITEMS = [
 function openDocModal(clientId) {
   if (!canEdit()) return;
   const t = taskMap[clientId] || {};
+  const c = clients.find(x => x.id === clientId);
+  const clientTemplates = (c?.doc_item_templates || '').split(',').filter(Boolean);
+  const itemList = clientTemplates.length ? clientTemplates : DOC_ITEMS;
   const curDate = t.doc_date || '';
   const curItems = (t.doc_items || '').split(',').filter(Boolean);
-  const checkboxes = DOC_ITEMS.map((item, i) => {
+  const checkboxes = itemList.map((item, i) => {
     const checked = curItems.includes(item) ? 'checked' : '';
     return `<label class="flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-50 rounded px-1">
       <input type="checkbox" id="doci-${i}" value="${e(item)}" ${checked}
@@ -1402,6 +1405,15 @@ function renderPanelInfo() {
           ${textField('FlowAccount Contact ID', 'fa_contact_id', c.fa_contact_id||'')}
         </div>
       </div>
+      <div class="border-t border-gray-100 pt-4 mt-4">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รายการเอกสาร</div>
+        <div class="text-xs text-gray-400 mb-2">พิมพ์ทีละบรรทัด — ใช้ใน popup รับเอกสาร ถ้าว่างจะใช้รายการ default</div>
+        <textarea data-key="doc_item_templates" data-type="linelist"
+          ${ro ? 'readonly' : 'oninput="markDirty()"'}
+          rows="5" placeholder="สลิปเงินเดือน&#10;ใบเสร็จค่าใช้จ่าย&#10;Statement ธนาคาร"
+          class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
+        >${e((c.doc_item_templates||'').split(',').filter(Boolean).join('\n'))}</textarea>
+      </div>
     </div>`;
 }
 
@@ -1415,6 +1427,8 @@ async function savePanelInfo() {
       fields[el.dataset.key] = el.checked;
     } else if (el.type === 'number') {
       fields[el.dataset.key] = parseFloat(el.value) || 0;
+    } else if (el.dataset.type === 'linelist') {
+      fields[el.dataset.key] = el.value.split('\n').map(s => s.trim()).filter(Boolean).join(',');
     } else {
       fields[el.dataset.key] = el.value.trim();
     }

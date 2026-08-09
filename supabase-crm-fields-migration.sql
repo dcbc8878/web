@@ -80,3 +80,11 @@ ALTER TABLE public.crm_tax_tasks
   ADD COLUMN IF NOT EXISTS doc_items text NOT NULL DEFAULT '';
 
 COMMENT ON COLUMN public.crm_tax_tasks.doc_items IS 'รายการเอกสารที่ได้รับ (comma-separated)';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่ม doc_item_templates (รายการเอกสารต่อบริษัท) ใน crm_clients
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_clients
+  ADD COLUMN IF NOT EXISTS doc_item_templates text NOT NULL DEFAULT '';
+
+COMMENT ON COLUMN public.crm_clients.doc_item_templates IS 'รายการเอกสารที่ต้องรับต่อบริษัท (comma-separated) — ว่าง = ใช้ default';
