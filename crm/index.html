@@ -55,10 +55,18 @@
     thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
     tbody tr:hover td { background: #fafbff; }
     tbody tr:last-child td { border-bottom: none; }
-    tbody tr.row-sent td { background-color: #fff8e6 !important; }
-    tbody tr.row-sent:hover td { background-color: #fef3c7 !important; }
-    tbody tr.row-paid td { background-color: #f0fdf4 !important; }
-    tbody tr.row-paid:hover td { background-color: #dcfce7 !important; }
+    tr[data-t1="sent"]  td.grp-t1  { background-color: #fff8e6; }
+    tr[data-t1="sent"]:hover  td.grp-t1  { background-color: #fef3c7; }
+    tr[data-t1="paid"]  td.grp-t1  { background-color: #f0fdf4; }
+    tr[data-t1="paid"]:hover  td.grp-t1  { background-color: #dcfce7; }
+    tr[data-sso="sent"] td.grp-sso { background-color: #fff8e6; }
+    tr[data-sso="sent"]:hover td.grp-sso { background-color: #fef3c7; }
+    tr[data-sso="paid"] td.grp-sso { background-color: #f0fdf4; }
+    tr[data-sso="paid"]:hover td.grp-sso { background-color: #dcfce7; }
+    tr[data-t2="sent"]  td.grp-t2  { background-color: #fff8e6; }
+    tr[data-t2="sent"]:hover  td.grp-t2  { background-color: #fef3c7; }
+    tr[data-t2="paid"]  td.grp-t2  { background-color: #f0fdf4; }
+    tr[data-t2="paid"]:hover  td.grp-t2  { background-color: #dcfce7; }
 
     #toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -271,14 +279,14 @@
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.53</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.54</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PP.36</th>
-                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
-                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
+                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">SENT</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">PAID</th>
                 <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200">SSO</th>
-                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
-                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
+                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">SENT</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">PAID</th>
                 <th class="px-2 py-2 text-xs font-semibold text-purple-500 bg-purple-50 border-b-2 border-gray-200 border-l border-gray-200">PP.30</th>
-                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
-                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
+                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">SENT</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">PAID</th>
                 <th class="px-2 py-2 text-xs font-semibold text-slate-500 bg-slate-50 border-b-2 border-gray-200 border-l border-gray-200">Download</th>
                 <th class="px-2 py-2 text-xs font-semibold text-slate-500 bg-slate-50 border-b-2 border-gray-200">Key</th>
               </tr>
@@ -831,10 +839,10 @@ function renderTracking() {
     const hasVat = c.has_vat !== false;
     const hasSso = c.has_sso !== false;
 
-    const mkCell = (f, bc = '', off = false) => {
-      if (off) return `<td class="px-1 py-2.5 ${bc}"><span class="dot na">—</span></td>`;
+    const mkCell = (f, bc = '', off = false, grp = '') => {
+      if (off) return `<td class="px-1 py-2.5 ${bc} ${grp}"><span class="dot na">—</span></td>`;
       const v = t[f] || 'todo';
-      return `<td class="status-td px-1 py-2.5 ${bc} ${canEdit() ? 'clickable' : ''}"
+      return `<td class="status-td px-1 py-2.5 ${bc} ${grp} ${canEdit() ? 'clickable' : ''}"
                   data-cid="${c.id}" data-field="${f}"
                   ${canEdit() ? `onclick="toggleField(${c.id},'${f}',this)"` : ''}>
                 ${statusDot(v)}</td>`;
@@ -846,34 +854,34 @@ function renderTracking() {
     const ssoPaid = t.sso_client_paid || false;
     const t2Sent = t.tax2_sent || false;
     const t2Paid = t.tax2_paid || false;
-    const allPaid = t1Paid && (!hasSso || ssoPaid) && (!hasVat || t2Paid);
-    const anySent = t1Sent || (hasSso && ssoSent) || (hasVat && t2Sent);
-    const rowCls = allPaid ? 'row-paid' : anySent ? 'row-sent' : '';
+    const t1State  = t1Paid  ? 'paid' : t1Sent  ? 'sent' : '';
+    const ssoState = (!hasSso) ? '' : (ssoPaid ? 'paid' : ssoSent ? 'sent' : '');
+    const t2State  = (!hasVat) ? '' : (t2Paid  ? 'paid' : t2Sent  ? 'sent' : '');
 
-    const mkToggle = (active, label, color, cid, field, off = false) => {
-      if (off) return `<td class="px-2 py-2.5 text-center"><span class="text-gray-200 text-xs">—</span></td>`;
+    const mkToggle = (active, label, color, cid, field, off = false, grp = '') => {
+      if (off) return `<td class="px-2 py-2.5 text-center ${grp}"><span class="text-gray-200 text-xs">—</span></td>`;
       const bg = color==='amber' ? '#fef3c7' : '#dcfce7';
       const fg = color==='amber' ? '#92400e' : '#15803d';
       const badge = active ? `<span class="inv-badge" style="background:${bg};color:${fg}">✓ ${label}</span>` : `<span class="text-gray-300 text-xs">—</span>`;
-      return `<td class="px-2 py-2.5 text-center ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${badge}</td>`;
+      return `<td class="px-2 py-2.5 text-center ${grp} ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${badge}</td>`;
     };
 
     const clientFields = FIELDS.filter(f => (hasVat || f !== 'pp30') && (hasSso || f !== 'sso'));
     const pct = calcPct(t, clientFields);
 
-    rows += `<tr class="border-b border-gray-100 ${rowCls}">
+    rows += `<tr class="border-b border-gray-100" data-t1="${t1State}" data-sso="${ssoState}" data-t2="${t2State}">
       <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
         <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(c.code)}</span>
         <div class="text-sm text-gray-800 mt-0.5 max-w-[190px] leading-tight">${e(c.thai_name)}</div>
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
       ${mkCell('stm',gb)}
-      ${mkCell('pnd1',gb)}${mkCell('pnd3')}${mkCell('pnd53')}${mkCell('pnd54')}${mkCell('pp36')}
-      ${mkToggle(t1Sent,'ส่ง','amber',c.id,'tax1_sent')}${mkToggle(t1Paid,'รับ','green',c.id,'tax1_paid')}
-      ${mkCell('sso',gb,!hasSso)}
-      ${mkToggle(ssoSent,'ส่ง','amber',c.id,'sso_sent',!hasSso)}${mkToggle(ssoPaid,'รับ','green',c.id,'sso_client_paid',!hasSso)}
-      ${mkCell('pp30',gb,!hasVat)}
-      ${mkToggle(t2Sent,'ส่ง','amber',c.id,'tax2_sent',!hasVat)}${mkToggle(t2Paid,'รับ','green',c.id,'tax2_paid',!hasVat)}
+      ${mkCell('pnd1',gb,false,'grp-t1')}${mkCell('pnd3','',false,'grp-t1')}${mkCell('pnd53','',false,'grp-t1')}${mkCell('pnd54','',false,'grp-t1')}${mkCell('pp36','',false,'grp-t1')}
+      ${mkToggle(t1Sent,'SENT','amber',c.id,'tax1_sent',false,'grp-t1')}${mkToggle(t1Paid,'PAID','green',c.id,'tax1_paid',false,'grp-t1')}
+      ${mkCell('sso',gb,!hasSso,'grp-sso')}
+      ${mkToggle(ssoSent,'SENT','amber',c.id,'sso_sent',!hasSso,'grp-sso')}${mkToggle(ssoPaid,'PAID','green',c.id,'sso_client_paid',!hasSso,'grp-sso')}
+      ${mkCell('pp30',gb,!hasVat,'grp-t2')}
+      ${mkToggle(t2Sent,'SENT','amber',c.id,'tax2_sent',!hasVat,'grp-t2')}${mkToggle(t2Paid,'PAID','green',c.id,'tax2_paid',!hasVat,'grp-t2')}
       ${mkCell('rd_download',gb)}${mkCell('rd_keyed')}
       ${mkCell('acct_fee',gb)}
       <td class="px-2 py-2 border-l border-gray-200" style="min-width:120px;max-width:180px">
