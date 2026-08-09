@@ -66,9 +66,11 @@
     thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
     tbody tr:hover td { background: #fafbff; }
     tbody tr:last-child td { border-bottom: none; }
-    .col-sticky { position: sticky; left: 0; z-index: 2; background: #fff; }
-    thead .col-sticky { background: #f8fafc; z-index: 3; }
-    tbody tr:hover .col-sticky { background: #fafbff; }
+    .col-num  { position:sticky; left:0;    z-index:2; background:#fff; }
+    .col-code { position:sticky; left:34px; z-index:2; background:#fff; }
+    .col-name { position:sticky; left:90px; z-index:2; background:#fff; border-right:1px solid #f1f5f9; }
+    thead .col-num, thead .col-code, thead .col-name { background:#f8fafc; z-index:3; }
+    tbody tr:hover .col-num, tbody tr:hover .col-code, tbody tr:hover .col-name { background:#fafbff; }
 
     #toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -263,30 +265,34 @@
       </div>
       <div class="px-6 pb-8 overflow-x-auto">
         <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <table class="text-center" style="table-layout:fixed;width:847px;min-width:847px">
+          <table class="text-center" style="table-layout:fixed;width:840px;min-width:840px">
             <colgroup>
-              <col style="width:190px"><!-- ลูกค้า -->
-              <col style="width:150px"><!-- โน๊ต -->
-              <col style="width:85px"> <!-- รับเอกสาร -->
-              <col style="width:120px"><!-- TAX1 -->
-              <col style="width:80px"> <!-- SSO -->
-              <col style="width:80px"> <!-- TAX2 -->
-              <col style="width:71px"> <!-- RD-DL -->
-              <col style="width:71px"> <!-- RD-Key -->
+              <col style="width:34px"> <!-- ลำดับ -->
+              <col style="width:56px"> <!-- CODE -->
+              <col style="width:124px"><!-- NAME -->
+              <col style="width:128px"><!-- NOTE -->
+              <col style="width:82px"> <!-- รับเอกสาร -->
+              <col style="width:116px"><!-- TAX1 -->
+              <col style="width:78px"> <!-- SSO -->
+              <col style="width:78px"> <!-- TAX2 -->
+              <col style="width:72px"> <!-- RD-DL -->
+              <col style="width:72px"> <!-- RD-Key -->
             </colgroup>
             <thead>
               <tr>
-                <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 col-sticky" style="vertical-align:middle">ลูกค้า</th>
+                <th class="px-1 py-3 text-xs font-semibold text-gray-400 border-b-2 border-gray-200 col-num" style="vertical-align:middle">#</th>
+                <th class="px-1 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 col-code" style="vertical-align:middle">CODE</th>
+                <th class="text-left px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 col-name" style="vertical-align:middle">ชื่อบริษัท</th>
                 <th class="text-left px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">โน๊ต</th>
                 <th class="px-2 py-3 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">รับเอกสาร</th>
-                <th class="px-2 py-3 text-xs font-bold text-blue-600 bg-blue-50 border-b-2 border-gray-200 border-l border-gray-200">TAX 1<div class="text-[9px] font-normal text-blue-400 mt-0.5">PND1 · PND3 · PND53 · PND54 · PP36</div></th>
+                <th class="px-2 py-3 text-xs font-bold text-blue-600 bg-blue-50 border-b-2 border-gray-200 border-l border-gray-200">TAX 1<div class="text-[9px] font-normal text-blue-400 mt-0.5">PND1·3·53·54·PP36</div></th>
                 <th class="px-2 py-3 text-xs font-bold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">SSO</th>
                 <th class="px-2 py-3 text-xs font-bold text-purple-500 bg-purple-50 border-b-2 border-gray-200 border-l border-gray-200">TAX 2<div class="text-[10px] font-normal text-purple-400 mt-0.5">PP30</div></th>
                 <th colspan="2" class="px-2 py-3 text-xs font-semibold text-slate-600 bg-slate-50 border-b-2 border-gray-200 border-l border-gray-200">RD<div class="text-[10px] font-normal text-slate-400 mt-0.5">DL · Key</div></th>
               </tr>
             </thead>
             <tbody id="tracking-tbody">
-              <tr><td colspan="11" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              <tr><td colspan="10" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
             </tbody>
           </table>
         </div>
@@ -898,7 +904,9 @@ function renderTracking() {
 
   const gb = 'border-l border-gray-200';
   let rows = '';
+  let rowIdx = 0;
   clients.forEach(c => {
+    rowIdx++;
     const t = taskMap[c.id] || {};
     const docItems = (t.doc_items||'').split(',').filter(Boolean);
     const docBadge = t.doc_date
@@ -951,9 +959,12 @@ function renderTracking() {
     };
 
     rows += `<tr class="border-b border-gray-100">
-      <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors col-sticky" onclick="openPanel(${c.id})" style="border-right:1px solid #f1f5f9">
-        <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(c.code)}</span>
-        <div class="text-sm text-gray-800 mt-0.5 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">${e(c.thai_name)}</div>
+      <td class="py-3 text-center text-xs text-gray-400 col-num">${rowIdx}</td>
+      <td class="px-1 py-3 text-center col-code cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
+        <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1 py-0.5 rounded whitespace-nowrap">${e(c.code)}</span>
+      </td>
+      <td class="px-2 py-3 text-left col-name cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
+        <div class="text-sm text-gray-800 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">${e(c.thai_name)}</div>
       </td>
       <td class="px-2 py-2 text-left border-l border-gray-200" style="overflow:hidden">
         ${noteCell(c.id, t.notes||'', (prevTaskMap[c.id]||[])[0]?.note||'')}
@@ -966,7 +977,7 @@ function renderTracking() {
     </tr>`;
   });
 
-  if (!rows) rows = `<tr><td colspan="8" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  if (!rows) rows = `<tr><td colspan="10" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
   document.getElementById('tracking-tbody').innerHTML = rows;
 }
 
