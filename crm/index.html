@@ -668,7 +668,8 @@ function noteCell(clientId, note, prevNote) {
 }
 function editNote(clientId, current, prevNote) {
   if (!canEdit()) return;
-  const wrapper = document.querySelector(`tr [onclick*="editNote(${clientId},"] td`)?.closest('tr')?.querySelector('td:nth-last-child(2)');
+  const el = document.querySelector(`[onclick*="editNote(${clientId},"]`);
+  const wrapper = el?.closest('td');
   if (!wrapper) return;
   const ph = prevNote ? `เดือนก่อน: ${prevNote}` : 'พิมพ์โน๊ต…';
   wrapper.innerHTML = `<input id="note-inp-${clientId}" type="text" value="${e(current)}" placeholder="${e(ph)}"
