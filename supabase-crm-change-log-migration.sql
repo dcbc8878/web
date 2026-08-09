@@ -61,3 +61,20 @@ DO $$ BEGIN
       );
   END IF;
 END $$;
+
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'crm_client_change_log'
+      AND policyname = 'Non-staff can delete change log'
+  ) THEN
+    CREATE POLICY "Non-staff can delete change log"
+      ON public.crm_client_change_log FOR DELETE
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.crm_staff
+          WHERE id = auth.uid() AND is_active = true AND role <> 'staff'
+        )
+      );
+  END IF;
+END $$;
