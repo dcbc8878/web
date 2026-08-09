@@ -70,7 +70,8 @@
     .col-code { position:sticky; left:34px; z-index:2; background:#fff; }
     .col-name { position:sticky; left:90px; z-index:2; background:#fff; border-right:1px solid #f1f5f9; }
     thead .col-num, thead .col-code, thead .col-name { background:#f8fafc; z-index:3; }
-    tbody tr:hover .col-num, tbody tr:hover .col-code, tbody tr:hover .col-name { background:#fafbff; }
+    tbody tr:hover > td { background-color: #eff6ff; }
+    tbody tr:hover .col-num, tbody tr:hover .col-code, tbody tr:hover .col-name { background:#eff6ff; }
 
     #toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -984,10 +985,10 @@ function renderTracking() {
       <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(c.code)}')`:''}">
         ${seqNum}
       </td>
-      <td class="px-1 py-3 text-center col-code cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
+      <td class="px-1 py-3 text-center col-code cursor-pointer" onclick="openPanel(${c.id})">
         <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1 py-0.5 rounded whitespace-nowrap">${e(c.code)}</span>
       </td>
-      <td class="px-2 py-3 text-left col-name cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
+      <td class="px-2 py-3 text-left col-name cursor-pointer" onclick="openPanel(${c.id})">
         <div class="text-sm text-gray-800 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">${e(c.thai_name)}</div>
       </td>
       <td class="px-2 py-2 text-left border-l border-gray-200" style="overflow:hidden">
