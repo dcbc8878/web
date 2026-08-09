@@ -718,6 +718,29 @@ async function saveNote(clientId, val) {
   if (data) taskMap[clientId] = data;
   renderTracking();
 }
+function editClientSeq(cell, clientId, code) {
+  if (!canEdit()) return;
+  const num = parseInt(code.replace(/^[A-Z]+/,'')) || 0;
+  cell.innerHTML = `<input type="number" min="1" max="999" value="${num}"
+    style="width:38px;font-size:11px;text-align:center;border:1.5px solid #3b82f6;border-radius:4px;outline:none;padding:2px;-moz-appearance:textfield"
+    onclick="event.stopPropagation()"
+    onblur="saveClientSeq(${clientId},'${code}',this.value)"
+    onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){event.preventDefault();renderTracking();}">`;
+  const inp = cell.querySelector('input');
+  inp.focus(); inp.select();
+}
+async function saveClientSeq(clientId, code, newVal) {
+  const prefix = (code.match(/^([A-Z]+)/)||['',''])[1];
+  const newNum = Math.max(1, Math.min(999, parseInt(newVal)||1));
+  const newCode = prefix + String(newNum).padStart(3,'0');
+  if (newCode === code) { renderTracking(); return; }
+  const { error } = await sb.from('crm_clients').update({ code: newCode }).eq('id', clientId);
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); renderTracking(); return; }
+  const c = clients.find(x => x.id === clientId);
+  if (c) c.code = newCode;
+  clients.sort((a,b) => a.code.localeCompare(b.code));
+  renderTracking();
+}
 function progressBar(pct) {
   const col = pct === 100 ? '#16a34a' : pct > 50 ? '#2563eb' : '#d97706';
   return `<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div><span class="prog-pct">${pct}%</span></div>`;
@@ -904,9 +927,8 @@ function renderTracking() {
 
   const gb = 'border-l border-gray-200';
   let rows = '';
-  let rowIdx = 0;
   clients.forEach(c => {
-    rowIdx++;
+    const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
     const t = taskMap[c.id] || {};
     const docItems = (t.doc_items||'').split(',').filter(Boolean);
     const docBadge = t.doc_date
@@ -959,7 +981,9 @@ function renderTracking() {
     };
 
     rows += `<tr class="border-b border-gray-100">
-      <td class="py-3 text-center text-xs text-gray-400 col-num">${rowIdx}</td>
+      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(c.code)}')`:''}">
+        ${seqNum}
+      </td>
       <td class="px-1 py-3 text-center col-code cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
         <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1 py-0.5 rounded whitespace-nowrap">${e(c.code)}</span>
       </td>
