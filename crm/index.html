@@ -66,6 +66,9 @@
     thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
     tbody tr:hover td { background: #fafbff; }
     tbody tr:last-child td { border-bottom: none; }
+    .col-sticky { position: sticky; left: 0; z-index: 2; background: #fff; }
+    thead .col-sticky { background: #f8fafc; z-index: 3; }
+    tbody tr:hover .col-sticky { background: #fafbff; }
     tr[data-t1="sent"]  td.grp-t1  { background-color: #fff8e6; }
     tr[data-t1="sent"]:hover  td.grp-t1  { background-color: #fef3c7; }
     tr[data-t1="paid"]  td.grp-t1  { background-color: #f0fdf4; }
@@ -269,11 +272,34 @@
         </div>
       </div>
       <div class="px-6 pb-8 overflow-x-auto">
-        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden" style="min-width:960px">
-          <table class="w-full text-center">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <table class="text-center" style="table-layout:fixed;width:1360px;min-width:1360px">
+            <colgroup>
+              <col style="width:190px"><!-- ลูกค้า -->
+              <col style="width:76px"> <!-- รับเอกสาร -->
+              <col style="width:40px"> <!-- STM -->
+              <col style="width:40px"> <!-- PND.1 -->
+              <col style="width:40px"> <!-- PND.3 -->
+              <col style="width:40px"> <!-- PND.53 -->
+              <col style="width:40px"> <!-- PND.54 -->
+              <col style="width:40px"> <!-- PP.36 -->
+              <col style="width:56px"> <!-- SENT TAX1 -->
+              <col style="width:56px"> <!-- PAID TAX1 -->
+              <col style="width:40px"> <!-- SSO -->
+              <col style="width:56px"> <!-- SENT SSO -->
+              <col style="width:56px"> <!-- PAID SSO -->
+              <col style="width:40px"> <!-- PP.30 -->
+              <col style="width:56px"> <!-- SENT TAX2 -->
+              <col style="width:56px"> <!-- PAID TAX2 -->
+              <col style="width:56px"> <!-- RD Download -->
+              <col style="width:40px"> <!-- RD Key -->
+              <col style="width:46px"> <!-- Acct Fee -->
+              <col style="width:122px"><!-- โน๊ต -->
+              <col style="width:110px"><!-- ความคืบหน้า -->
+            </colgroup>
             <thead>
               <tr>
-                <th rowspan="2" class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:210px;vertical-align:middle">ลูกค้า</th>
+                <th rowspan="2" class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 col-sticky" style="vertical-align:middle">ลูกค้า</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle;min-width:80px">รับเอกสาร</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">STM</th>
                 <th colspan="7" class="px-2 py-1.5 text-xs font-bold text-blue-500 bg-blue-50 border-b border-gray-200 border-l border-gray-200">TAX 1</th>
@@ -889,9 +915,9 @@ function renderTracking() {
     const pct = calcPct(t, clientFields);
 
     rows += `<tr class="border-b border-gray-100" data-t1="${t1State}" data-sso="${ssoState}" data-t2="${t2State}">
-      <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors" onclick="openPanel(${c.id})">
+      <td class="px-4 py-3 text-left cursor-pointer hover:bg-blue-50 transition-colors col-sticky" onclick="openPanel(${c.id})" style="border-right:1px solid #f1f5f9">
         <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded">${e(c.code)}</span>
-        <div class="text-sm text-gray-800 mt-0.5 max-w-[190px] leading-tight">${e(c.thai_name)}</div>
+        <div class="text-sm text-gray-800 mt-0.5 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">${e(c.thai_name)}</div>
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
       ${mkCell('stm',gb)}
@@ -903,7 +929,7 @@ function renderTracking() {
       ${mkToggle(t2Sent,'SENT','amber',c.id,'tax2_sent',!hasVat,'grp-t2')}${mkToggle(t2Paid,'PAID','green',c.id,'tax2_paid',!hasVat,'grp-t2')}
       ${mkCell('rd_download',gb)}${mkCell('rd_keyed')}
       ${mkCell('acct_fee',gb)}
-      <td class="px-2 py-2 border-l border-gray-200" style="min-width:120px;max-width:180px">
+      <td class="px-2 py-2 border-l border-gray-200" style="overflow:hidden">
         ${noteCell(c.id, t.notes||'', prevTaskMap[c.id]||'')}
       </td>
       <td class="px-3 py-2.5">${progressBar(pct)}</td>
