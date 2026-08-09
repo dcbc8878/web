@@ -253,13 +253,11 @@
                 <th rowspan="2" class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="min-width:210px;vertical-align:middle">ลูกค้า</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle;min-width:80px">รับเอกสาร</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">STM</th>
-                <th colspan="6" class="px-2 py-1.5 text-xs font-bold text-blue-500 bg-blue-50 border-b border-gray-200 border-l border-gray-200">TAX 1</th>
-                <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-green-600 bg-green-50 border-b border-gray-200 border-l border-gray-200">SSO</th>
-                <th colspan="2" class="px-2 py-1.5 text-xs font-bold text-purple-500 bg-purple-50 border-b border-gray-200 border-l border-gray-200">TAX 2</th>
+                <th colspan="7" class="px-2 py-1.5 text-xs font-bold text-blue-500 bg-blue-50 border-b border-gray-200 border-l border-gray-200">TAX 1</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-bold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">SSO</th>
+                <th rowspan="2" class="px-2 py-2.5 text-xs font-bold text-purple-500 bg-purple-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">PP.30</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">RD<br>Keyed</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">Acct<br>Fee</th>
-                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-amber-600 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">ส่งแล้ว</th>
-                <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-green-600 border-b-2 border-gray-200" style="vertical-align:middle">รับเงิน</th>
                 <th rowspan="2" class="px-3 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="vertical-align:middle;min-width:110px">ความคืบหน้า</th>
               </tr>
               <tr>
@@ -268,15 +266,12 @@
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.53</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PND.54</th>
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PP.36</th>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">SSO</th>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200">PP.30</th>
-                <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PAID</th>
+                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
               </tr>
             </thead>
             <tbody id="tracking-tbody">
-              <tr><td colspan="18" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              <tr><td colspan="15" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
             </tbody>
           </table>
         </div>
@@ -448,7 +443,7 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
   'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
 const ROLE_LABEL = { owner:'เจ้าของ', senior:'พนักงานอาวุโส', staff:'พนักงาน' };
-const FIELDS = ['stm','pnd1','pnd3','pnd53','pnd54','pp36','pp36_paid','sso','sso_paid','pp30','pp30_paid','rd_keyed','acct_fee'];
+const FIELDS = ['stm','pnd1','pnd3','pnd53','pnd54','pp36','sso','pp30','rd_keyed','acct_fee'];
 const YE_FIELDS = ['pnd51','pnd1k','kt26k','pnd50','fin_stmt','audit','dbd_submit','boj5'];
 const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', paid:'ชำระแล้ว', cancelled:'ยกเลิก' };
 const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
@@ -701,12 +696,12 @@ function renderTracking() {
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
       ${mkCell('stm',gb)}
-      ${mkCell('pnd1',gb)}${mkCell('pnd3')}${mkCell('pnd53')}${mkCell('pnd54')}${mkCell('pp36')}${mkCell('pp36_paid')}
-      ${mkCell('sso',gb)}${mkCell('sso_paid')}
-      ${mkCell('pp30',gb)}${mkCell('pp30_paid')}
+      ${mkCell('pnd1',gb)}${mkCell('pnd3')}${mkCell('pnd53')}${mkCell('pnd54')}${mkCell('pp36')}
+      ${mkToggle(sent,'ส่ง','amber',c.id,'toggleSent')}${mkToggle(paid,'รับ','green',c.id,'togglePaid')}
+      ${mkCell('sso',gb)}
+      ${mkCell('pp30',gb)}
       ${mkCell('rd_keyed',gb)}
       ${mkCell('acct_fee',gb)}
-      ${mkToggle(sent,'ส่ง','amber',c.id,'toggleSent','border-l border-gray-200')}${mkToggle(paid,'รับ','green',c.id,'togglePaid')}
       <td class="px-3 py-2.5">${progressBar(pct)}</td>
     </tr>`;
   });
