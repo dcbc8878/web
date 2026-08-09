@@ -1564,12 +1564,37 @@ function confirmDeactivateClient() {
   const c = clients.find(x => x.id === panelClientId);
   if (!c) return;
   openModal(`
-    <h3 class="text-base font-bold text-gray-900 mb-3">ปิดใช้งานลูกค้า</h3>
-    <p class="text-sm text-gray-700">ต้องการปิดใช้งาน <strong>${e(c.thai_name)}</strong> ใช่หรือไม่?</p>
-    <p class="text-xs text-gray-400 mt-2">ข้อมูลทั้งหมดยังคงอยู่ สามารถเปิดใช้งานได้ภายหลังผ่าน Supabase</p>
-    <div class="flex justify-end gap-2 mt-6">
+    <h3 class="text-base font-bold text-gray-900 mb-1">จัดการลูกค้า</h3>
+    <p class="text-sm text-gray-700 mb-4">เลือกการดำเนินการสำหรับ <strong>${e(c.thai_name)}</strong></p>
+    <div class="space-y-3">
+      <div class="border border-gray-200 rounded-xl p-4">
+        <div class="text-sm font-semibold text-gray-800 mb-1">ปิดใช้งานชั่วคราว</div>
+        <div class="text-xs text-gray-400 mb-3">ซ่อนจากรายการ แต่ข้อมูลยังคงอยู่ครบ สามารถเปิดคืนได้ผ่าน Supabase</div>
+        <button onclick="doDeactivateClient()" class="w-full px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors">ปิดใช้งาน</button>
+      </div>
+      <div class="border border-red-200 bg-red-50 rounded-xl p-4">
+        <div class="text-sm font-semibold text-red-700 mb-1">ลบถาวร</div>
+        <div class="text-xs text-red-400 mb-3">ลบลูกค้าและข้อมูลทั้งหมด (งานภาษี, ใบแจ้งหนี้, ประวัติ) ไม่สามารถกู้คืนได้</div>
+        <button onclick="confirmHardDeleteClient()" class="w-full px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 transition-colors">ลบถาวร</button>
+      </div>
+    </div>
+    <div class="flex justify-end mt-4">
       <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
-      <button onclick="doDeactivateClient()" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700">ปิดใช้งาน</button>
+    </div>`);
+}
+
+function confirmHardDeleteClient() {
+  const c = clients.find(x => x.id === panelClientId);
+  if (!c) return;
+  openModal(`
+    <h3 class="text-base font-bold text-red-700 mb-3">ยืนยันการลบถาวร</h3>
+    <p class="text-sm text-gray-700">พิมพ์รหัสลูกค้า <strong class="text-red-600">${e(c.code)}</strong> เพื่อยืนยัน</p>
+    <input id="delete-confirm-code" type="text" placeholder="${e(c.code)}"
+      class="mt-3 w-full px-3.5 py-2.5 rounded-lg border border-red-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+    <p class="text-xs text-red-400 mt-2">การดำเนินการนี้ไม่สามารถยกเลิกได้ ข้อมูลทั้งหมดจะถูกลบถาวร</p>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="doHardDeleteClient('${e(c.code)}')" class="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700">ลบถาวร</button>
     </div>`);
 }
 
@@ -1581,6 +1606,22 @@ async function doDeactivateClient() {
   clients = clients.filter(x => x.id !== id);
   closePanel();
   showToast('ปิดใช้งานลูกค้าแล้ว');
+  navigate(curPage);
+}
+
+async function doHardDeleteClient(expectedCode) {
+  const typed = document.getElementById('delete-confirm-code')?.value.trim();
+  if (typed !== expectedCode) { showToast('รหัสลูกค้าไม่ถูกต้อง', 'error'); return; }
+  closeModal();
+  const id = panelClientId;
+  const { error } = await sb.from('crm_clients').delete().eq('id', id);
+  if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  clients = clients.filter(x => x.id !== id);
+  delete invoiceMap[id];
+  delete taskMap[id];
+  delete yearEndMap[id];
+  closePanel();
+  showToast('ลบลูกค้าแล้ว');
   navigate(curPage);
 }
 
