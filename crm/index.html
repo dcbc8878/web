@@ -254,8 +254,8 @@
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle;min-width:80px">รับเอกสาร</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">STM</th>
                 <th colspan="7" class="px-2 py-1.5 text-xs font-bold text-blue-500 bg-blue-50 border-b border-gray-200 border-l border-gray-200">TAX 1</th>
-                <th rowspan="2" class="px-2 py-2.5 text-xs font-bold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">SSO</th>
-                <th rowspan="2" class="px-2 py-2.5 text-xs font-bold text-purple-500 bg-purple-50 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">PP.30</th>
+                <th colspan="3" class="px-2 py-1.5 text-xs font-bold text-green-600 bg-green-50 border-b border-gray-200 border-l border-gray-200">SSO</th>
+                <th colspan="3" class="px-2 py-1.5 text-xs font-bold text-purple-500 bg-purple-50 border-b border-gray-200 border-l border-gray-200">TAX 2</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">RD<br>Keyed</th>
                 <th rowspan="2" class="px-2 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200 border-l border-gray-200" style="vertical-align:middle">Acct<br>Fee</th>
                 <th rowspan="2" class="px-3 py-2.5 text-xs font-semibold text-gray-500 border-b-2 border-gray-200" style="vertical-align:middle;min-width:110px">ความคืบหน้า</th>
@@ -268,10 +268,16 @@
                 <th class="px-2 py-2 text-xs font-semibold text-gray-500 border-b-2 border-gray-200">PP.36</th>
                 <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
                 <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200 border-l border-gray-200">SSO</th>
+                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
+                <th class="px-2 py-2 text-xs font-semibold text-purple-500 bg-purple-50 border-b-2 border-gray-200 border-l border-gray-200">PP.30</th>
+                <th class="px-2 py-2 text-xs font-semibold text-amber-600 bg-amber-50 border-b-2 border-gray-200">ส่งแล้ว</th>
+                <th class="px-2 py-2 text-xs font-semibold text-green-600 bg-green-50 border-b-2 border-gray-200">รับเงิน</th>
               </tr>
             </thead>
             <tbody id="tracking-tbody">
-              <tr><td colspan="15" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              <tr><td colspan="19" class="py-10 text-gray-400 text-sm">กำลังโหลด…</td></tr>
             </tbody>
           </table>
         </div>
@@ -679,14 +685,20 @@ function renderTracking() {
                 ${statusDot(v)}</td>`;
     };
 
-    const sent = t.month_sent || false;
-    const paid = t.month_paid || false;
-    const rowCls = paid ? 'row-paid' : sent ? 'row-sent' : '';
-    const mkToggle = (active, label, color, cid, fn, extraCls='') => {
+    const t1Sent = t.tax1_sent || false;
+    const t1Paid = t.tax1_paid || false;
+    const ssoSent = t.sso_sent || false;
+    const ssoPaid = t.sso_client_paid || false;
+    const t2Sent = t.tax2_sent || false;
+    const t2Paid = t.tax2_paid || false;
+    const allPaid = t1Paid && ssoPaid && t2Paid;
+    const anySent = t1Sent || ssoSent || t2Sent;
+    const rowCls = allPaid ? 'row-paid' : anySent ? 'row-sent' : '';
+    const mkToggle = (active, label, color, cid, field, extraCls='') => {
       const bg = color==='amber' ? '#fef3c7' : '#dcfce7';
       const fg = color==='amber' ? '#92400e' : '#15803d';
       const badge = active ? `<span class="inv-badge" style="background:${bg};color:${fg}">✓ ${label}</span>` : `<span class="text-gray-300 text-xs">—</span>`;
-      return `<td class="px-2 py-2.5 text-center ${extraCls} ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="${fn}(${cid})"`:''}>${badge}</td>`;
+      return `<td class="px-2 py-2.5 text-center ${extraCls} ${canEdit()?'cursor-pointer':''}" ${canEdit()?`onclick="toggleGroupFlag(${cid},'${field}')"`:''}>${badge}</td>`;
     };
 
     rows += `<tr class="border-b border-gray-100 ${rowCls}">
@@ -697,16 +709,18 @@ function renderTracking() {
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
       ${mkCell('stm',gb)}
       ${mkCell('pnd1',gb)}${mkCell('pnd3')}${mkCell('pnd53')}${mkCell('pnd54')}${mkCell('pp36')}
-      ${mkToggle(sent,'ส่ง','amber',c.id,'toggleSent')}${mkToggle(paid,'รับ','green',c.id,'togglePaid')}
+      ${mkToggle(t1Sent,'ส่ง','amber',c.id,'tax1_sent')}${mkToggle(t1Paid,'รับ','green',c.id,'tax1_paid')}
       ${mkCell('sso',gb)}
+      ${mkToggle(ssoSent,'ส่ง','amber',c.id,'sso_sent')}${mkToggle(ssoPaid,'รับ','green',c.id,'sso_client_paid')}
       ${mkCell('pp30',gb)}
+      ${mkToggle(t2Sent,'ส่ง','amber',c.id,'tax2_sent')}${mkToggle(t2Paid,'รับ','green',c.id,'tax2_paid')}
       ${mkCell('rd_keyed',gb)}
       ${mkCell('acct_fee',gb)}
       <td class="px-3 py-2.5">${progressBar(pct)}</td>
     </tr>`;
   });
 
-  if (!rows) rows = `<tr><td colspan="15" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
+  if (!rows) rows = `<tr><td colspan="19" class="py-10 text-gray-400 text-sm text-center">ยังไม่มีลูกค้าในระบบ</td></tr>`;
   document.getElementById('tracking-tbody').innerHTML = rows;
 }
 
@@ -746,30 +760,22 @@ async function toggleField(clientId, field, cell) {
   renderTrackingSummary();
 }
 
-async function toggleSent(clientId) {
-  if (!canEdit()) return;
-  const next = !(taskMap[clientId]?.month_sent || false);
-  if (!taskMap[clientId]) taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
-  taskMap[clientId].month_sent = next;
-  renderTracking();
-  const { data, error } = await sb.from('crm_tax_tasks')
-    .upsert({ client_id: clientId, year: curYear, month: curMonth, month_sent: next }, { onConflict: 'client_id,year,month' })
-    .select().single();
-  if (error) { taskMap[clientId].month_sent = !next; renderTracking(); showToast('บันทึกไม่สำเร็จ', 'error'); return; }
-  if (data) taskMap[clientId] = data;
-}
+const SENT_PAIRS = { tax1_paid: 'tax1_sent', sso_client_paid: 'sso_sent', tax2_paid: 'tax2_sent' };
 
-async function togglePaid(clientId) {
+async function toggleGroupFlag(clientId, field) {
   if (!canEdit()) return;
-  const next = !(taskMap[clientId]?.month_paid || false);
+  const next = !(taskMap[clientId]?.[field] || false);
   if (!taskMap[clientId]) taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
-  taskMap[clientId].month_paid = next;
-  if (next) taskMap[clientId].month_sent = true;
+  taskMap[clientId][field] = next;
+  const sentField = SENT_PAIRS[field];
+  if (sentField && next) taskMap[clientId][sentField] = true;
   renderTracking();
+  const upsertData = { client_id: clientId, year: curYear, month: curMonth, [field]: next };
+  if (sentField && next) upsertData[sentField] = true;
   const { data, error } = await sb.from('crm_tax_tasks')
-    .upsert({ client_id: clientId, year: curYear, month: curMonth, month_paid: next, month_sent: taskMap[clientId].month_sent }, { onConflict: 'client_id,year,month' })
+    .upsert(upsertData, { onConflict: 'client_id,year,month' })
     .select().single();
-  if (error) { taskMap[clientId].month_paid = !next; renderTracking(); showToast('บันทึกไม่สำเร็จ', 'error'); return; }
+  if (error) { taskMap[clientId][field] = !next; renderTracking(); showToast('บันทึกไม่สำเร็จ', 'error'); return; }
   if (data) taskMap[clientId] = data;
 }
 

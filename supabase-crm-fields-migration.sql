@@ -41,11 +41,19 @@ COMMENT ON COLUMN public.crm_client_credentials.svs_username IS 'กองทุ
 COMMENT ON COLUMN public.crm_client_credentials.kys_username IS 'กองทุนเงินให้กู้ยืมเพื่อการศึกษา (กยศ)';
 
 -- ──────────────────────────────────────────────────────────
--- เพิ่ม month_sent / month_paid ใน crm_tax_tasks
+-- เพิ่ม sent/paid ต่อกลุ่มภาษี (TAX1 / SSO / TAX2) ใน crm_tax_tasks
 -- ──────────────────────────────────────────────────────────
 ALTER TABLE public.crm_tax_tasks
-  ADD COLUMN IF NOT EXISTS month_sent boolean NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS month_paid boolean NOT NULL DEFAULT false;
+  ADD COLUMN IF NOT EXISTS tax1_sent       boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS tax1_paid       boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS sso_sent        boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS sso_client_paid boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS tax2_sent       boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS tax2_paid       boolean NOT NULL DEFAULT false;
 
-COMMENT ON COLUMN public.crm_tax_tasks.month_sent IS 'ส่งรายงาน/บิลให้ลูกค้าแล้ว';
-COMMENT ON COLUMN public.crm_tax_tasks.month_paid IS 'ลูกค้าชำระค่าบริการแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.tax1_sent       IS 'TAX1 — ส่งบิลให้ลูกค้าแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.tax1_paid       IS 'TAX1 — ลูกค้าชำระแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.sso_sent        IS 'SSO — ส่งบิลให้ลูกค้าแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.sso_client_paid IS 'SSO — ลูกค้าชำระแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.tax2_sent       IS 'TAX2 — ส่งบิลให้ลูกค้าแล้ว';
+COMMENT ON COLUMN public.crm_tax_tasks.tax2_paid       IS 'TAX2 — ลูกค้าชำระแล้ว';
