@@ -844,15 +844,19 @@ function renderTracking() {
   let rows = '';
   clients.forEach(c => {
     const t = taskMap[c.id] || {};
-    const docCell = t.doc_date
-      ? `<span onclick="editDocDate(${c.id})" title="คลิกเพื่อแก้ไข"
-           class="inline-block bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-0.5 rounded cursor-pointer hover:bg-green-100">
-           📄 ${e(t.doc_date)}</span>`
+    const docItems = (t.doc_items||'').split(',').filter(Boolean);
+    const docBadge = t.doc_date
+      ? `<span onclick="openDocModal(${c.id})" title="${e(docItems.join(', ')||'คลิกเพื่อแก้ไข')}"
+           class="inline-flex flex-col items-start bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-0.5 rounded cursor-pointer hover:bg-green-100 leading-tight">
+           <span>📄 ${e(t.doc_date)}</span>
+           ${docItems.length ? `<span class="text-[10px] text-green-500 font-normal">${docItems.length} รายการ</span>` : ''}
+         </span>`
       : (canEdit()
-          ? `<button onclick="editDocDate(${c.id})"
+          ? `<button onclick="openDocModal(${c.id})"
                class="text-xs text-gray-300 hover:text-blue-500 border border-dashed border-gray-200 hover:border-blue-300 px-2 py-0.5 rounded transition-colors">
-               + เพิ่ม</button>`
+               + รับเอกสาร</button>`
           : '<span class="text-gray-300 text-xs">—</span>');
+    const docCell = docBadge;
 
     const hasVat = c.has_vat !== false;
     const hasSso = c.has_sso !== false;
@@ -998,18 +1002,65 @@ function renderTrackingSummary() {
   document.getElementById('sv-inv').textContent  = canEdit() ? `${invPaid}/${invTotal}` : '—';
 }
 
-async function editDocDate(clientId) {
+const DOC_ITEMS = [
+  'สลิปเงินเดือน',
+  'ใบเสร็จค่าใช้จ่าย',
+  'Statement ธนาคาร',
+  'ใบกำกับภาษี',
+  'เอกสารอื่นๆ',
+];
+
+function openDocModal(clientId) {
   if (!canEdit()) return;
-  const cur = taskMap[clientId]?.doc_date || '';
-  const val = prompt('วันที่รับเอกสาร (เช่น 3 ส.ค.) หรือเว้นว่างเพื่อลบ:', cur);
-  if (val === null) return;
+  const t = taskMap[clientId] || {};
+  const curDate = t.doc_date || '';
+  const curItems = (t.doc_items || '').split(',').filter(Boolean);
+  const checkboxes = DOC_ITEMS.map((item, i) => {
+    const checked = curItems.includes(item) ? 'checked' : '';
+    return `<label class="flex items-center gap-2 py-1.5 cursor-pointer hover:bg-gray-50 rounded px-1">
+      <input type="checkbox" id="doci-${i}" value="${e(item)}" ${checked}
+        class="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer">
+      <span class="text-sm text-gray-700">${e(item)}</span>
+    </label>`;
+  }).join('');
+
+  openModal(`
+    <div class="p-5" style="min-width:320px;max-width:400px">
+      <h3 class="text-base font-semibold text-gray-800 mb-4">รับเอกสาร</h3>
+      <div class="mb-4">
+        <label class="block text-xs font-medium text-gray-500 mb-1">วันที่รับเอกสาร</label>
+        <input id="doc-date-input" type="text" value="${e(curDate)}" placeholder="เช่น 3 ส.ค."
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+      </div>
+      <div class="mb-5">
+        <label class="block text-xs font-medium text-gray-500 mb-1">รายการที่ได้รับ</label>
+        <div class="border border-gray-200 rounded-lg px-2 py-1">${checkboxes}</div>
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button onclick="closeModal()"
+          class="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50">ยกเลิก</button>
+        <button onclick="saveDocModal(${clientId})"
+          class="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium">บันทึก</button>
+      </div>
+    </div>
+  `);
+}
+
+async function saveDocModal(clientId) {
+  const dateVal = (document.getElementById('doc-date-input')?.value || '').trim();
+  const checked = [...document.querySelectorAll('[id^="doci-"]:checked')].map(el => el.value);
+  const itemsStr = checked.join(',');
+  closeModal();
   if (!taskMap[clientId]) {
     taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
     FIELDS.forEach(f => { taskMap[clientId][f] = 'todo'; });
   }
-  taskMap[clientId].doc_date = val.trim();
+  taskMap[clientId].doc_date = dateVal;
+  taskMap[clientId].doc_items = itemsStr;
+  renderTracking();
   const { data, error } = await sb.from('crm_tax_tasks')
-    .upsert({ client_id: clientId, year: curYear, month: curMonth, doc_date: val.trim() }, { onConflict: 'client_id,year,month' })
+    .upsert({ client_id: clientId, year: curYear, month: curMonth, doc_date: dateVal, doc_items: itemsStr },
+      { onConflict: 'client_id,year,month' })
     .select().single();
   if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
   if (data) taskMap[clientId] = data;

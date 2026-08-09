@@ -72,3 +72,11 @@ COMMENT ON COLUMN public.crm_tax_tasks.sso_sent        IS 'SSO — ส่งบ�
 COMMENT ON COLUMN public.crm_tax_tasks.sso_client_paid IS 'SSO — ลูกค้าชำระแล้ว';
 COMMENT ON COLUMN public.crm_tax_tasks.tax2_sent       IS 'TAX2 — ส่งบิลให้ลูกค้าแล้ว';
 COMMENT ON COLUMN public.crm_tax_tasks.tax2_paid       IS 'TAX2 — ลูกค้าชำระแล้ว';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่ม doc_items (รายการเอกสารที่ได้รับ) ใน crm_tax_tasks
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_tax_tasks
+  ADD COLUMN IF NOT EXISTS doc_items text NOT NULL DEFAULT '';
+
+COMMENT ON COLUMN public.crm_tax_tasks.doc_items IS 'รายการเอกสารที่ได้รับ (comma-separated)';
