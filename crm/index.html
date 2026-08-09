@@ -981,7 +981,7 @@ async function changeMonth(delta) {
 async function toggleField(clientId, field, cell) {
   if (!canEdit()) return;
   const cur  = taskMap[clientId]?.[field] || 'todo';
-  const next = cur === 'todo' ? 'done' : cur === 'done' ? 'na' : 'todo';
+  const next = cur === 'todo' ? 'done' : cur === 'done' ? (FIELDS.includes(field) ? 'todo' : 'na') : 'todo';
   if (!taskMap[clientId]) {
     taskMap[clientId] = { client_id: clientId, year: curYear, month: curMonth };
     FIELDS.forEach(f => { taskMap[clientId][f] = 'todo'; });
