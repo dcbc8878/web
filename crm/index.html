@@ -1941,7 +1941,7 @@ function switchTab(tab) {
 function renderPanelInfo() {
   const c = clients.find(x => x.id === panelClientId);
   if (!c) return;
-  const ro = !canEditBasic(); // LV1-3 can edit, LV4-5 read-only
+  const ro = !canEditBasic() || panelOrigin !== 'full'; // LV1-3 can edit, but only from the ลูกค้า page
 
   const tf = (label, key, val) => `
     <div>
