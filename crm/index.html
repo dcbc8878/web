@@ -166,6 +166,10 @@
       </div>
     </div>
     <nav class="flex-1 px-3 py-4 space-y-0.5">
+      <div class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="6" height="8" rx="1"/><rect x="10" y="3" width="6" height="5" rx="1"/><rect x="10" y="10" width="6" height="8" rx="1"/><rect x="2" y="13" width="6" height="5" rx="1"/><rect x="18" y="3" width="4" height="15" rx="1"/></svg>
+        รายได้สรุป
+      </div>
       <div class="nav-item active" data-page="tracking" onclick="navigate('tracking')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         งานภาษีรายเดือน
@@ -372,6 +376,111 @@
         <button onclick="showAddStaffGuide()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">+ เพิ่มพนักงาน</button>
       </div>
       <div id="staff-list" class="p-6 max-w-3xl space-y-3"></div>
+    </div>
+
+    <!-- PAGE: dashboard -->
+    <div id="page-dashboard" class="hidden">
+      <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+        <div>
+          <h2 class="text-base font-bold text-gray-900">รายได้สรุป</h2>
+          <p class="text-xs text-gray-400 mt-0.5">ยอดที่ควรได้รับ · ออกบิลแล้ว · รับเงินแล้ว</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="changeDashYear(-1)" class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <div id="dash-year-display" class="px-4 py-1.5 bg-blue-50 text-blue-700 font-bold text-sm rounded-full border border-blue-100 min-w-[90px] text-center"></div>
+          <button onclick="changeDashYear(1)" class="w-8 h-8 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors text-gray-600">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="grid grid-cols-4 gap-4 px-6 py-4">
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ควรได้รับ/เดือน</div>
+          <div id="dash-expected-mo" class="text-2xl font-black text-gray-800 mt-1 tabular-nums">—</div>
+          <div class="text-xs text-gray-400 mt-1">ต่อเดือน (รวมทุกลูกค้า)</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ออกบิลแล้ว</div>
+          <div id="dash-invoiced" class="text-2xl font-black text-blue-600 mt-1 tabular-nums">—</div>
+          <div id="dash-invoiced-sub" class="text-xs text-gray-400 mt-1">—</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">รับเงินแล้ว</div>
+          <div id="dash-collected" class="text-2xl font-black text-green-600 mt-1 tabular-nums">—</div>
+          <div id="dash-collected-sub" class="text-xs text-gray-400 mt-1">—</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">ค้างชำระ</div>
+          <div id="dash-outstanding" class="text-2xl font-black text-amber-600 mt-1 tabular-nums">—</div>
+          <div id="dash-outstanding-sub" class="text-xs text-gray-400 mt-1">—</div>
+        </div>
+      </div>
+
+      <!-- Monthly breakdown -->
+      <div class="px-6 pb-4">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <span class="text-sm font-bold text-gray-700">รายละเอียดรายเดือน</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 bg-gray-50">
+                  <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">เดือน</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500">ควรได้รับ</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-blue-500">ออกบิลแล้ว</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-green-600">รับเงินแล้ว</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-amber-600">ค้างชำระ</th>
+                  <th class="text-center px-4 py-2.5 text-xs font-semibold text-gray-500">บิล</th>
+                </tr>
+              </thead>
+              <tbody id="dash-monthly-tbody">
+                <tr><td colspan="6" class="py-8 text-center text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              </tbody>
+              <tfoot id="dash-monthly-tfoot" class="bg-gray-50 border-t-2 border-gray-200 hidden">
+                <tr>
+                  <td class="px-4 py-2.5 text-xs font-bold text-gray-700">รวม</td>
+                  <td id="dash-ft-expected" class="text-right px-4 py-2.5 text-xs font-bold text-gray-700 tabular-nums"></td>
+                  <td id="dash-ft-invoiced" class="text-right px-4 py-2.5 text-xs font-bold text-blue-600 tabular-nums"></td>
+                  <td id="dash-ft-collected" class="text-right px-4 py-2.5 text-xs font-bold text-green-600 tabular-nums"></td>
+                  <td id="dash-ft-outstanding" class="text-right px-4 py-2.5 text-xs font-bold text-amber-600 tabular-nums"></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-client breakdown -->
+      <div class="px-6 pb-8">
+        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100">
+            <span class="text-sm font-bold text-gray-700">รายละเอียดต่อลูกค้า</span>
+            <span class="text-xs text-gray-400 ml-2">(ปีนี้)</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-gray-100 bg-gray-50">
+                  <th class="text-left px-4 py-2.5 text-xs font-semibold text-gray-500">ลูกค้า</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-gray-500">ค่าบริการ/เดือน</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-blue-500">ออกบิลแล้ว</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-green-600">รับเงินแล้ว</th>
+                  <th class="text-right px-4 py-2.5 text-xs font-semibold text-amber-600">ค้างชำระ</th>
+                </tr>
+              </thead>
+              <tbody id="dash-client-tbody">
+                <tr><td colspan="5" class="py-8 text-center text-gray-400 text-sm">กำลังโหลด…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- PAGE: settings -->
@@ -624,7 +733,7 @@ async function loadStaff() {
 // ─────────────────────────────────────────────────────────────
 function navigate(p) {
   curPage = p;
-  ['tracking','yearend','clients','staff','settings'].forEach(pg => {
+  ['dashboard','tracking','yearend','clients','staff','settings'].forEach(pg => {
     document.getElementById(`page-${pg}`).classList.toggle('hidden', pg !== p);
   });
   document.querySelectorAll('.nav-item').forEach(el => {
@@ -634,6 +743,7 @@ function navigate(p) {
   else if (p === 'yearend') { if (!yearEndLoaded) loadYearEndTasks().then(renderYearEnd); else renderYearEnd(); }
   else if (p === 'clients') renderClientList();
   else if (p === 'staff') loadStaff().then(renderStaff);
+  else if (p === 'dashboard') loadDashboard();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1688,6 +1798,123 @@ function openModal(html) {
     `<div class="modal-backdrop" onclick="if(event.target===this)closeModal()"><div class="modal-box">${html}</div></div>`;
 }
 function closeModal() { document.getElementById('modal-area').innerHTML = ''; }
+
+// ─────────────────────────────────────────────────────────────
+// PAGE: DASHBOARD
+// ─────────────────────────────────────────────────────────────
+let dashYear = new Date().getFullYear();
+let dashInvoices = [];
+
+function fmtBaht(n) {
+  if (n === 0) return '฿0';
+  return '฿' + Math.round(n).toLocaleString('th-TH');
+}
+
+async function loadDashboard() {
+  document.getElementById('dash-year-display').textContent = `ปี ${dashYear + 543}`;
+  document.getElementById('dash-monthly-tbody').innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-400 text-sm">กำลังโหลด…</td></tr>`;
+  document.getElementById('dash-client-tbody').innerHTML  = `<tr><td colspan="5" class="py-8 text-center text-gray-400 text-sm">กำลังโหลด…</td></tr>`;
+  const { data } = await sb.from('crm_invoices').select('*').eq('year', dashYear).neq('status','cancelled');
+  dashInvoices = data || [];
+  renderDashboard();
+}
+
+function renderDashboard() {
+  document.getElementById('dash-year-display').textContent = `ปี ${dashYear + 543}`;
+
+  const monthlyClients = clients.filter(c => c.is_active && c.billing_type === 'monthly');
+  const expectedMo = monthlyClients.reduce((s, c) => s + (parseFloat(c.monthly_fee) || 0), 0);
+
+  let totalInvoiced = 0, totalCollected = 0;
+  dashInvoices.forEach(inv => {
+    totalInvoiced  += parseFloat(inv.fee_amount) || 0;
+    if (inv.status === 'paid') totalCollected += parseFloat(inv.payment_amount ?? inv.fee_amount) || 0;
+  });
+  const totalOutstanding = Math.max(0, totalInvoiced - totalCollected);
+
+  document.getElementById('dash-expected-mo').textContent  = fmtBaht(expectedMo);
+  document.getElementById('dash-invoiced').textContent     = fmtBaht(totalInvoiced);
+  document.getElementById('dash-invoiced-sub').textContent = `${dashInvoices.length} ใบ`;
+  document.getElementById('dash-collected').textContent    = fmtBaht(totalCollected);
+  const paidCount = dashInvoices.filter(i => i.status==='paid').length;
+  document.getElementById('dash-collected-sub').textContent = `${paidCount}/${dashInvoices.length} ใบ`;
+  document.getElementById('dash-outstanding').textContent  = fmtBaht(totalOutstanding);
+  const pendCount = dashInvoices.filter(i => i.status==='sent').length;
+  document.getElementById('dash-outstanding-sub').textContent = pendCount ? `${pendCount} ใบรอรับเงิน` : 'ไม่มีค้างชำระ';
+
+  const now = new Date();
+  const isCurrentYear = dashYear === now.getFullYear();
+  const lastMonth = isCurrentYear ? now.getMonth() + 1 : 12;
+
+  let monthRows = '';
+  let ftExp = 0, ftInv = 0, ftCol = 0;
+  for (let m = 1; m <= 12; m++) {
+    const isFuture = isCurrentYear && m > lastMonth;
+    const monthInvs = dashInvoices.filter(i => i.month === m);
+    const inv = monthInvs.reduce((s,i) => s + (parseFloat(i.fee_amount)||0), 0);
+    const col = monthInvs.filter(i=>i.status==='paid').reduce((s,i) => s + (parseFloat(i.payment_amount ?? i.fee_amount)||0), 0);
+    const out = Math.max(0, inv - col);
+    ftExp += expectedMo; ftInv += inv; ftCol += col;
+
+    const sentBadges = monthInvs.map(i => {
+      const cls = i.status==='paid'?'paid':i.status==='sent'?'sent':'draft';
+      return `<span class="inv-badge ${cls}">${i.status==='paid'?'รับแล้ว':i.status==='sent'?'ส่งแล้ว':'draft'}</span>`;
+    }).join(' ') || (isFuture ? '<span class="text-gray-200 text-xs">—</span>' : '<span class="text-gray-300 text-xs">ยังไม่ออก</span>');
+
+    const rowStyle = isFuture ? ' class="opacity-35"' : '';
+    monthRows += `<tr${rowStyle} class="border-b border-gray-50 hover:bg-gray-50">
+      <td class="px-4 py-2.5 text-xs font-semibold text-gray-700">${THAI_MONTHS[m]}</td>
+      <td class="px-4 py-2.5 text-right text-xs text-gray-500 tabular-nums">${isFuture ? '—' : fmtBaht(expectedMo)}</td>
+      <td class="px-4 py-2.5 text-right text-xs ${inv>0?'text-blue-600 font-semibold':'text-gray-300'} tabular-nums">${inv>0?fmtBaht(inv):'—'}</td>
+      <td class="px-4 py-2.5 text-right text-xs ${col>0?'text-green-600 font-semibold':'text-gray-300'} tabular-nums">${col>0?fmtBaht(col):'—'}</td>
+      <td class="px-4 py-2.5 text-right text-xs ${out>0?'text-amber-600 font-semibold':'text-gray-300'} tabular-nums">${out>0?fmtBaht(out):'—'}</td>
+      <td class="px-4 py-2.5 text-center">${sentBadges}</td>
+    </tr>`;
+  }
+  document.getElementById('dash-monthly-tbody').innerHTML = monthRows;
+  document.getElementById('dash-ft-expected').textContent    = fmtBaht(ftExp);
+  document.getElementById('dash-ft-invoiced').textContent    = fmtBaht(ftInv);
+  document.getElementById('dash-ft-collected').textContent   = fmtBaht(ftCol);
+  document.getElementById('dash-ft-outstanding').textContent = fmtBaht(Math.max(0, ftInv - ftCol));
+  document.getElementById('dash-monthly-tfoot').classList.remove('hidden');
+
+  const clientMap = {};
+  dashInvoices.forEach(inv => {
+    if (!clientMap[inv.client_id]) clientMap[inv.client_id] = { invoiced: 0, collected: 0 };
+    clientMap[inv.client_id].invoiced  += parseFloat(inv.fee_amount) || 0;
+    if (inv.status === 'paid') clientMap[inv.client_id].collected += parseFloat(inv.payment_amount ?? inv.fee_amount) || 0;
+  });
+
+  const activeMonthly = clients.filter(c => c.is_active && c.billing_type === 'monthly')
+    .sort((a,b) => (clientMap[b.id]?.invoiced||0) - (clientMap[a.id]?.invoiced||0));
+
+  if (!activeMonthly.length) {
+    document.getElementById('dash-client-tbody').innerHTML = `<tr><td colspan="5" class="py-8 text-center text-gray-400 text-sm">ยังไม่มีข้อมูล</td></tr>`;
+    return;
+  }
+
+  let clientRows = '';
+  activeMonthly.forEach(c => {
+    const cd = clientMap[c.id] || { invoiced: 0, collected: 0 };
+    const out = Math.max(0, cd.invoiced - cd.collected);
+    clientRows += `<tr class="border-b border-gray-50 hover:bg-gray-50">
+      <td class="px-4 py-2.5">
+        <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1.5 py-0.5 rounded mr-1">${e(c.code)}</span>
+        <span class="text-sm text-gray-800">${e(c.thai_name)}</span>
+      </td>
+      <td class="px-4 py-2.5 text-right text-xs text-gray-500 tabular-nums">${fmtBaht(parseFloat(c.monthly_fee)||0)}</td>
+      <td class="px-4 py-2.5 text-right text-xs ${cd.invoiced>0?'text-blue-600 font-semibold':'text-gray-300'} tabular-nums">${cd.invoiced>0?fmtBaht(cd.invoiced):'—'}</td>
+      <td class="px-4 py-2.5 text-right text-xs ${cd.collected>0?'text-green-600 font-semibold':'text-gray-300'} tabular-nums">${cd.collected>0?fmtBaht(cd.collected):'—'}</td>
+      <td class="px-4 py-2.5 text-right text-xs ${out>0?'text-amber-600 font-semibold':'text-gray-300'} tabular-nums">${out>0?fmtBaht(out):'—'}</td>
+    </tr>`;
+  });
+  document.getElementById('dash-client-tbody').innerHTML = clientRows;
+}
+
+async function changeDashYear(delta) {
+  dashYear += delta;
+  await loadDashboard();
+}
 
 // ─────────────────────────────────────────────────────────────
 // AUTH
