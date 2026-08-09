@@ -659,28 +659,44 @@ function calcRowPct(t, hasVat, hasSso) {
 }
 function noteCell(clientId, note, prevNote) {
   if (note) {
-    return `<div class="text-xs text-gray-700 leading-tight cursor-pointer hover:text-blue-600 truncate" title="${e(note)}" onclick="editNote(${clientId},'${e(note).replace(/'/g,'&#39;')}','${e(prevNote).replace(/'/g,'&#39;')}')">${e(note)}</div>`;
+    return `<div class="text-xs text-gray-700 leading-tight cursor-pointer hover:text-blue-600 truncate" title="${e(note)}" onclick="editNote(${clientId},'${e(note).replace(/'/g,'&#39;')}')">${e(note)}</div>`;
   }
   if (!canEdit()) {
     return prevNote ? `<div class="text-xs text-gray-300 italic leading-tight truncate" title="โน๊ตเดือนก่อน: ${e(prevNote)}">${e(prevNote)}</div>` : '';
   }
-  return `<button onclick="editNote(${clientId},'','${e(prevNote).replace(/'/g,'&#39;')}')" class="text-xs text-gray-300 hover:text-blue-500 border border-dashed border-gray-200 hover:border-blue-300 px-1.5 py-0.5 rounded transition-colors whitespace-nowrap">+ โน๊ต</button>`;
+  return `<button onclick="editNote(${clientId},'')" class="text-xs text-gray-300 hover:text-blue-500 border border-dashed border-gray-200 hover:border-blue-300 px-1.5 py-0.5 rounded transition-colors whitespace-nowrap">+ โน๊ต</button>`;
 }
-function editNote(clientId, current, prevNote) {
+function editNote(clientId, current) {
   if (!canEdit()) return;
-  const ph = prevNote ? `เดือนก่อน: ${prevNote}` : 'พิมพ์โน๊ต…';
-  openModal(`<div style="min-width:300px;max-width:420px;font-family:inherit">
-    <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:12px">โน๊ตรายเดือน</div>
-    ${prevNote ? `<div style="font-size:11px;color:#9ca3af;margin-bottom:8px">เดือนก่อน: ${e(prevNote)}</div>` : ''}
-    <textarea id="note-popup-input" rows="3" placeholder="${e(ph)}"
-      style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:8px;resize:vertical;outline:none;font-family:inherit;line-height:1.5"
-      onfocus="this.style.borderColor='#3b82f6'"
-      onblur="this.style.borderColor='#d1d5db'"
-      onkeydown="if(event.key==='Escape')closeModal()"
-    >${e(current)}</textarea>
-    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-      <button onclick="closeModal()" style="padding:7px 16px;border-radius:7px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;font-size:13px;cursor:pointer">ยกเลิก</button>
-      <button onclick="saveNote(${clientId},document.getElementById('note-popup-input').value);closeModal()" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer">บันทึก</button>
+  const TM = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const history = prevTaskMap[clientId] || [];
+  const histHTML = history.length
+    ? history.map(h => `<div style="margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;color:#9ca3af;margin-bottom:3px">${TM[h.month-1]} ${h.year+543}</div>
+        <div style="font-size:12px;color:#374151;line-height:1.5;white-space:pre-wrap">${e(h.note)}</div>
+      </div>`).join('')
+    : `<div style="font-size:12px;color:#d1d5db;font-style:italic;padding-top:4px">ไม่มีโน๊ตย้อนหลัง</div>`;
+  const curLabel = TM[curMonth-1] + ' ' + (curYear+543);
+  openModal(`<div style="min-width:520px;max-width:640px;font-family:inherit">
+    <div style="font-size:15px;font-weight:700;color:#1f2937;margin-bottom:14px">โน๊ตรายเดือน</div>
+    <div style="display:flex;gap:14px;align-items:flex-start">
+      <div style="width:200px;flex-shrink:0;background:#f9fafb;border-radius:8px;padding:10px 12px;max-height:220px;overflow-y:auto;border:1px solid #f1f5f9">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.05em;margin-bottom:10px">6 เดือนที่ผ่านมา</div>
+        ${histHTML}
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;font-weight:700;color:#6b7280;letter-spacing:.05em;margin-bottom:6px">${curLabel}</div>
+        <textarea id="note-popup-input" rows="6" placeholder="พิมพ์โน๊ต…"
+          style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 10px;border:1.5px solid #d1d5db;border-radius:8px;resize:vertical;outline:none;font-family:inherit;line-height:1.5"
+          onfocus="this.style.borderColor='#3b82f6'"
+          onblur="this.style.borderColor='#d1d5db'"
+          onkeydown="if(event.key==='Escape')closeModal()"
+        >${e(current)}</textarea>
+        <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end">
+          <button onclick="closeModal()" style="padding:7px 16px;border-radius:7px;border:1.5px solid #e5e7eb;background:#f9fafb;color:#374151;font-size:13px;cursor:pointer">ยกเลิก</button>
+          <button onclick="saveNote(${clientId},document.getElementById('note-popup-input').value);closeModal()" style="padding:7px 16px;border-radius:7px;border:none;background:#2563eb;color:#fff;font-size:13px;font-weight:600;cursor:pointer">บันทึก</button>
+        </div>
+      </div>
     </div>
   </div>`);
   setTimeout(() => { const inp = document.getElementById('note-popup-input'); if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);} }, 50);
@@ -786,16 +802,30 @@ async function loadClients() {
   clients = data || [];
 }
 async function loadTasks() {
-  const prevM = curMonth === 1 ? 12 : curMonth - 1;
-  const prevY = curMonth === 1 ? curYear - 1 : curYear;
-  const [{ data }, { data: prevData }] = await Promise.all([
+  const prevMonths = [];
+  for (let i = 1; i <= 6; i++) {
+    let m = curMonth - i, y = curYear;
+    while (m <= 0) { m += 12; y--; }
+    prevMonths.push({year: y, month: m});
+  }
+  const histFilter = prevMonths.map(p => `and(year.eq.${p.year},month.eq.${p.month})`).join(',');
+  const [{ data }, { data: histData }] = await Promise.all([
     sb.from('crm_tax_tasks').select('*').eq('year', curYear).eq('month', curMonth),
-    sb.from('crm_tax_tasks').select('client_id,notes').eq('year', prevY).eq('month', prevM),
+    sb.from('crm_tax_tasks').select('client_id,notes,year,month').or(histFilter).neq('notes',''),
   ]);
   taskMap = {};
   prevTaskMap = {};
   (data || []).forEach(t => { taskMap[t.client_id] = t; });
-  (prevData || []).forEach(t => { if (t.notes) prevTaskMap[t.client_id] = t.notes; });
+  const hist = {};
+  (histData || []).forEach(t => {
+    if (!t.notes) return;
+    if (!hist[t.client_id]) hist[t.client_id] = [];
+    hist[t.client_id].push({year: t.year, month: t.month, note: t.notes});
+  });
+  Object.keys(hist).forEach(cid => {
+    hist[cid].sort((a, b) => b.year !== a.year ? b.year - a.year : b.month - a.month);
+    prevTaskMap[cid] = hist[cid];
+  });
 }
 async function loadCreds() {
   const { data } = await sb.from('crm_client_credentials').select('*');
@@ -926,7 +956,7 @@ function renderTracking() {
         <div class="text-sm text-gray-800 mt-0.5 leading-tight overflow-hidden text-ellipsis whitespace-nowrap">${e(c.thai_name)}</div>
       </td>
       <td class="px-2 py-2 text-left border-l border-gray-200" style="overflow:hidden">
-        ${noteCell(c.id, t.notes||'', prevTaskMap[c.id]||'')}
+        ${noteCell(c.id, t.notes||'', (prevTaskMap[c.id]||[])[0]?.note||'')}
       </td>
       <td class="px-2 py-2.5 ${gb}">${docCell}</td>
       ${mkGroupCell(t1Sent, t1Paid, c.id, 'tax1_sent', 'tax1_paid', false, 'tax1')}
