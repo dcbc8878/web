@@ -225,7 +225,7 @@
       <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <div>
           <h2 class="text-base font-bold text-gray-900">สถานะงานภาษีรายเดือน</h2>
-          <p class="text-xs text-gray-400 mt-0.5">คลิกสถานะเพื่อเปลี่ยน (เจ้าของ/อาวุโสเท่านั้น)</p>
+          <p class="text-xs text-gray-400 mt-0.5">คลิกสถานะเพื่อเปลี่ยน (LV1-3 เท่านั้น)</p>
         </div>
         <div class="flex items-center gap-2">
           <button id="batch-inv-btn" onclick="openBatchInvoice()"
@@ -385,7 +385,7 @@
     <div id="page-staff" class="hidden">
       <div class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
         <h2 class="text-base font-bold text-gray-900">จัดการทีมงาน</h2>
-        <button onclick="showAddStaffGuide()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">+ เพิ่มพนักงาน</button>
+        <button id="add-staff-btn" onclick="showAddStaffGuide()" class="hidden bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">+ เพิ่มพนักงาน</button>
       </div>
       <div id="staff-list" class="p-6 max-w-3xl space-y-3"></div>
     </div>
@@ -500,30 +500,38 @@
       <div class="bg-white border-b border-gray-200 px-6 py-4">
         <h2 class="text-base font-bold text-gray-900">ตั้งค่า</h2>
       </div>
-      <div class="p-6 max-w-md">
-        <div class="bg-white border border-gray-200 rounded-xl p-6">
-          <h3 class="font-bold text-gray-900 mb-4">เปลี่ยนรหัสผ่าน</h3>
-          <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">รหัสผ่านใหม่</label>
-              <input id="new-pass" type="password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <div class="p-6 max-w-3xl">
+        <div class="max-w-md">
+          <div class="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 class="font-bold text-gray-900 mb-4">เปลี่ยนรหัสผ่าน</h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">รหัสผ่านใหม่</label>
+                <input id="new-pass" type="password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">ยืนยันรหัสผ่านใหม่</label>
+                <input id="new-pass2" type="password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div id="pass-err" class="hidden text-sm text-red-600"></div>
+              <button onclick="changePassword()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">บันทึก</button>
             </div>
-            <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-1.5">ยืนยันรหัสผ่านใหม่</label>
-              <input id="new-pass2" type="password" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <div id="own-company-section" class="hidden bg-white border border-gray-200 rounded-xl p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-gray-900">บริษัทของตัวเอง</h3>
+              <button onclick="openAddOwnCompany()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">+ เพิ่ม</button>
             </div>
-            <div id="pass-err" class="hidden text-sm text-red-600"></div>
-            <button onclick="changePassword()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">บันทึก</button>
+            <p class="text-xs text-gray-400 mb-4">บริษัทที่เพิ่มตรงนี้จะถูกติดตามงานภาษีเหมือนลูกค้า แต่จะไม่นับรวมในรายชื่อลูกค้าและรายได้</p>
+            <div id="own-company-list" class="space-y-2"></div>
           </div>
         </div>
 
-        <div id="own-company-section" class="hidden bg-white border border-gray-200 rounded-xl p-6 mt-6">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-gray-900">บริษัทของตัวเอง</h3>
-            <button onclick="openAddOwnCompany()" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-1.5 rounded-lg transition-colors">+ เพิ่ม</button>
-          </div>
-          <p class="text-xs text-gray-400 mb-4">บริษัทที่เพิ่มตรงนี้จะถูกติดตามงานภาษีเหมือนลูกค้า แต่จะไม่นับรวมในรายชื่อลูกค้าและรายได้</p>
-          <div id="own-company-list" class="space-y-2"></div>
+        <div id="activity-log-section" class="hidden bg-white border border-gray-200 rounded-xl p-6 mt-6">
+          <h3 class="font-bold text-gray-900 mb-1">ประวัติการแก้ไข</h3>
+          <p class="text-xs text-gray-400 mb-4">บันทึกกิจกรรมการแก้ไขในระบบ (เจ้าของ/ผู้จัดการเท่านั้น)</p>
+          <div id="activity-log-list" class="space-y-2"></div>
         </div>
       </div>
     </div>
@@ -549,15 +557,15 @@
   </div>
 
   <div class="flex border-b border-gray-200 px-4 flex-shrink-0 overflow-x-auto">
-    <button class="tab-btn active" data-tab="info"    onclick="switchTab('info')">ข้อมูลบริษัท</button>
-    <button class="tab-btn hidden" data-tab="billing" onclick="switchTab('billing')" id="tab-btn-billing">ใบแจ้งหนี้</button>
-    <button class="tab-btn hidden" data-tab="creds"   onclick="switchTab('creds')"   id="tab-btn-creds">ล็อกอิน/รหัสผ่าน</button>
-    <button class="tab-btn"        data-tab="history" onclick="switchTab('history')">ประวัติงาน</button>
+    <button class="tab-btn active" data-tab="info"    onclick="switchTab('info')"    id="tab-btn-info">ข้อมูลทั่วไป</button>
+    <button class="tab-btn"        data-tab="changes" onclick="switchTab('changes')" id="tab-btn-changes">การเปลี่ยนแปลง</button>
+    <button class="tab-btn"        data-tab="creds"   onclick="switchTab('creds')"   id="tab-btn-creds">รหัสผ่าน</button>
+    <button class="tab-btn"        data-tab="history" onclick="switchTab('history')" id="tab-btn-history">ประวัติงาน</button>
   </div>
 
   <div class="flex-1 overflow-y-auto px-6 py-5">
     <div class="tab-pane" data-pane="info"></div>
-    <div class="tab-pane hidden" data-pane="billing"></div>
+    <div class="tab-pane hidden" data-pane="changes"></div>
     <div class="tab-pane hidden" data-pane="creds"></div>
     <div class="tab-pane hidden" data-pane="history"></div>
   </div>
@@ -581,7 +589,7 @@ const sb = supabase.createClient(SB_URL, SB_ANON);
 
 const THAI_MONTHS = ['','มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม',
   'มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-const ROLE_LABEL = { owner:'เจ้าของ', senior:'พนักงานอาวุโส', staff:'พนักงาน' };
+const ROLE_LABEL = { owner:'เจ้าของ (LV1)', manager:'ผู้จัดการ (LV2)', senior:'พนักงานอาวุโส (LV3)', junior:'พนักงาน (LV4)', parttime:'พาร์ทไทม์/ฝึกงาน (LV5)' };
 const FIELDS = ['rd_download','rd_keyed'];
 const YE_FIELDS = ['pnd51','pnd1k','kt26k','pnd50','fin_stmt','audit','dbd_submit','boj5'];
 const GROUP_ITEMS = {
@@ -655,11 +663,20 @@ let yearEndLoaded = false;
 let panelClientId = null;
 let panelTab     = 'info';
 let panelDirty   = false;
+let panelOrigin  = 'full'; // 'full' (opened from ลูกค้า page) or 'limited' (tracking/yearend)
 
-const role    = () => profile?.role || 'staff';
-const canEdit = () => role() !== 'staff';
-const canCred = () => role() !== 'staff';
-const isOwner = () => role() === 'owner';
+// LV1 = owner (highest) ... LV5 = parttime (lowest)
+const ROLE_LEVEL = { owner: 1, manager: 2, senior: 3, junior: 4, parttime: 5 };
+const role      = () => profile?.role || 'parttime';
+const myLevel   = () => ROLE_LEVEL[role()] || 5;
+const isOwner   = () => myLevel() <= 1;                 // LV1
+const canManageStaff = () => myLevel() <= 2;             // LV1-2: reset/deactivate/reactivate staff
+const canAddStaff    = () => myLevel() <= 3;             // LV1-3: add new staff
+const canSeeAuditLog = () => myLevel() <= 2;             // LV1-2
+const canEdit   = () => myLevel() <= 3;                  // LV1-3: tax tasks, invoices, changes tab
+const canEditBasic  = () => myLevel() <= 3;              // LV1-3: basic info + credentials edit
+const canSeeServiceDates = () => myLevel() <= 3;          // LV1-3: registration/start/end date fields
+const canCred   = () => true;                            // everyone can view credentials (read-only below LV3)
 
 // ─────────────────────────────────────────────────────────────
 // UTILITIES
@@ -674,6 +691,12 @@ function showToast(msg, type = 'success') {
   t.style.color = 'white';
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 3000);
+}
+async function logActivity(action, entityType, entityId, summary) {
+  await sb.from('crm_activity_log').insert({
+    actor_id: profile?.id, actor_role: role(),
+    action, entity_type: entityType, entity_id: String(entityId), summary,
+  });
 }
 function statusDot(v) {
   if (v === 'done') return '<span class="dot done">✓</span>';
@@ -838,9 +861,11 @@ async function init() {
   document.getElementById('user-name').textContent        = prof.display_name;
   document.getElementById('user-initial').textContent     = prof.display_name[0] || '?';
   document.getElementById('user-role-badge').textContent  = ROLE_LABEL[prof.role] || prof.role;
-  if (isOwner()) document.getElementById('nav-staff').classList.remove('hidden');
+  if (canAddStaff()) document.getElementById('nav-staff').classList.remove('hidden');
+  if (canAddStaff()) document.getElementById('add-staff-btn').classList.remove('hidden');
   if (isOwner()) document.getElementById('add-client-btn').classList.remove('hidden');
   if (isOwner()) document.getElementById('own-company-section').classList.remove('hidden');
+  if (canSeeAuditLog()) document.getElementById('activity-log-section').classList.remove('hidden');
   if (canEdit()) {
     const bib = document.getElementById('batch-inv-btn');
     bib.classList.remove('hidden');
@@ -929,7 +954,10 @@ function navigate(p) {
   else if (p === 'clients') renderClientList();
   else if (p === 'staff') loadStaff().then(renderStaff);
   else if (p === 'dashboard') loadDashboard();
-  else if (p === 'settings' && isOwner()) renderOwnCompanies();
+  else if (p === 'settings') {
+    if (isOwner()) renderOwnCompanies();
+    if (canSeeAuditLog()) renderActivityLog();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1456,27 +1484,33 @@ function renderStaff() {
   const el = document.getElementById('staff-list');
   if (!el) return;
   if (!staffList.length) { el.innerHTML = '<div class="text-gray-400 text-sm">ยังไม่มีพนักงานในระบบ</div>'; return; }
-  el.innerHTML = staffList.map(s => `
+  const badgeColor = lvl => lvl <= 1 ? 'amber' : lvl <= 2 ? 'purple' : lvl <= 3 ? 'blue' : 'slate';
+  el.innerHTML = staffList.map(s => {
+    const lvl = ROLE_LEVEL[s.role] || 5;
+    const col = badgeColor(lvl);
+    return `
     <div class="bg-white border border-gray-200 rounded-xl px-5 py-4 flex items-center gap-4">
-      <div class="w-10 h-10 bg-${s.role==='owner'?'amber':s.role==='senior'?'blue':'slate'}-100 rounded-full flex items-center justify-center flex-shrink-0">
-        <span class="text-${s.role==='owner'?'amber':s.role==='senior'?'blue':'slate'}-700 text-sm font-bold">${(s.display_name||'?')[0]}</span>
+      <div class="w-10 h-10 bg-${col}-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <span class="text-${col}-700 text-sm font-bold">${(s.display_name||'?')[0]}</span>
       </div>
       <div class="flex-1 min-w-0">
         <div class="font-semibold text-gray-900">${e(s.display_name)}</div>
         <div class="text-xs text-gray-400">@${e(s.username)}</div>
       </div>
       <div class="flex items-center gap-2">
-        <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${s.role==='owner'?'bg-amber-50 text-amber-700':s.role==='senior'?'bg-blue-50 text-blue-700':'bg-gray-100 text-gray-600'}">
+        <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-${col}-50 text-${col}-700">
           ${ROLE_LABEL[s.role]||s.role}
         </span>
-        ${!s.is_active ? '<span class="text-xs bg-red-50 text-red-500 px-2.5 py-1 rounded-full font-semibold">ปิดใช้งาน</span>' : ''}
-        <button onclick="editStaff(${JSON.stringify(s).replace(/"/g,'&quot;')})"
-          class="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors">แก้ไข</button>
+        ${!s.is_active ? '<span class="text-xs bg-red-50 text-red-500 px-2.5 py-1 rounded-full font-semibold">เลิกจ้าง</span>' : ''}
+        ${canManageStaff() ? `<button onclick="editStaff(${JSON.stringify(s).replace(/"/g,'&quot;')})"
+          class="text-xs text-blue-600 hover:text-blue-800 font-semibold px-2 py-1 rounded hover:bg-blue-50 transition-colors">แก้ไข</button>` : ''}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 function showAddStaffGuide() {
+  if (!canAddStaff()) return;
   openModal(`
     <h3 class="text-base font-bold text-gray-900 mb-3">เพิ่มพนักงานใหม่</h3>
     <div class="space-y-3 text-sm text-gray-700">
@@ -1496,6 +1530,7 @@ function showAddStaffGuide() {
 }
 
 function editStaff(s) {
+  if (!canManageStaff()) return;
   openModal(`
     <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขพนักงาน: ${e(s.display_name)}</h3>
     <div class="space-y-4">
@@ -1504,13 +1539,19 @@ function editStaff(s) {
           class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
       <div><label class="block text-sm font-semibold text-gray-700 mb-1.5">สิทธิ์</label>
         <select id="edit-staff-role" class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="owner"  ${s.role==='owner'?'selected':''}>เจ้าของ</option>
-          <option value="senior" ${s.role==='senior'?'selected':''}>พนักงานอาวุโส</option>
-          <option value="staff"  ${s.role==='staff'?'selected':''}>พนักงาน</option>
+          <option value="owner"    ${s.role==='owner'?'selected':''}>เจ้าของ (LV1)</option>
+          <option value="manager"  ${s.role==='manager'?'selected':''}>ผู้จัดการ (LV2)</option>
+          <option value="senior"   ${s.role==='senior'?'selected':''}>พนักงานอาวุโส (LV3)</option>
+          <option value="junior"   ${s.role==='junior'?'selected':''}>พนักงาน (LV4)</option>
+          <option value="parttime" ${s.role==='parttime'?'selected':''}>พาร์ทไทม์/ฝึกงาน (LV5)</option>
         </select></div>
       <div class="flex items-center gap-2">
         <input id="edit-staff-active" type="checkbox" ${s.is_active?'checked':''} class="w-4 h-4 rounded text-blue-600">
-        <label class="text-sm text-gray-700">ใช้งานอยู่</label>
+        <label class="text-sm text-gray-700">ยังทำงานอยู่ (ยกเลิก = เลิกจ้าง แต่ยังเห็นในระบบ ปรับกลับมาทำงานได้ภายหลัง)</label>
+      </div>
+      <div class="pt-3 border-t border-gray-100">
+        <button onclick="resetStaffPassword('${s.id}','${e(s.display_name)}')"
+          class="text-xs text-amber-600 hover:text-amber-800 font-semibold px-2 py-1 rounded hover:bg-amber-50 transition-colors">รีเซ็ทรหัสผ่าน</button>
       </div>
     </div>
     <div class="flex justify-end gap-2 mt-6">
@@ -1519,13 +1560,31 @@ function editStaff(s) {
     </div>`);
 }
 
+function resetStaffPassword(staffId, displayName) {
+  showToast('ฟีเจอร์นี้ต้องตั้งค่า Supabase Edge Function ก่อน (อยู่ระหว่างดำเนินการ)', 'error');
+}
+
 async function saveStaff(staffId) {
+  if (!canManageStaff()) return;
   const name   = document.getElementById('edit-staff-name').value.trim();
   const role2  = document.getElementById('edit-staff-role').value;
   const active = document.getElementById('edit-staff-active').checked;
   if (!name) { showToast('กรุณากรอกชื่อ', 'error'); return; }
+
+  const before = staffList.find(x => x.id === staffId);
   const { error } = await sb.from('crm_staff').update({ display_name: name, role: role2, is_active: active }).eq('id', staffId);
   if (error) { showToast('บันทึกไม่สำเร็จ', 'error'); return; }
+
+  if (before && before.is_active && !active) {
+    await logActivity('staff_deactivate', 'staff', staffId, `เลิกจ้าง ${name}`);
+  } else if (before && !before.is_active && active) {
+    await logActivity('staff_reactivate', 'staff', staffId, `ปรับ ${name} กลับมาทำงาน`);
+  } else if (before && before.role !== role2) {
+    await logActivity('staff_role_change', 'staff', staffId, `เปลี่ยนสิทธิ์ ${name}: ${ROLE_LABEL[before.role]||before.role} → ${ROLE_LABEL[role2]||role2}`);
+  } else {
+    await logActivity('staff_update', 'staff', staffId, `แก้ไขข้อมูล ${name}`);
+  }
+
   closeModal(); showToast('บันทึกสำเร็จ');
   await loadStaff(); renderStaff();
 }
@@ -1570,14 +1629,18 @@ async function openPanel(clientId) {
   const c = clients.find(x => x.id === clientId);
   if (!c) return;
 
+  panelOrigin = (curPage === 'tracking' || curPage === 'yearend') ? 'limited' : 'full';
+
   document.getElementById('panel-code').textContent = c.code;
   document.getElementById('panel-name').textContent = c.thai_name;
   document.getElementById('panel-overlay').classList.remove('hidden');
   document.getElementById('client-panel').style.transform = 'translateX(0)';
 
-  document.getElementById('tab-btn-billing').classList.toggle('hidden', !canEdit());
+  const isLimited = panelOrigin === 'limited';
+  document.getElementById('tab-btn-changes').classList.toggle('hidden', isLimited);
+  document.getElementById('tab-btn-history').classList.toggle('hidden', isLimited);
   document.getElementById('tab-btn-creds').classList.toggle('hidden', !canCred());
-  document.getElementById('panel-deactivate-btn').classList.toggle('hidden', !isOwner());
+  document.getElementById('panel-deactivate-btn').classList.toggle('hidden', !isOwner() || isLimited);
 
   switchTab('info');
 }
@@ -1630,8 +1693,10 @@ function confirmHardDeleteClient() {
 async function doDeactivateClient() {
   closeModal();
   const id = panelClientId;
+  const c = clients.find(x => x.id === id);
   const { error } = await sb.from('crm_clients').update({ is_active: false }).eq('id', id);
   if (error) { showToast('เกิดข้อผิดพลาด: ' + error.message, 'error'); return; }
+  await logActivity('client_deactivate', 'client', id, `ปิดใช้งานลูกค้า ${c?.thai_name||''}`);
   clients = clients.filter(x => x.id !== id);
   closePanel();
   showToast('ปิดใช้งานลูกค้าแล้ว');
@@ -1643,8 +1708,10 @@ async function doHardDeleteClient(expectedCode) {
   if (typed !== expectedCode) { showToast('รหัสลูกค้าไม่ถูกต้อง', 'error'); return; }
   closeModal();
   const id = panelClientId;
+  const c = clients.find(x => x.id === id);
   const { error } = await sb.from('crm_clients').delete().eq('id', id);
   if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  await logActivity('client_delete', 'client', id, `ลบถาวร ${c?.thai_name||''} (${expectedCode})`);
   clients = clients.filter(x => x.id !== id);
   delete invoiceMap[id];
   delete taskMap[id];
@@ -1658,8 +1725,9 @@ async function deleteChangeLog(logId) {
   if (!confirm('ต้องการลบรายการนี้ใช่หรือไม่?')) return;
   const { error } = await sb.from('crm_client_change_log').delete().eq('id', logId);
   if (error) { showToast('ลบไม่สำเร็จ: ' + error.message, 'error'); return; }
+  await logActivity('client_change_delete', 'client_change_log', logId, `ลบรายการเปลี่ยนแปลง #${logId}`);
   showToast('ลบรายการแล้ว');
-  renderPanelHistory();
+  renderPanelChanges();
 }
 
 async function deleteInvoice(invId) {
@@ -1687,7 +1755,7 @@ function switchTab(tab) {
   document.getElementById('panel-save-bar').classList.add('hidden');
   panelDirty = false;
   if (tab === 'info')    renderPanelInfo();
-  if (tab === 'billing') renderPanelBilling();
+  if (tab === 'changes') renderPanelChanges();
   if (tab === 'creds')   renderPanelCreds();
   if (tab === 'history') renderPanelHistory();
 }
@@ -1696,8 +1764,7 @@ function switchTab(tab) {
 function renderPanelInfo() {
   const c = clients.find(x => x.id === panelClientId);
   if (!c) return;
-  const ro = !isOwner();
-  const roBill = !canEdit();
+  const ro = !canEditBasic(); // LV1-3 can edit, LV4-5 read-only
 
   const tf = (label, key, val) => `
     <div>
@@ -1707,71 +1774,126 @@ function renderPanelInfo() {
         ${ro ? '' : 'oninput="markDirty()"'}>
     </div>`;
 
-  const tfBill = (label, key, val) => `
+  const dtField = (label, key, val) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <input type="text" value="${e(val)}" ${roBill ? 'readonly' : ''} data-key="${key}"
+      <input type="date" value="${e(val)}" ${ro ? 'readonly disabled' : ''} data-key="${key}"
         class="editable-field w-full text-sm text-gray-800"
-        ${roBill ? '' : 'oninput="markDirty()"'}>
+        ${ro ? '' : 'oninput="markDirty()"'}>
     </div>`;
 
-  const selectField = (label, key, val, options, useRo) => `
-    <div>
-      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <select data-key="${key}" ${useRo ? 'disabled' : ''} onchange="${useRo ? '' : 'markDirty()'}"
-        class="select-field text-sm text-gray-800">
-        ${options.map(([v,l]) => `<option value="${v}" ${val===v?'selected':''}>${l}</option>`).join('')}
-      </select>
-    </div>`;
-
-  const numField = (label, key, val, useRo) => `
-    <div>
-      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <input type="number" value="${val || 0}" min="0" step="100" ${useRo ? 'readonly' : ''} data-key="${key}"
-        class="editable-field w-full text-sm text-gray-800"
-        ${useRo ? '' : 'oninput="markDirty()"'}>
-    </div>`;
-
-  const chkField = (label, key, val, useRo) => `
-    <div class="flex items-center gap-2 pt-4">
-      <input type="checkbox" data-key="${key}" ${val ? 'checked' : ''} ${useRo ? 'disabled' : ''}
-        onchange="${useRo ? '' : 'markDirty()'}" class="w-4 h-4 rounded text-blue-600 flex-shrink-0">
-      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">${label}</div>
-    </div>`;
-
-  const taField = (label, key, val, rows, useRo, ph='') => `
+  const taField = (label, key, val, rows, ph='') => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
       <textarea data-key="${key}" rows="${rows}" placeholder="${ph}"
-        ${useRo ? 'readonly' : 'oninput="markDirty()"'}
+        ${ro ? 'readonly' : 'oninput="markDirty()"'}
         class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
       >${e(val)}</textarea>
     </div>`;
 
-  const codePrefix = (c.code || '').match(/^([A-Z]+)/)?.[1] || '';
-  const clientNoDisplay = c.code
-    ? `<div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
-         <span class="text-blue-700 font-bold text-sm">${e(c.code)}</span>
-         <span class="text-blue-400 text-xs">${e(CLIENT_TYPE_MAP[codePrefix]||'')}</span>
-       </div>`
-    : `<span class="text-xs text-gray-300 italic">ยังไม่ได้กำหนด</span>`;
+  const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
+  const showServiceDates = panelOrigin === 'full' && canSeeServiceDates();
 
-  const vatBadge = c.has_vat !== false
-    ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">มี VAT (PP.30)</span>`
-    : `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400 border border-gray-200">ไม่มี VAT</span>`;
-  const ssoBadge = c.has_sso !== false
-    ? `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">มี SSO</span>`
-    : `<span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-400 border border-gray-200">ไม่มี SSO</span>`;
+  paneEl('info').innerHTML = `
+    <div id="panel-info-fields">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">NO.</div>
+          <div class="text-sm text-gray-500 py-2">${seqNum || '—'}</div>
+        </div>
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">CODE</div>
+          <div class="flex gap-1.5 items-center">
+            <input type="text" value="${e(c.code)}" ${ro ? 'readonly' : ''} data-key="code"
+              class="editable-field flex-1 text-sm text-gray-800" ${ro ? '' : 'oninput="markDirty()"'}>
+            ${ro ? '' : `<button onclick="suggestCode()" class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0">แนะนำ</button>`}
+          </div>
+        </div>
+        <div class="col-span-2">
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">BUSINESS TYPE</div>
+          <select data-key="type" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
+            class="select-field text-sm text-gray-800">
+            <option value="">-- เลือก --</option>
+            ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-span-2">${tf('NAME (ไทย)', 'thai_name', c.thai_name)}</div>
+        <div class="col-span-2">${tf('NAME (English)', 'eng_name', c.eng_name||'')}</div>
+        ${tf('TAX ID', 'tax_id', c.tax_id || c.tax_number || '')}
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Type of Operation</div>
+          <select data-key="category" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
+            class="select-field text-sm text-gray-800">
+            <option value="">-- เลือก --</option>
+            ${BUSINESS_CATEGORIES.map(cat => `<option value="${e(cat)}" ${(c.category||'')==cat?'selected':''}>${e(cat)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-span-2">${taField('ADDRESS', 'address', c.address||'', 2, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
+        ${showServiceDates ? `
+          ${tf('Registration date', 'registration_date', c.registration_date||'')}
+          <div></div>
+          ${dtField('Service start Month', 'start_date', c.start_date || '')}
+          ${dtField('Service End Month', 'end_date', c.end_date || '')}
+        ` : ''}
+        <div class="col-span-2">${taField('NOTE', 'notes', c.notes||'', 2)}</div>
+      </div>
+      ${ro ? '<p class="text-xs text-gray-400 mt-3">แก้ไขได้เฉพาะ เจ้าของ / ผู้จัดการ / พนักงานอาวุโส (LV1-3)</p>' : ''}
+    </div>`;
+}
 
-  const categoryOpts = BUSINESS_CATEGORIES.map(cat =>
-    `<option value="${e(cat)}" ${(c.category||'')==cat?'selected':''}>${e(cat)}</option>`).join('');
+async function savePanelInfo() {
+  const fields = {};
+  document.querySelectorAll('#panel-info-fields [data-key]').forEach(el => {
+    if (el.disabled || el.readOnly) return;
+    if (el.tagName === 'SELECT') { fields[el.dataset.key] = el.value; }
+    else if (el.type === 'checkbox') { fields[el.dataset.key] = el.checked; }
+    else if (el.type === 'number') { fields[el.dataset.key] = parseFloat(el.value) || 0; }
+    else if (el.dataset.type === 'linelist') { fields[el.dataset.key] = el.value.split('\n').map(s=>s.trim()).filter(Boolean).join(','); }
+    else { fields[el.dataset.key] = el.value.trim(); }
+  });
+  if (fields.tax_id !== undefined) { fields.tax_number = fields.tax_id; delete fields.tax_id; }
+  ['start_date', 'end_date'].forEach(f => { if (f in fields && fields[f] === '') fields[f] = null; });
+
+  if (!Object.keys(fields).length) {
+    panelDirty = false;
+    document.getElementById('panel-save-bar').classList.add('hidden');
+    return;
+  }
+
+  const { error } = await sb.from('crm_clients').update(fields).eq('id', panelClientId);
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+
+  const idx = clients.findIndex(x => x.id === panelClientId);
+  if (idx !== -1) Object.assign(clients[idx], fields);
+  if (fields.thai_name) document.getElementById('panel-name').textContent = fields.thai_name;
+  await logActivity('client_info_update', 'client', panelClientId, `แก้ไขข้อมูลทั่วไป: ${Object.keys(fields).join(', ')}`);
+  panelDirty = false;
+  document.getElementById('panel-save-bar').classList.add('hidden');
+  showToast('บันทึกสำเร็จ');
+}
+
+// ── Changes Tab ──
+let panelChangesCache = [];
+
+async function renderPanelChanges() {
+  const el = paneEl('changes');
+  if (!el) return;
+  el.innerHTML = '<div class="text-gray-400 text-sm py-4">กำลังโหลด…</div>';
+
+  const { data } = await sb.from('crm_client_change_log')
+    .select('*').eq('client_id', panelClientId)
+    .order('change_date', { ascending: false }).order('created_at', { ascending: false });
+  panelChangesCache = data || [];
+
+  const CHANGE_TYPE_LABEL = {};
+  CHANGE_TYPES.forEach(t => { CHANGE_TYPE_LABEL[t.key] = t.label; });
 
   const changeTypeOpts = CHANGE_TYPES.map(ct =>
     `<option value="${e(ct.key)}">${e(ct.label)}</option>`).join('');
 
-  const changeSection = canEdit() ? `
-    <div class="border-t border-gray-100 pt-4 mt-4">
-      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">บันทึกการเปลี่ยนแปลง</div>
+  const formSection = canEdit() ? `
+    <div class="mb-5 pb-5 border-b border-gray-100">
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">เพิ่มการเปลี่ยนแปลง</div>
       <div class="space-y-3">
         <div>
           <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทการเปลี่ยนแปลง</div>
@@ -1804,142 +1926,91 @@ function renderPanelInfo() {
       </div>
     </div>` : '';
 
-  paneEl('info').innerHTML = `
-    <div id="panel-info-fields">
+  const rows = panelChangesCache.length ? panelChangesCache.map((ch, i) => `
+    <tr class="border-b border-gray-50">
+      <td class="py-2 pr-2 text-xs text-gray-400 tabular-nums">${panelChangesCache.length - i}</td>
+      <td class="py-2 pr-2 text-xs text-gray-800">
+        <span class="font-semibold">${e(CHANGE_TYPE_LABEL[ch.change_type] || ch.change_type)}</span>
+        ${ch.new_value ? `<span class="text-blue-700"> → ${e(ch.new_value)}</span>` : ''}
+        ${ch.note ? `<div class="text-gray-400 mt-0.5">${e(ch.note)}</div>` : ''}
+      </td>
+      <td class="py-2 pr-2 text-xs text-gray-500 whitespace-nowrap">${ch.change_date ? thaiDate(ch.change_date) : '—'}</td>
+      <td class="py-2 text-right whitespace-nowrap">
+        ${canEdit() ? `
+          <button onclick="editChangeLog(${ch.id})" class="text-xs text-blue-600 hover:text-blue-800 font-semibold px-1.5 py-0.5 rounded hover:bg-blue-50 transition-colors">แก้ไข</button>
+          <button onclick="deleteChangeLog(${ch.id})" class="text-xs text-red-500 hover:text-red-700 font-semibold px-1.5 py-0.5 rounded hover:bg-red-50 transition-colors">ลบ</button>
+        ` : '<span class="text-gray-300 text-xs">—</span>'}
+      </td>
+    </tr>`).join('') : `<tr><td colspan="4" class="py-6 text-center text-gray-400 text-xs">ยังไม่มีรายการเปลี่ยนแปลง</td></tr>`;
 
-      <!-- ข้อมูลพื้นฐาน (owner-only) -->
-      <div class="mb-5 pb-4 border-b border-gray-100">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ข้อมูลพื้นฐาน</div>
-        <div class="mb-4">
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">รหัสลูกค้า</div>
-          <div class="flex items-center gap-3">
-            ${clientNoDisplay}
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">CODE (ชื่อเรียก)</div>
-            <div class="flex gap-1.5 items-center">
-              <input type="text" value="${e(c.code)}" ${ro ? 'readonly' : ''} data-key="code"
-                class="editable-field flex-1 text-sm text-gray-800" ${ro ? '' : 'oninput="markDirty()"'}>
-              ${ro ? '' : `<button onclick="suggestCode()" class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0">แนะนำ</button>`}
-            </div>
-          </div>
-          <div>
-            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทนิติบุคคล</div>
-            <select data-key="type" ${ro ? 'disabled' : ''} onchange="${ro ? '' : 'markDirty()'}"
-              class="select-field text-sm text-gray-800">
-              <option value="">-- เลือก --</option>
-              ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="col-span-2">${tf('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
-          <div class="col-span-2">${tf('ชื่อบริษัท (อังกฤษ)', 'eng_name', c.eng_name||'')}</div>
-          ${tf('เลขผู้เสียภาษี', 'tax_id', c.tax_id || c.tax_number || '')}
-          <div></div>
-          <div class="col-span-2">${taField('ที่อยู่', 'address', c.address||'', 2, ro, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
-          ${tf('วันที่จดทะเบียน', 'registration_date', c.registration_date||'')}
-          ${tf('วันที่เริ่มให้บริการ', 'start_date', c.start_date || '')}
-          ${tf('วันที่สิ้นสุดให้บริการ', 'end_date', c.end_date||'')}
-          <div class="col-span-2">${tf('หมายเหตุ', 'notes', c.notes||'')}</div>
-        </div>
-        ${ro ? '<p class="text-xs text-gray-400 mt-3">แก้ไขได้เฉพาะเจ้าของ</p>' : ''}
-      </div>
-
-      <!-- ข้อมูลทั่วไป (canEdit) -->
-      <div class="mb-5 pb-4 border-b border-gray-100">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ข้อมูลทั่วไป</div>
-        <div class="space-y-4">
-          <div>
-            <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทธุรกิจ</div>
-            <select data-key="category" ${roBill ? 'disabled' : ''} onchange="${roBill ? '' : 'markDirty()'}"
-              class="select-field text-sm text-gray-800">
-              <option value="">-- เลือก --</option>
-              ${categoryOpts}
-            </select>
-          </div>
-          ${tfBill('อีเมล (สำหรับใบเสร็จ)', 'client_email', c.client_email||'')}
-          ${tfBill('LINE Group ID', 'line_group_id', c.line_group_id||'')}
-        </div>
-      </div>
-
-      <!-- สถานะบริการปัจจุบัน (display only) -->
-      <div class="mb-5 pb-4 border-b border-gray-100">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">สถานะบริการปัจจุบัน</div>
-        <div class="flex flex-wrap items-center gap-3">
-          ${c.monthly_fee > 0
-            ? `<span class="text-sm font-bold text-gray-800">${fmtMoney(c.monthly_fee)}<span class="text-xs font-normal text-gray-400 ml-1">/เดือน</span></span>`
-            : `<span class="text-xs text-gray-300 italic">ยังไม่ได้กำหนดค่าบริการ</span>`}
-          ${vatBadge}
-          ${ssoBadge}
-        </div>
-      </div>
-
-      <!-- บันทึกการเปลี่ยนแปลง -->
-      ${changeSection}
-
-      <!-- การออกบิล (canEdit) -->
-      <div class="border-t border-gray-100 pt-4 mt-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">การออกบิล</div>
-        <div class="grid grid-cols-2 gap-4">
-          ${selectField('ประเภทการเรียกเก็บ','billing_type', c.billing_type||'monthly', [
-              ['monthly','รายเดือน (M)'],['annual','รายปี (Y)'],['filing','ยื่นแบบเปล่า (T)']
-            ], roBill)}
-          ${numField('ค่าบริการ (บาท/เดือน)', 'monthly_fee', c.monthly_fee, roBill)}
-          <div></div>
-          ${chkField('หัก ณ ที่จ่าย 3%', 'has_wht', c.has_wht !== false, roBill)}
-          ${chkField('มีที่ตั้งสำนักงานของตัวเอง', 'has_own_office', c.has_own_office !== false, roBill)}
-        </div>
-      </div>
-
-      <!-- FlowAccount & รายการเอกสาร (canEdit) -->
-      <div class="border-t border-gray-100 pt-4 mt-4">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">FlowAccount & เอกสาร</div>
-        <div class="space-y-4">
-          ${tfBill('FlowAccount Contact ID', 'fa_contact_id', c.fa_contact_id||'')}
-          <div>
-            <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รายการเอกสาร</div>
-            <div class="text-xs text-gray-400 mb-2">พิมพ์ทีละบรรทัด — ใช้ใน popup รับเอกสาร ถ้าว่างจะใช้รายการ default</div>
-            <textarea data-key="doc_item_templates" data-type="linelist"
-              ${roBill ? 'readonly' : 'oninput="markDirty()"'}
-              rows="5" placeholder="สลิปเงินเดือน&#10;ใบเสร็จค่าใช้จ่าย&#10;Statement ธนาคาร"
-              class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
-            >${e((c.doc_item_templates||'').split(',').filter(Boolean).join('\n'))}</textarea>
-          </div>
-        </div>
-      </div>
-
+  el.innerHTML = formSection + `
+    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ประวัติการเปลี่ยนแปลง</div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-100">
+            <th class="text-left pb-2 text-[10px] font-semibold text-gray-400 uppercase">NO</th>
+            <th class="text-left pb-2 text-[10px] font-semibold text-gray-400 uppercase">TYPE</th>
+            <th class="text-left pb-2 text-[10px] font-semibold text-gray-400 uppercase">Effective date</th>
+            <th class="text-right pb-2 text-[10px] font-semibold text-gray-400 uppercase">Edit/Remove</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
     </div>`;
 }
 
-async function savePanelInfo() {
-  const fields = {};
-  document.querySelectorAll('#panel-info-fields [data-key]').forEach(el => {
-    if (el.disabled || el.readOnly) return;
-    if (el.tagName === 'SELECT') { fields[el.dataset.key] = el.value; }
-    else if (el.type === 'checkbox') { fields[el.dataset.key] = el.checked; }
-    else if (el.type === 'number') { fields[el.dataset.key] = parseFloat(el.value) || 0; }
-    else if (el.dataset.type === 'linelist') { fields[el.dataset.key] = el.value.split('\n').map(s=>s.trim()).filter(Boolean).join(','); }
-    else { fields[el.dataset.key] = el.value.trim(); }
-  });
-  if (fields.tax_id !== undefined) { fields.tax_number = fields.tax_id; delete fields.tax_id; }
-  ['start_date', 'end_date'].forEach(f => { if (f in fields && fields[f] === '') fields[f] = null; });
+function editChangeLog(logId) {
+  if (!canEdit()) return;
+  const ch = panelChangesCache.find(x => x.id === logId);
+  if (!ch) return;
+  const typeOpts = CHANGE_TYPES.map(t => `<option value="${e(t.key)}" ${t.key===ch.change_type?'selected':''}>${e(t.label)}</option>`).join('');
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขรายการเปลี่ยนแปลง</h3>
+    <div class="space-y-3">
+      <div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทการเปลี่ยนแปลง</div>
+        <select id="edit-change-type" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm">
+          ${typeOpts}
+        </select>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">วันที่มีผล</div>
+        <input id="edit-change-date" type="date" value="${e(ch.change_date)}"
+          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm">
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ค่าใหม่</div>
+        <input id="edit-change-val" type="text" value="${e(ch.new_value)}"
+          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm">
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">หมายเหตุ</div>
+        <input id="edit-change-note" type="text" value="${e(ch.note)}"
+          class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm">
+      </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-6">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
+      <button onclick="saveEditChangeLog(${logId})" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">บันทึก</button>
+    </div>`);
+}
 
-  if (!Object.keys(fields).length) {
-    panelDirty = false;
-    document.getElementById('panel-save-bar').classList.add('hidden');
-    return;
-  }
+async function saveEditChangeLog(logId) {
+  const change_type = document.getElementById('edit-change-type').value;
+  const change_date = document.getElementById('edit-change-date').value;
+  const new_value   = document.getElementById('edit-change-val').value.trim();
+  const note        = document.getElementById('edit-change-note').value.trim();
+  if (!change_date) { showToast('กรุณาระบุวันที่มีผล', 'error'); return; }
 
-  const { error } = await sb.from('crm_clients').update(fields).eq('id', panelClientId);
+  const { error } = await sb.from('crm_client_change_log')
+    .update({ change_type, change_date, new_value, note }).eq('id', logId);
   if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
 
-  const idx = clients.findIndex(x => x.id === panelClientId);
-  if (idx !== -1) Object.assign(clients[idx], fields);
-  if (fields.thai_name) document.getElementById('panel-name').textContent = fields.thai_name;
-  panelDirty = false;
-  document.getElementById('panel-save-bar').classList.add('hidden');
+  await logActivity('client_change_edit', 'client_change_log', logId, `แก้ไขรายการเปลี่ยนแปลง #${logId}`);
+  closeModal();
   showToast('บันทึกสำเร็จ');
+  renderPanelChanges();
 }
 
 function renderChangeValInput() {
@@ -2011,10 +2082,12 @@ async function applyClientChange() {
     if (updates.thai_name) document.getElementById('panel-name').textContent = updates.thai_name;
   }
 
+  await logActivity('client_change_add', 'client', panelClientId, `บันทึกการเปลี่ยนแปลง: ${CHANGE_TYPES.find(t=>t.key===ct)?.label||ct}${newValue?` → ${newValue}`:''}`);
+
   showToast('บันทึกการเปลี่ยนแปลงสำเร็จ');
   panelDirty = false;
   document.getElementById('panel-save-bar').classList.add('hidden');
-  renderPanelInfo();
+  renderPanelChanges();
 }
 
 // ── Billing Tab ──
@@ -2239,6 +2312,21 @@ async function confirmMarkPaid(clientId) {
 }
 
 // ── Creds Tab ──
+function maskCredVal(v) { return v ? '•'.repeat(Math.min(v.length, 20)) : '—'; }
+
+function toggleCredView(btn) {
+  const span = btn.previousElementSibling;
+  const masked = span.dataset.masked !== 'false';
+  span.textContent = masked ? (span.dataset.val || '—') : maskCredVal(span.dataset.val);
+  span.dataset.masked = masked ? 'false' : 'true';
+}
+
+function copyCredValue(span) {
+  const val = span.dataset.val;
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(() => showToast('คัดลอกแล้ว'));
+}
+
 function renderPanelCreds() {
   if (!canCred()) {
     paneEl('creds').innerHTML = `<div class="text-center py-12 text-gray-400">
@@ -2247,20 +2335,33 @@ function renderPanelCreds() {
     return;
   }
   const cred = credMap[panelClientId] || {};
-  const ro   = !isOwner();
+  const editable = canEditBasic() && panelOrigin === 'full';
 
-  const credField = (label, key, val) => `
+  const credFieldEdit = (label, key, val) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
       <div class="relative">
-        <input type="password" value="${e(val)}" ${ro ? 'readonly' : ''} data-key="${key}"
-          class="editable-field w-full text-sm text-gray-800 pr-8"
-          ${ro ? '' : 'oninput="markDirty()"'}>
+        <input type="password" value="${e(val)}" data-key="${key}"
+          class="editable-field w-full text-sm text-gray-800 pr-8" oninput="markDirty()">
         <button type="button" onclick="togglePw(this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
       </div>
     </div>`;
+
+  const credFieldView = (label, key, val) => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <div class="flex items-center gap-1.5">
+        <span class="cred-view-val flex-1 px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-700 font-mono truncate cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors"
+          title="คลิกเพื่อคัดลอก" data-val="${e(val)}" data-masked="true" onclick="copyCredValue(this)">${maskCredVal(val)}</span>
+        <button type="button" onclick="toggleCredView(this)" class="text-gray-300 hover:text-gray-600 flex-shrink-0 p-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>`;
+
+  const credField = editable ? credFieldEdit : credFieldView;
 
   paneEl('creds').innerHTML = `
     <div id="panel-cred-fields" class="space-y-5">
@@ -2289,12 +2390,12 @@ function renderPanelCreds() {
         ${credField('Username','kys_username', cred.kys_username)}
         ${credField('Password','kys_password', cred.kys_password)}
       </div>
-      ${ro ? '<p class="text-xs text-gray-400 text-center mt-2">พนักงานอาวุโสดูได้ · เจ้าของเท่านั้นที่แก้ไขได้</p>' : ''}
+      ${!editable ? `<p class="text-xs text-gray-400 text-center mt-2">คลิกที่ช่องเพื่อคัดลอก${canEditBasic() ? ' · แก้ไขได้ที่หน้าลูกค้า' : ' · แก้ไขได้เฉพาะ เจ้าของ / ผู้จัดการ / พนักงานอาวุโส'}</p>` : ''}
     </div>`;
 }
 
 async function savePanelCreds() {
-  if (!isOwner()) return;
+  if (!canEditBasic() || panelOrigin !== 'full') return;
   const fields = { client_id: panelClientId };
   document.querySelectorAll('#panel-cred-fields input[data-key]').forEach(inp => {
     fields[inp.dataset.key] = inp.value;
@@ -2302,6 +2403,7 @@ async function savePanelCreds() {
   const { error } = await sb.from('crm_client_credentials').upsert(fields, { onConflict: 'client_id' });
   if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
   credMap[panelClientId] = fields;
+  await logActivity('client_creds_update', 'client', panelClientId, `แก้ไขรหัสผ่านเข้าระบบ`);
   panelDirty = false;
   document.getElementById('panel-save-bar').classList.add('hidden');
   showToast('บันทึกสำเร็จ');
@@ -2343,32 +2445,6 @@ async function renderPanelHistory() {
     return before.length ? before[0].new_value : c.thai_name;
   }
 
-  const CHANGE_TYPE_LABEL = {};
-  CHANGE_TYPES.forEach(t => { CHANGE_TYPE_LABEL[t.key] = t.label; });
-
-  let changeLogHtml = '';
-  if (changeLog?.length) {
-    changeLogHtml = `
-      <div class="mb-5 pb-4 border-b border-gray-100">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ประวัติการเปลี่ยนแปลง</div>
-        <div class="space-y-2.5">
-          ${changeLog.map(ch => {
-            const label = CHANGE_TYPE_LABEL[ch.change_type] || ch.change_type;
-            const valueStr = ch.new_value ? ` → <span class="text-blue-700 font-semibold">${e(ch.new_value)}</span>` : '';
-            const noteStr = ch.note ? `<span class="text-gray-400 ml-1">· ${e(ch.note)}</span>` : '';
-            const delBtn = canEdit() ? `<button onclick="deleteChangeLog(${ch.id})" class="ml-1 text-gray-300 hover:text-red-500 transition-colors text-xs leading-none flex-shrink-0" title="ลบ">✕</button>` : '';
-            return `<div class="flex gap-3 items-start">
-              <div class="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0"></div>
-              <div class="flex-1 min-w-0">
-                <div class="text-xs text-gray-700 flex items-start gap-1"><span><span class="font-semibold">${e(label)}</span>${valueStr}${noteStr}</span>${delBtn}</div>
-                <div class="text-[10px] text-gray-400 mt-0.5">${ch.change_date ? thaiDate(ch.change_date) : ''}</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-  }
-
   const hasVat = c.has_vat !== false, hasSso = c.has_sso !== false;
   const monthCards = months.map(({ y: my, m: mm }) => {
     const t = tasksByMonth[`${my}-${mm}`];
@@ -2405,7 +2481,7 @@ async function renderPanelHistory() {
     </div>`;
   }).join('');
 
-  el.innerHTML = changeLogHtml +
+  el.innerHTML =
     `<div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ประวัติงานรายเดือน</div>` +
     monthCards;
 }
@@ -2675,6 +2751,49 @@ function renderOwnCompanies() {
         <span class="text-sm text-gray-800">${e(c.thai_name)}</span>
       </div>
       ${!c.is_active ? '<span class="text-xs text-red-500 flex-shrink-0">ปิดใช้งาน</span>' : ''}
+    </div>`).join('');
+}
+
+const ACTIVITY_ACTION_LABEL = {
+  client_info_update: 'แก้ไขข้อมูลทั่วไป',
+  client_change_add: 'เพิ่มการเปลี่ยนแปลง',
+  client_change_edit: 'แก้ไขการเปลี่ยนแปลง',
+  client_change_delete: 'ลบการเปลี่ยนแปลง',
+  client_creds_update: 'แก้ไขรหัสผ่านเข้าระบบ',
+  client_deactivate: 'ปิดใช้งานลูกค้า',
+  client_delete: 'ลบลูกค้าถาวร',
+  staff_update: 'แก้ไขพนักงาน',
+  staff_role_change: 'เปลี่ยนสิทธิ์พนักงาน',
+  staff_deactivate: 'เลิกจ้างพนักงาน',
+  staff_reactivate: 'ปรับพนักงานกลับมาทำงาน',
+};
+
+async function renderActivityLog() {
+  const el = document.getElementById('activity-log-list');
+  if (!el || !canSeeAuditLog()) return;
+  el.innerHTML = '<div class="text-xs text-gray-400 py-2">กำลังโหลด…</div>';
+
+  if (!staffList.length) await loadStaff();
+
+  const { data, error } = await sb.from('crm_activity_log')
+    .select('*').order('created_at', { ascending: false }).limit(100);
+  if (error) { el.innerHTML = `<div class="text-xs text-red-500 py-2">โหลดไม่สำเร็จ: ${e(error.message)}</div>`; return; }
+  if (!data?.length) { el.innerHTML = '<div class="text-xs text-gray-400 py-2">ยังไม่มีข้อมูล</div>'; return; }
+
+  const staffName = id => staffList.find(s => s.id === id)?.display_name || 'ไม่ทราบชื่อ';
+
+  el.innerHTML = data.map(a => `
+    <div class="flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0">
+      <div class="w-1.5 h-1.5 rounded-full bg-indigo-400 mt-1.5 flex-shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs text-gray-700">
+          <span class="font-semibold">${e(staffName(a.actor_id))}</span>
+          <span class="text-gray-400"> (${e(ROLE_LABEL[a.actor_role]||a.actor_role)})</span>
+          — ${e(ACTIVITY_ACTION_LABEL[a.action] || a.action)}
+        </div>
+        ${a.summary ? `<div class="text-xs text-gray-500 mt-0.5">${e(a.summary)}</div>` : ''}
+        <div class="text-[10px] text-gray-400 mt-0.5">${fmtDate(a.created_at)}</div>
+      </div>
     </div>`).join('');
 }
 
