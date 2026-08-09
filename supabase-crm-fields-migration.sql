@@ -27,3 +27,15 @@ ALTER TABLE public.crm_year_end_tasks
 COMMENT ON COLUMN public.crm_year_end_tasks.pnd1k IS 'ภ.ง.ด.1ก — สรุปการหักภาษี ณ ที่จ่ายรายปี';
 COMMENT ON COLUMN public.crm_year_end_tasks.kt26k IS 'กท.26ก — รายงานเงินสมทบประกันสังคมประจำปี';
 COMMENT ON COLUMN public.crm_year_end_tasks.boj5  IS 'บอจ.5 — รายงานการประชุมผู้ถือหุ้นประจำปี (ส่ง DBD)';
+
+-- ──────────────────────────────────────────────────────────
+-- เพิ่มรหัสผ่าน SVS และ กยศ ใน crm_client_credentials
+-- ──────────────────────────────────────────────────────────
+ALTER TABLE public.crm_client_credentials
+  ADD COLUMN IF NOT EXISTS svs_username text NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS svs_password text NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS kys_username text NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS kys_password text NOT NULL DEFAULT '';
+
+COMMENT ON COLUMN public.crm_client_credentials.svs_username IS 'กองทุนพัฒนาฝีมือแรงงาน (SVS)';
+COMMENT ON COLUMN public.crm_client_credentials.kys_username IS 'กองทุนเงินให้กู้ยืมเพื่อการศึกษา (กยศ)';

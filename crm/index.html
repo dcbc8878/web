@@ -1375,6 +1375,16 @@ function renderPanelCreds() {
         ${credField('Username','sso_username', cred.sso_username)}
         ${credField('Password','sso_password', cred.sso_password)}
       </div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1 border-b border-gray-100">กองทุนพัฒนาฝีมือแรงงาน (SVS)</div>
+      <div class="grid grid-cols-2 gap-4">
+        ${credField('Username','svs_username', cred.svs_username)}
+        ${credField('Password','svs_password', cred.svs_password)}
+      </div>
+      <div class="text-xs font-bold text-gray-400 uppercase tracking-wide pb-1 border-b border-gray-100">กองทุนเงินให้กู้ยืมเพื่อการศึกษา (กยศ)</div>
+      <div class="grid grid-cols-2 gap-4">
+        ${credField('Username','kys_username', cred.kys_username)}
+        ${credField('Password','kys_password', cred.kys_password)}
+      </div>
       ${ro ? '<p class="text-xs text-gray-400 text-center mt-2">พนักงานอาวุโสดูได้ · เจ้าของเท่านั้นที่แก้ไขได้</p>' : ''}
     </div>`;
 }
