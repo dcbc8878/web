@@ -601,6 +601,8 @@ const GROUP_ITEMS = {
 };
 const INV_STATUS_LABEL = { draft:'ร่าง', sent:'ส่งแล้ว', paid:'ชำระแล้ว', cancelled:'ยกเลิก' };
 const BILLING_TYPE_LABEL = { monthly:'รายเดือน', annual:'รายปี', filing:'ยื่นแบบ' };
+const ENTITY_TYPES = ['บริษัทจำกัด','บริษัทมหาชนจำกัด','ห้างหุ้นส่วนจำกัด','ห้างหุ้นส่วนสามัญนิติบุคคล','ห้างหุ้นส่วนสามัญ','สมาคม','มูลนิธิ','วิสาหกิจชุมชน','กิจการร่วมค้า','อื่นๆ','บุคคลธรรมดา'];
+const CLIENT_TYPE_MAP = { M:'รายเดือน', Y:'รายปี', T:'ยื่นแบบเปล่า' };
 
 // ─────────────────────────────────────────────────────────────
 // STATE
@@ -719,27 +721,27 @@ async function saveNote(clientId, val) {
   if (data) taskMap[clientId] = data;
   renderTracking();
 }
-function editClientSeq(cell, clientId, code) {
+function editClientSeq(cell, clientId, clientNo) {
   if (!canEdit()) return;
-  const num = parseInt(code.replace(/^[A-Z]+/,'')) || 0;
+  const num = parseInt((clientNo||'').slice(1)) || 0;
   cell.innerHTML = `<input type="number" min="1" max="999" value="${num}"
     style="width:38px;font-size:11px;text-align:center;border:1.5px solid #3b82f6;border-radius:4px;outline:none;padding:2px;-moz-appearance:textfield"
     onclick="event.stopPropagation()"
-    onblur="saveClientSeq(${clientId},'${code}',this.value)"
+    onblur="saveClientSeq(${clientId},'${clientNo}',this.value)"
     onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){event.preventDefault();renderTracking();}">`;
   const inp = cell.querySelector('input');
   inp.focus(); inp.select();
 }
-async function saveClientSeq(clientId, code, newVal) {
-  const prefix = (code.match(/^([A-Z]+)/)||['',''])[1];
+async function saveClientSeq(clientId, clientNo, newVal) {
+  const prefix = (clientNo||'').charAt(0) || 'M';
   const newNum = Math.max(1, Math.min(999, parseInt(newVal)||1));
-  const newCode = prefix + String(newNum).padStart(3,'0');
-  if (newCode === code) { renderTracking(); return; }
-  const { error } = await sb.from('crm_clients').update({ code: newCode }).eq('id', clientId);
+  const newClientNo = prefix + String(newNum).padStart(3,'0');
+  if (newClientNo === clientNo) { renderTracking(); return; }
+  const { error } = await sb.from('crm_clients').update({ client_no: newClientNo }).eq('id', clientId);
   if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); renderTracking(); return; }
   const c = clients.find(x => x.id === clientId);
-  if (c) c.code = newCode;
-  clients.sort((a,b) => a.code.localeCompare(b.code));
+  if (c) c.client_no = newClientNo;
+  clients.sort((a,b) => { const na=a.client_no||'',nb=b.client_no||''; return na?nb?na.localeCompare(nb):-1:nb?1:0; });
   renderTracking();
 }
 function progressBar(pct) {
@@ -805,8 +807,8 @@ async function init() {
   document.getElementById('user-initial').textContent     = prof.display_name[0] || '?';
   document.getElementById('user-role-badge').textContent  = ROLE_LABEL[prof.role] || prof.role;
   if (isOwner()) document.getElementById('nav-staff').classList.remove('hidden');
+  if (isOwner()) document.getElementById('add-client-btn').classList.remove('hidden');
   if (canEdit()) {
-    document.getElementById('add-client-btn').classList.remove('hidden');
     const bib = document.getElementById('batch-inv-btn');
     bib.classList.remove('hidden');
     bib.classList.add('flex');
@@ -828,8 +830,13 @@ async function init() {
 // DATA LOADING
 // ─────────────────────────────────────────────────────────────
 async function loadClients() {
-  const { data } = await sb.from('crm_clients').select('*').eq('is_active', true).order('code');
-  clients = data || [];
+  const { data } = await sb.from('crm_clients').select('*').eq('is_active', true);
+  clients = (data || []).sort((a, b) => {
+    const na = a.client_no || '', nb = b.client_no || '';
+    if (na && nb) return na.localeCompare(nb);
+    if (na) return -1; if (nb) return 1;
+    return (a.code||'').localeCompare(b.code||'');
+  });
 }
 async function loadTasks() {
   const prevMonths = [];
@@ -929,7 +936,8 @@ function renderTracking() {
   const gb = 'border-l border-gray-200';
   let rows = '';
   clients.forEach(c => {
-    const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
+    const clientNo = c.client_no || '';
+    const seqNum = clientNo ? (parseInt(clientNo.slice(1)) || '') : (parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '');
     const t = taskMap[c.id] || {};
     const docItems = (t.doc_items||'').split(',').filter(Boolean);
     const docBadge = t.doc_date
@@ -982,7 +990,7 @@ function renderTracking() {
     };
 
     rows += `<tr class="border-b border-gray-100">
-      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(c.code)}')`:''}">
+      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(clientNo)}')`:''}">
         ${seqNum}
       </td>
       <td class="px-1 py-3 text-center col-code cursor-pointer" onclick="openPanel(${c.id})">
@@ -1368,10 +1376,11 @@ function renderClientList() {
   const q = (document.getElementById('client-search')?.value || '').toLowerCase();
   const filtered = q
     ? clients.filter(c =>
-        c.code.toLowerCase().includes(q) ||
-        c.thai_name.toLowerCase().includes(q) ||
+        (c.client_no||'').toLowerCase().includes(q) ||
+        (c.code||'').toLowerCase().includes(q) ||
+        (c.thai_name||'').toLowerCase().includes(q) ||
         (c.eng_name || '').toLowerCase().includes(q) ||
-        (c.tax_number || '').includes(q))
+        (c.tax_id || c.tax_number || '').includes(q))
     : clients;
 
   const container = document.getElementById('client-list');
@@ -1389,14 +1398,15 @@ function renderClientList() {
     const feeStr = c.monthly_fee > 0 ? fmtMoney(c.monthly_fee) : '';
     return `<div onclick="openPanel(${c.id})"
       class="bg-white border border-gray-200 rounded-xl px-5 py-4 cursor-pointer hover:border-blue-300 hover:shadow-sm transition-all flex items-center gap-4">
-      <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-        <span class="text-blue-700 text-sm font-bold">${e(c.code)}</span>
+      <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0 flex-col gap-0.5">
+        ${c.client_no ? `<span class="text-blue-700 text-xs font-bold leading-none">${e(c.client_no)}</span>` : ''}
+        <span class="text-blue-500 text-[10px] font-medium leading-none">${e(c.code)}</span>
       </div>
       <div class="flex-1 min-w-0">
         <div class="font-semibold text-gray-900 truncate">${e(c.thai_name)}</div>
         <div class="text-xs text-gray-400 mt-0.5 flex items-center gap-2 flex-wrap">
-          ${c.tax_number ? `<span>เลขภาษี: ${e(c.tax_number)}</span>` : ''}
-          ${c.category   ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.category)}</span>` : ''}
+          ${(c.tax_id||c.tax_number) ? `<span>เลขภาษี: ${e(c.tax_id||c.tax_number)}</span>` : ''}
+          ${c.entity_type ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.entity_type)}</span>` : (c.category ? `<span class="bg-gray-100 px-1.5 py-0.5 rounded">${e(c.category)}</span>` : '')}
           ${feeStr ? `<span class="text-emerald-700 font-semibold">${feeStr}</span>` : ''}
           ${inv && canEdit() ? invBadge(inv.status) : ''}
         </div>
@@ -1504,10 +1514,27 @@ function nextClientCode(type) {
     .map(code => parseInt(code.slice(1)));
   return `${prefix}${String(nums.length ? Math.max(...nums) + 1 : 1).padStart(3, '0')}`;
 }
+function nextClientNo(type) {
+  const prefix = type || 'M';
+  const nums = clients
+    .filter(c => c.client_no && c.client_no.startsWith(prefix))
+    .map(c => parseInt((c.client_no||'').slice(1)) || 0)
+    .filter(n => n > 0);
+  return prefix + String(nums.length ? Math.max(...nums) + 1 : 1).padStart(3,'0');
+}
 function suggestCode() {
   const typeEl = document.querySelector('#panel-info-fields [data-key="billing_type"]');
   const codeEl = document.querySelector('#panel-info-fields [data-key="code"]');
   if (typeEl && codeEl) { codeEl.value = nextClientCode(typeEl.value); markDirty(); }
+}
+function ncUpdateSeq(force) {
+  const typeEl = document.getElementById('nc-ctype');
+  const seqEl  = document.getElementById('nc-seq');
+  if (!typeEl || !seqEl) return;
+  if (force || !seqEl.value) {
+    const next = nextClientNo(typeEl.value);
+    seqEl.value = parseInt(next.slice(1)) || 1;
+  }
 }
 
 async function openPanel(clientId) {
@@ -1516,7 +1543,7 @@ async function openPanel(clientId) {
   const c = clients.find(x => x.id === clientId);
   if (!c) return;
 
-  document.getElementById('panel-code').textContent = c.code;
+  document.getElementById('panel-code').textContent = c.client_no || c.code;
   document.getElementById('panel-name').textContent = c.thai_name;
   document.getElementById('panel-overlay').classList.remove('hidden');
   document.getElementById('client-panel').style.transform = 'translateX(0)';
@@ -1550,9 +1577,10 @@ function switchTab(tab) {
 function renderPanelInfo() {
   const c = clients.find(x => x.id === panelClientId);
   if (!c) return;
-  const ro = !canEdit();
+  const ro     = !isOwner();
+  const roBill = !canEdit();
 
-  const textField = (label, key, val, opts = '') => `
+  const tf = (label, key, val, opts = '') => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
       <input type="text" value="${e(val)}" ${ro ? 'readonly' : ''} data-key="${key}" ${opts}
@@ -1560,11 +1588,19 @@ function renderPanelInfo() {
         ${ro ? '' : 'oninput="markDirty()"'}>
     </div>`;
 
-  const selectField = (label, key, val, options) => `
+  const tfBill = (label, key, val) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <select data-key="${key}" ${ro ? 'disabled' : ''} onchange="markDirty()"
-        class="select-field text-sm text-gray-800 ${ro?'':'hover:border-gray-300'}">
+      <input type="text" value="${e(val)}" ${roBill ? 'readonly' : ''} data-key="${key}"
+        class="editable-field w-full text-sm text-gray-800"
+        ${roBill ? '' : 'oninput="markDirty()"'}>
+    </div>`;
+
+  const selectField = (label, key, val, options, useRo) => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <select data-key="${key}" ${useRo ? 'disabled' : ''} onchange="markDirty()"
+        class="select-field text-sm text-gray-800">
         ${options.map(([v,l]) => `<option value="${v}" ${val===v?'selected':''}>${l}</option>`).join('')}
       </select>
     </div>`;
@@ -1572,79 +1608,152 @@ function renderPanelInfo() {
   const numField = (label, key, val) => `
     <div>
       <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
-      <input type="number" value="${val || 0}" min="0" step="100" ${ro ? 'readonly' : ''} data-key="${key}"
+      <input type="number" value="${val || 0}" min="0" step="100" ${roBill ? 'readonly' : ''} data-key="${key}"
         class="editable-field w-full text-sm text-gray-800"
-        ${ro ? '' : 'oninput="markDirty()"'}>
+        ${roBill ? '' : 'oninput="markDirty()"'}>
     </div>`;
 
-  const chkField = (label, key, val) => `
+  const chkField = (label, key, val, useRo) => `
     <div class="flex items-center gap-2 pt-5">
-      <input type="checkbox" data-key="${key}" ${val ? 'checked' : ''} ${ro ? 'disabled' : ''}
+      <input type="checkbox" data-key="${key}" ${val ? 'checked' : ''} ${useRo ? 'disabled' : ''}
         onchange="markDirty()" class="w-4 h-4 rounded text-blue-600 flex-shrink-0">
-      <div>
-        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">${label}</div>
-      </div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide">${label}</div>
     </div>`;
+
+  const taField = (label, key, val, rows, useRo, ph='') => `
+    <div>
+      <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">${label}</div>
+      <textarea data-key="${key}" rows="${rows}" placeholder="${ph}"
+        ${useRo ? 'readonly' : 'oninput="markDirty()"'}
+        class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
+      >${e(val)}</textarea>
+    </div>`;
+
+  const entityOptions = ENTITY_TYPES.map(t =>
+    `<option value="${e(t)}" ${(c.entity_type||c.type||''===t)?'selected':''}>${e(t)}</option>`).join('');
+
+  const clientNoDisplay = c.client_no
+    ? `<div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
+         <span class="text-blue-700 font-bold text-sm">${e(c.client_no)}</span>
+         <span class="text-blue-400 text-xs">${e(CLIENT_TYPE_MAP[c.client_type||'M']||'')}</span>
+       </div>`
+    : `<span class="text-xs text-gray-300 italic">ยังไม่ได้กำหนด</span>`;
 
   paneEl('info').innerHTML = `
     <div id="panel-info-fields">
+
+      <div class="mb-4 pb-4 border-b border-gray-100">
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">รหัสลูกค้า</div>
+        <div class="flex items-center gap-3">
+          ${clientNoDisplay}
+          ${!ro && c.client_no ? `<button onclick="editClientSeqFromPanel(${c.id},'${e(c.client_no)}')"
+            class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50">แก้ไขลำดับ</button>` : ''}
+        </div>
+      </div>
+
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">โค้ด (CODE)</div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">CODE (ชื่อเรียก)</div>
           <div class="flex gap-1.5 items-center">
             <input type="text" value="${e(c.code)}" ${ro ? 'readonly' : ''} data-key="code"
-              class="editable-field flex-1 text-sm text-gray-800" ${ro ? '' : 'oninput="markDirty()"'}
-              placeholder="${nextClientCode(c.billing_type||'monthly')}">
-            ${ro ? '' : `<button onclick="suggestCode()" class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0 whitespace-nowrap">แนะนำ</button>`}
+              class="editable-field flex-1 text-sm text-gray-800" ${ro ? '' : 'oninput="markDirty()"'}>
+            ${ro ? '' : `<button onclick="suggestCode()" class="text-[11px] px-2 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 flex-shrink-0">แนะนำ</button>`}
           </div>
         </div>
-        ${textField('เลขภาษี', 'tax_number', c.tax_number)}
-        <div class="col-span-2">${textField('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
-        <div class="col-span-2">${textField('ชื่อบริษัท (อังกฤษ)', 'eng_name', c.eng_name)}</div>
-        ${textField('ประเภทธุรกิจ', 'category', c.category)}
-        ${textField('รูปแบบนิติบุคคล', 'type', c.type)}
-        ${textField('วันที่จดทะเบียนบริษัท', 'registration_date', c.registration_date || '')}
-        ${textField('วันที่เริ่มให้บริการ', 'start_date', c.start_date || '')}
-        ${textField('วันที่สิ้นสุดให้บริการ', 'end_date', c.end_date || '')}
-        <div class="col-span-2">${textField('หมายเหตุ', 'notes', c.notes)}</div>
+        <div>
+          <div class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">ประเภทนิติบุคคล</div>
+          <select data-key="entity_type" ${ro ? 'disabled' : ''} onchange="markDirty()"
+            class="select-field text-sm text-gray-800">
+            <option value="">-- เลือก --</option>
+            ${ENTITY_TYPES.map(t => `<option value="${e(t)}" ${(c.entity_type||'')==t?'selected':''}>${e(t)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="col-span-2">${tf('ชื่อบริษัท (ไทย)', 'thai_name', c.thai_name)}</div>
+        <div class="col-span-2">${tf('ชื่อบริษัท (อังกฤษ)', 'eng_name', c.eng_name||'')}</div>
+        ${tf('เลขผู้เสียภาษี', 'tax_id', c.tax_id || c.tax_number || '')}
+        ${tf('ประเภทธุรกิจ', 'category', c.category||'')}
+        <div class="col-span-2">${taField('ที่อยู่', 'address', c.address||'', 2, ro, 'เลขที่ ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์')}</div>
+        ${tf('วันที่จดทะเบียน', 'registration_date', c.registration_date||'')}
+        ${tf('วันที่เริ่มให้บริการ', 'service_start_date', c.service_start_date || c.start_date || '')}
+        ${tf('วันที่สิ้นสุดให้บริการ', 'end_date', c.end_date||'')}
+        <div class="col-span-2">${tf('หมายเหตุ', 'notes', c.notes||'')}</div>
       </div>
+
       <div class="border-t border-gray-100 pt-4 mt-5">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ค่าบริการ</div>
         <div class="grid grid-cols-2 gap-4">
           ${selectField('ประเภทการเรียกเก็บ','billing_type', c.billing_type||'monthly', [
-              ['monthly','รายเดือน (M000)'],['annual','รายปี (Y000)'],['filing','ยื่นแบบเปล่า (T000)']
-            ])}
+              ['monthly','รายเดือน (M)'],['annual','รายปี (Y)'],['filing','ยื่นแบบเปล่า (T)']
+            ], roBill)}
           ${numField('ค่าบริการ (บาท/เดือน)', 'monthly_fee', c.monthly_fee)}
-          ${chkField('หัก ณ ที่จ่าย 3%', 'has_wht', c.has_wht !== false)}
-          ${chkField('มี VAT (PP.30)', 'has_vat', c.has_vat !== false)}
-          ${chkField('มี SSO (ประกันสังคม)', 'has_sso', c.has_sso !== false)}
-          ${chkField('มีที่ตั้งสำนักงานของตัวเอง', 'has_own_office', c.has_own_office !== false)}
+          ${chkField('หัก ณ ที่จ่าย 3%', 'has_wht', c.has_wht !== false, roBill)}
+          ${chkField('มี VAT (PP.30)', 'has_vat', c.has_vat !== false, roBill)}
+          ${chkField('มี SSO (ประกันสังคม)', 'has_sso', c.has_sso !== false, roBill)}
+          ${chkField('มีที่ตั้งสำนักงานของตัวเอง', 'has_own_office', c.has_own_office !== false, roBill)}
         </div>
       </div>
+
       <div class="border-t border-gray-100 pt-4 mt-4">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">ช่องทางติดต่อ</div>
         <div class="grid grid-cols-1 gap-4">
-          ${textField('อีเมล (สำหรับใบเสร็จ)', 'client_email', c.client_email||'')}
-          ${textField('LINE Group ID', 'line_group_id', c.line_group_id||'')}
-          ${textField('FlowAccount Contact ID', 'fa_contact_id', c.fa_contact_id||'')}
+          ${tfBill('อีเมล (สำหรับใบเสร็จ)', 'client_email', c.client_email||'')}
+          ${tfBill('LINE Group ID', 'line_group_id', c.line_group_id||'')}
+          ${tfBill('FlowAccount Contact ID', 'fa_contact_id', c.fa_contact_id||'')}
         </div>
       </div>
+
       <div class="border-t border-gray-100 pt-4 mt-4">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">รายการเอกสาร</div>
         <div class="text-xs text-gray-400 mb-2">พิมพ์ทีละบรรทัด — ใช้ใน popup รับเอกสาร ถ้าว่างจะใช้รายการ default</div>
         <textarea data-key="doc_item_templates" data-type="linelist"
-          ${ro ? 'readonly' : 'oninput="markDirty()"'}
+          ${roBill ? 'readonly' : 'oninput="markDirty()"'}
           rows="5" placeholder="สลิปเงินเดือน&#10;ใบเสร็จค่าใช้จ่าย&#10;Statement ธนาคาร"
           class="editable-field w-full text-sm text-gray-800 resize-none leading-relaxed"
         >${e((c.doc_item_templates||'').split(',').filter(Boolean).join('\n'))}</textarea>
       </div>
+
+      ${ro && !roBill ? '<p class="text-xs text-gray-400 text-center mt-4 pb-2">ข้อมูลบริษัท — แก้ไขได้เฉพาะเจ้าของ</p>' : ''}
     </div>`;
+}
+
+function editClientSeqFromPanel(clientId, clientNo) {
+  if (!canEdit()) return;
+  const num = parseInt((clientNo||'').slice(1)) || 0;
+  openModal(`
+    <h3 class="text-base font-bold text-gray-900 mb-4">แก้ไขลำดับที่ (${clientNo})</h3>
+    <div class="mb-4">
+      <label class="block text-sm font-semibold text-gray-700 mb-1.5">ลำดับที่ใหม่</label>
+      <input id="seq-input" type="number" min="1" max="999" value="${num}"
+        class="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        onkeydown="if(event.key==='Enter')document.getElementById('seq-save-btn').click()">
+    </div>
+    <div class="flex justify-end gap-2">
+      <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium">ยกเลิก</button>
+      <button id="seq-save-btn" onclick="saveSeqFromPanel(${clientId},'${clientNo}',document.getElementById('seq-input').value);closeModal()"
+        class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">บันทึก</button>
+    </div>`);
+  setTimeout(() => { const inp = document.getElementById('seq-input'); if(inp){inp.focus();inp.select();} }, 50);
+}
+async function saveSeqFromPanel(clientId, clientNo, newVal) {
+  const prefix = (clientNo||'').charAt(0) || 'M';
+  const newNum = Math.max(1, Math.min(999, parseInt(newVal)||1));
+  const newClientNo = prefix + String(newNum).padStart(3,'0');
+  if (newClientNo === clientNo) return;
+  const { error } = await sb.from('crm_clients').update({ client_no: newClientNo }).eq('id', clientId);
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
+  const c = clients.find(x => x.id === clientId);
+  if (c) c.client_no = newClientNo;
+  clients.sort((a,b) => { const na=a.client_no||'',nb=b.client_no||''; return na?nb?na.localeCompare(nb):-1:nb?1:0; });
+  document.getElementById('panel-code').textContent = newClientNo;
+  showToast('บันทึกสำเร็จ');
+  renderPanelInfo();
 }
 
 async function savePanelInfo() {
   const oldClient = clients.find(x => x.id === panelClientId);
   const fields = {};
   document.querySelectorAll('#panel-info-fields [data-key]').forEach(el => {
+    if (el.disabled && el.tagName === 'SELECT') return;
     if (el.tagName === 'SELECT') {
       fields[el.dataset.key] = el.value;
     } else if (el.type === 'checkbox') {
@@ -1657,6 +1766,7 @@ async function savePanelInfo() {
       fields[el.dataset.key] = el.value.trim();
     }
   });
+  if (fields.tax_id !== undefined) { fields.tax_number = fields.tax_id; }
 
   const { error } = await sb.from('crm_clients').update(fields).eq('id', panelClientId);
   if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); return; }
@@ -2085,50 +2195,73 @@ async function createBatchInvoices() {
 // ADD CLIENT
 // ─────────────────────────────────────────────────────────────
 function openAddClient() {
+  if (!isOwner()) return;
+  const entityOptions = ENTITY_TYPES.map(t => `<option value="${e(t)}">${e(t)}</option>`).join('');
+  const inp = 'w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
   openModal(`
     <h3 class="text-base font-bold text-gray-900 mb-4">เพิ่มลูกค้าใหม่</h3>
     <div class="space-y-3">
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">CODE *</label>
-          <input id="nc-code" type="text" placeholder="เช่น EPED" maxlength="10"
-            class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภท *</label>
+          <select id="nc-ctype" onchange="ncUpdateSeq()" class="${inp}">
+            <option value="M">รายเดือน (M)</option>
+            <option value="Y">รายปี (Y)</option>
+            <option value="T">ยื่นแบบเปล่า (T)</option>
+          </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">เลขภาษี</label>
-          <input id="nc-tax" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">ลำดับที่ *</label>
+          <div class="flex gap-1.5">
+            <input id="nc-seq" type="number" min="1" max="999" placeholder="เช่น 1"
+              class="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="ncUpdateSeq(true)" title="ถัดไป"
+              class="px-2.5 py-1 rounded border border-gray-200 text-gray-400 hover:bg-gray-50 text-xs flex-shrink-0">↻</button>
+          </div>
         </div>
       </div>
       <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภทนิติบุคคล *</label>
+        <select id="nc-entity" class="${inp}">
+          <option value="">-- เลือก --</option>
+          ${entityOptions}
+        </select>
+      </div>
+      <div>
         <label class="block text-xs font-semibold text-gray-600 mb-1">ชื่อบริษัท (ไทย) *</label>
-        <input id="nc-thai" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input id="nc-thai" type="text" class="${inp}">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">CODE (ชื่อเรียก) — ไม่บังคับ</label>
+        <input id="nc-code" type="text" placeholder="เช่น ABC, EPED (ถ้าว่างใช้รหัสลูกค้า)" maxlength="20"
+          class="${inp} uppercase">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">เลขผู้เสียภาษี</label>
+        <input id="nc-taxid" type="text" maxlength="13" class="${inp}">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ที่อยู่</label>
+        <textarea id="nc-address" rows="2" class="${inp} resize-none"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภทธุรกิจ</label>
-          <input id="nc-cat" type="text" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">วันที่จดทะเบียน</label>
+          <input id="nc-regdate" type="text" placeholder="เช่น 1 ม.ค. 2560" class="${inp}">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">รูปแบบนิติบุคคล</label>
-          <input id="nc-type" type="text" placeholder="เช่น บจก." class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">วันที่เริ่มให้บริการ</label>
+          <input id="nc-svcdate" type="text" placeholder="เช่น 1 ม.ค. 2566" class="${inp}">
         </div>
       </div>
       <div class="border-t border-gray-100 pt-3">
         <div class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">ค่าบริการ</div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">ประเภท</label>
-            <select id="nc-btype" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="monthly">รายเดือน</option>
-              <option value="filing">ยื่นแบบ (filing only)</option>
-              <option value="annual">รายปี</option>
-            </select>
-          </div>
-          <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">ค่าบริการ (บาท/เดือน)</label>
-            <input id="nc-fee" type="number" value="0" min="0" step="100"
-              class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input id="nc-fee" type="number" value="0" min="0" step="100" class="${inp}">
           </div>
+          <div></div>
         </div>
         <div class="flex flex-wrap gap-x-5 gap-y-1.5 mt-2">
           <label class="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
@@ -2142,50 +2275,68 @@ function openAddClient() {
           </label>
         </div>
       </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">อีเมลลูกค้า (สำหรับใบเสร็จ)</label>
-        <input id="nc-email" type="email" class="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      <div id="nc-err" class="hidden text-sm text-red-600"></div>
+      <div id="nc-err" class="hidden text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg"></div>
     </div>
     <div class="flex justify-end gap-2 mt-5">
       <button onclick="closeModal()" class="px-4 py-2 text-sm text-gray-600 font-medium hover:text-gray-900">ยกเลิก</button>
       <button onclick="saveNewClient()" class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700">เพิ่มลูกค้า</button>
     </div>`);
+  setTimeout(() => ncUpdateSeq(), 10);
 }
 
 async function saveNewClient() {
-  const code  = document.getElementById('nc-code').value.trim().toUpperCase();
-  const thai  = document.getElementById('nc-thai').value.trim();
-  const ncErr = document.getElementById('nc-err');
-  if (!code || !thai) { ncErr.textContent = 'กรุณากรอก CODE และชื่อบริษัท'; ncErr.classList.remove('hidden'); return; }
+  if (!isOwner()) return;
+  const ctypeVal = document.getElementById('nc-ctype')?.value || 'M';
+  const seqVal   = parseInt(document.getElementById('nc-seq')?.value) || 0;
+  const entity   = document.getElementById('nc-entity')?.value || '';
+  const thai     = (document.getElementById('nc-thai')?.value || '').trim();
+  const ncErr    = document.getElementById('nc-err');
+
+  if (!seqVal || !entity || !thai) {
+    ncErr.textContent = !seqVal ? 'กรุณากรอกลำดับที่' : !entity ? 'กรุณาเลือกประเภทนิติบุคคล' : 'กรุณากรอกชื่อบริษัท';
+    ncErr.classList.remove('hidden'); return;
+  }
+
+  const clientNo     = ctypeVal + String(Math.max(1, Math.min(999, seqVal))).padStart(3,'0');
+  const codeRaw      = (document.getElementById('nc-code')?.value || '').trim().toUpperCase();
+  const code         = codeRaw || clientNo;
+  const taxId        = (document.getElementById('nc-taxid')?.value || '').trim();
+  const address      = (document.getElementById('nc-address')?.value || '').trim();
+  const regDate      = (document.getElementById('nc-regdate')?.value || '').trim();
+  const svcDate      = (document.getElementById('nc-svcdate')?.value || '').trim();
+  const fee          = parseFloat(document.getElementById('nc-fee')?.value) || 0;
+  const billing_type = ctypeVal === 'M' ? 'monthly' : ctypeVal === 'Y' ? 'annual' : 'filing';
 
   const payload = {
-    code, thai_name: thai,
-    tax_number:   document.getElementById('nc-tax').value.trim(),
-    category:     document.getElementById('nc-cat').value.trim(),
-    type:         document.getElementById('nc-type').value.trim(),
-    billing_type: document.getElementById('nc-btype').value,
-    monthly_fee:  parseFloat(document.getElementById('nc-fee').value) || 0,
-    has_wht:      document.getElementById('nc-wht').checked,
-    has_vat:      document.getElementById('nc-vat').checked,
-    has_sso:      document.getElementById('nc-sso').checked,
-    client_email: document.getElementById('nc-email').value.trim(),
+    client_no:          clientNo,
+    client_type:        ctypeVal,
+    code,
+    entity_type:        entity,
+    thai_name:          thai,
+    tax_id:             taxId,
+    tax_number:         taxId,
+    address,
+    registration_date:  regDate,
+    service_start_date: svcDate,
+    billing_type,
+    monthly_fee:        fee,
+    has_wht:            document.getElementById('nc-wht').checked,
+    has_vat:            document.getElementById('nc-vat').checked,
+    has_sso:            document.getElementById('nc-sso').checked,
   };
 
   const { data, error } = await sb.from('crm_clients').insert(payload).select().single();
   if (error) { ncErr.textContent = error.message; ncErr.classList.remove('hidden'); return; }
 
-  if (payload.monthly_fee > 0) {
+  if (fee > 0) {
     await sb.from('crm_billing_contracts').insert({
-      client_id: data.id, billing_type: payload.billing_type,
-      fee_amount: payload.monthly_fee, has_wht: payload.has_wht,
-      notes: 'เริ่มต้น'
+      client_id: data.id, billing_type, fee_amount: fee,
+      has_wht: payload.has_wht, notes: 'เริ่มต้น'
     });
   }
 
   clients.push(data);
-  clients.sort((a, b) => a.code.localeCompare(b.code));
+  clients.sort((a,b) => { const na=a.client_no||'',nb=b.client_no||''; return na?nb?na.localeCompare(nb):-1:nb?1:0; });
   closeModal();
   showToast('เพิ่มลูกค้าสำเร็จ');
   if (curPage === 'clients') renderClientList();
