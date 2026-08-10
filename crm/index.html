@@ -1071,8 +1071,11 @@ function navigate(p) {
 function renderTracking() {
   const thYear = curYear + 543;
   document.getElementById('month-display').textContent = `${THAI_MONTHS[curMonth]} ${thYear}`;
+  const monthFirstStr = `${curYear}-${String(curMonth).padStart(2,'0')}-01`;
+  const monthLastStr = `${curYear}-${String(curMonth).padStart(2,'0')}-${String(new Date(curYear, curMonth, 0).getDate()).padStart(2,'0')}`;
   const visibleClients = (canManageOwnCompany() ? clients : clients.filter(c => !c.is_own_company))
-    .filter(c => trackingTypeFilter === 'all' || (c.billing_type || 'monthly') === trackingTypeFilter);
+    .filter(c => trackingTypeFilter === 'all' || (c.billing_type || 'monthly') === trackingTypeFilter)
+    .filter(c => (!c.start_date || c.start_date <= monthLastStr) && (!c.end_date || c.end_date >= monthFirstStr));
 
   let totalDone = 0, totalTodo = 0;
   let invPaid = 0, invTotal = 0;
