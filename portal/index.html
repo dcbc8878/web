@@ -18,27 +18,11 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Prompt', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            light: '#FFF2E8',
-                            DEFAULT: '#FFB88C',
-                            dark: '#E5976A',
-                            text: '#4A4A4A',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
+         scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
+         that has to download, run and scan the DOM before the page has any
+         styling, producing a flash of unstyled content on first load. -->
+    <link rel="stylesheet" href="/site.css">
 
     <style>
         ::-webkit-scrollbar { width: 8px; }
