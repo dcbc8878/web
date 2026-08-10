@@ -318,18 +318,18 @@
                measured against a real compiled build of the Tailwind classes below, +buffer.
                Fewer/shorter rows just shrink the box; more than 12 rows scrolls inside it. -->
           <div style="max-height:924px;overflow-y:auto">
-          <table class="text-center" style="table-layout:fixed;width:1256px;min-width:1256px">
+          <table class="text-center" style="table-layout:fixed;width:1338px;min-width:1338px">
             <colgroup>
               <col style="width:34px"> <!-- ลำดับ -->
               <col style="width:56px"> <!-- CODE -->
               <col style="width:540px"><!-- NAME -->
               <col style="width:128px"><!-- NOTE -->
-              <col style="width:82px"> <!-- รับเอกสาร -->
+              <col style="width:116px"><!-- รับเอกสาร -->
               <col style="width:116px"><!-- TAX1 -->
-              <col style="width:78px"> <!-- SSO -->
-              <col style="width:78px"> <!-- TAX2 -->
-              <col style="width:72px"> <!-- RD-DL -->
-              <col style="width:72px"> <!-- RD-Key -->
+              <col style="width:116px"><!-- SSO -->
+              <col style="width:116px"><!-- TAX2 -->
+              <col style="width:58px"> <!-- RD-DL -->
+              <col style="width:58px"> <!-- RD-Key -->
             </colgroup>
             <thead>
               <tr>
@@ -872,27 +872,24 @@ async function saveNote(clientId, val) {
   if (data) taskMap[clientId] = data;
   renderTracking();
 }
-function editClientSeq(cell, clientId, code) {
+function editClientSeq(cell, clientId, seqNum) {
   if (!canEdit()) return;
-  const num = parseInt((code||'').replace(/^[A-Z]+/,'')) || 0;
+  const num = parseInt(seqNum) || 0;
   cell.innerHTML = `<input type="number" min="1" max="999" value="${num}"
     style="width:38px;font-size:11px;text-align:center;border:1.5px solid #3b82f6;border-radius:4px;outline:none;padding:2px;-moz-appearance:textfield"
     onclick="event.stopPropagation()"
-    onblur="saveClientSeq(${clientId},'${code}',this.value)"
+    onblur="saveClientSeq(${clientId},this.value)"
     onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){event.preventDefault();renderTracking();}">`;
   const inp = cell.querySelector('input');
   inp.focus(); inp.select();
 }
-async function saveClientSeq(clientId, code, newVal) {
-  const prefix = (code.match(/^([A-Z]+)/)||['',''])[1] || 'M';
+async function saveClientSeq(clientId, newVal) {
   const newNum = Math.max(1, Math.min(999, parseInt(newVal)||1));
-  const newCode = prefix + String(newNum).padStart(3,'0');
-  if (newCode === code) { renderTracking(); return; }
-  const { error } = await sb.from('crm_clients').update({ code: newCode }).eq('id', clientId);
-  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); renderTracking(); return; }
   const c = clients.find(x => x.id === clientId);
-  if (c) c.code = newCode;
-  clients.sort((a,b) => a.code.localeCompare(b.code));
+  if (c && c.seq_num === newNum) { renderTracking(); return; }
+  const { error } = await sb.from('crm_clients').update({ seq_num: newNum }).eq('id', clientId);
+  if (error) { showToast('บันทึกไม่สำเร็จ: ' + error.message, 'error'); renderTracking(); return; }
+  if (c) c.seq_num = newNum;
   renderTracking();
 }
 function progressBar(pct) {
@@ -1103,7 +1100,7 @@ function renderTracking() {
   const gb = 'border-l border-gray-200';
   let rows = '';
   visibleClients.forEach(c => {
-    const seqNum = parseInt((c.code||'').replace(/^[A-Z]+/,'')) || '';
+    const clientNo = computeClientNo(c.billing_type, c.seq_num);
     const t = taskMap[c.id] || {};
     const docItems = (t.doc_items||'').split(',').filter(Boolean);
     const docBadge = t.doc_date
@@ -1156,8 +1153,8 @@ function renderTracking() {
     };
 
     rows += `<tr class="border-b border-gray-100">
-      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},'${e(c.code)}')`:''}">
-        ${seqNum}
+      <td class="py-3 text-center text-xs text-gray-400 col-num ${canEdit()?'cursor-pointer hover:text-blue-500':''}" onclick="${canEdit()?`editClientSeq(this,${c.id},${c.seq_num||0})`:''}">
+        ${clientNo}
       </td>
       <td class="px-1 py-3 text-center col-code cursor-pointer" onclick="openPanel(${c.id})">
         <span class="inline-block bg-blue-50 text-blue-700 text-xs font-bold px-1 py-0.5 rounded whitespace-nowrap">${e(c.code)}</span>
