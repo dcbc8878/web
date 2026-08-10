@@ -29,7 +29,9 @@ const escapeAttr = escapeHtml;
 
 // Minimal markdown subset. Everything is escaped first, so article text
 // can never inject markup — the only tags present are the ones added here.
-function renderContent(raw) {
+// `label` (an article slug) is only used to make the console warning below
+// useful when this runs unattended in CI across many articles.
+function renderContent(raw, label) {
     const lines = String(raw ?? '').replace(/\r\n/g, '\n').split('\n');
     const out = [];
     let listOpen = false;
@@ -63,6 +65,12 @@ function renderContent(raw) {
                     (alt ? `<figcaption>${escapeHtml(alt)}</figcaption>` : '') +
                     `</figure>`
                 );
+            } else {
+                // Rather than silently vanishing (the only trace being a CI
+                // log line nobody who writes articles ever sees), leave a
+                // visible marker in the published page itself.
+                console.error(`⚠ [${label || 'unknown'}] Dropping image with non-http(s) URL: ${JSON.stringify(url)}`);
+                out.push(`<p class="text-red-500">[รูปภาพไม่แสดง: ลิงก์ต้องขึ้นต้นด้วย https:// — ${escapeHtml(url)}]</p>`);
             }
             continue;
         }
@@ -252,7 +260,7 @@ ${cover ? `                <img src="${escapeAttr(cover)}" alt="${escapeAttr(a.t
                         <i class="fa-regular fa-calendar mr-1"></i>เผยแพร่เมื่อ ${escapeHtml(thaiDate(a.published_at || a.created_at))}
                     </p>
                     <div class="article-body">
-${renderContent(a.content)}
+${renderContent(a.content, a.slug)}
                     </div>
 ${a.source_url ? `                    <p class="mt-8 pt-5 border-t border-gray-100 text-xs text-gray-400 font-light">
                         โพสต์ต้นฉบับ: <a href="${escapeAttr(a.source_url)}" target="_blank" rel="noopener" class="text-brand hover:underline">ดูบน Facebook</a>
@@ -376,23 +384,28 @@ async function main() {
         console.error(`⚠ Could not load articles, publishing an empty list: ${err.message}`);
     }
 
-    console.log(`Building ${articles.length} article page(s)`);
+    // Filtered once, up front, and reused everywhere below — otherwise the
+    // listing page and sitemap can advertise a link to an article whose
+    // page generation was skipped for a bad slug, which then 404s.
+    const validArticles = articles.filter((a) => {
+        const ok = a.slug && /^[a-z0-9-]+$/i.test(a.slug);
+        if (!ok) console.error(`⚠ Skipping article with unusable slug: ${JSON.stringify(a.slug)}`);
+        return ok;
+    });
+
+    console.log(`Building ${validArticles.length} article page(s)`);
 
     await mkdir(join(OUT_ROOT, 'articles'), { recursive: true });
-    await writeFile(join(OUT_ROOT, 'articles', 'index.html'), listingPage(articles), 'utf8');
+    await writeFile(join(OUT_ROOT, 'articles', 'index.html'), listingPage(validArticles), 'utf8');
 
-    for (const a of articles) {
-        if (!a.slug || !/^[a-z0-9-]+$/i.test(a.slug)) {
-            console.error(`⚠ Skipping article with unusable slug: ${JSON.stringify(a.slug)}`);
-            continue;
-        }
+    for (const a of validArticles) {
         const dir = join(OUT_ROOT, 'articles', a.slug);
         await mkdir(dir, { recursive: true });
         await writeFile(join(dir, 'index.html'), articlePage(a), 'utf8');
         console.log(`  ✓ /articles/${a.slug}`);
     }
 
-    await writeFile(join(OUT_ROOT, 'sitemap.xml'), sitemapXml(articles), 'utf8');
+    await writeFile(join(OUT_ROOT, 'sitemap.xml'), sitemapXml(validArticles), 'utf8');
     console.log('  ✓ sitemap.xml');
 }
 

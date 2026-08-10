@@ -778,7 +778,7 @@
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/supabase-client.js?v=4"></script>
+    <script src="/supabase-client.js?v=5"></script>
 
     <!-- Scripts -->
     <script>
@@ -885,8 +885,7 @@
             });
         }
 
-        // 4. รีวิวลูกค้า — โหลดเฉพาะรีวิวที่อนุมัติแล้ว ซ่อนทั้งเซคชันถ้ามีน้อยกว่า 5 รายการ
-        const REQUIRED_APPROVED_REVIEWS = 5;
+        // 4. รีวิวลูกค้า — โหลดเฉพาะรีวิวที่อนุมัติแล้ว ซ่อนทั้งเซคชันถ้ามีน้อยกว่า DCBC_REQUIRED_APPROVED_REVIEWS รายการ (ค่ากลาง ดูที่ supabase-client.js)
 
         function reviewAvatarHtml(r) {
             if (r.logo_path) {
@@ -915,16 +914,19 @@
 
         async function loadReviewCarousel() {
             const section = document.getElementById('reviews');
-            const navLink = document.querySelector('a[href="#reviews"]');
+            // Two identical "#reviews" links exist (desktop nav + mobile
+            // dropdown copy) — both must be hidden together, or the mobile
+            // one is left visible and dead.
+            const navLinks = document.querySelectorAll('a[href="#reviews"]');
             const { data, error } = await dcbcSupabase
                 .from('reviews')
                 .select('*')
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
 
-            if (error || !data || data.length < REQUIRED_APPROVED_REVIEWS) {
+            if (error || !data || data.length < DCBC_REQUIRED_APPROVED_REVIEWS) {
                 section.classList.add('hidden');
-                if (navLink) navLink.classList.add('hidden');
+                navLinks.forEach(link => link.classList.add('hidden'));
                 return;
             }
 

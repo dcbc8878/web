@@ -701,9 +701,15 @@
                 logo.style.transition = 'transform 0.55s cubic-bezier(0.72, 0, 0.24, 1) 0.42s';
                 logo.style.transform = dcbcHandoffTransform(logo);
                 var go = function () { window.location.href = link.href; };
-                logo.addEventListener('transitionend', go, { once: true });
-                // transitionend can be missed if the tab is backgrounded mid-move
-                setTimeout(go, 1250);
+                // transitionend can be missed if the tab is backgrounded
+                // mid-move, hence the fallback timer — but if transitionend
+                // does fire first, the timer must be cancelled or it later
+                // fires anyway and restarts an already-finished navigation.
+                var fallbackTimer = setTimeout(go, 1250);
+                logo.addEventListener('transitionend', function () {
+                    clearTimeout(fallbackTimer);
+                    go();
+                }, { once: true });
             });
         })();
     </script>

@@ -1,7 +1,11 @@
 # บริษัท เด็กชายบัญชี จำกัด — เว็บไซต์
 
 เว็บไซต์ static (HTML / Tailwind CDN / JavaScript) สำหรับโดเมน **www.dcbc.co.th**
-ใช้ Supabase เป็นฐานข้อมูลและที่เก็บไฟล์ ไม่มี build step
+ใช้ Supabase เป็นฐานข้อมูลและที่เก็บไฟล์
+
+มี build step เดียว: ตอน deploy ทุกครั้ง `scripts/build-articles.mjs` จะดึงบทความจาก
+Supabase มาสร้างเป็นหน้า HTML จริงไว้ล่วงหน้า (`/articles`, `/articles/<slug>`) และ
+สร้าง `sitemap.xml` ใหม่ ไฟล์อื่นๆ ทั้งหมดแก้ตรงๆ ได้เลยโดยไม่ต้อง build
 
 ## 📁 โครงสร้างไฟล์
 
@@ -14,6 +18,8 @@ web/
 ├── review/index.html             ฟอร์มส่งรีวิว        → /review
 ├── adminupload/index.html        ระบบจัดการหลังบ้าน   → /adminupload
 ├── program/downloader/index.html หน้าดาวน์โหลดโปรแกรม → /program/downloader
+├── articles/                     หน้าบทความ → /articles — **สร้างอัตโนมัติตอน deploy อย่าแก้ไฟล์ในนี้ตรงๆ**
+├── scripts/build-articles.mjs    สคริปต์ที่สร้างโฟลเดอร์ articles/ กับ sitemap.xml จากตาราง Supabase
 ├── supabase-client.js            Supabase client + helper ที่ใช้ร่วมกันทุกหน้า
 ├── supabase-migration.sql        สคริปต์สร้างตาราง/policy (รันใน Supabase SQL Editor)
 ├── APP_UPDATE_API.md             เอกสาร API ตรวจสอบอัปเดตสำหรับตัวโปรแกรม
@@ -21,9 +27,9 @@ web/
 ├── favicon-*.png / favicon.ico   ไอคอนเว็บ
 ├── 404.html                      หน้าเมื่อไม่พบ URL (GitHub Pages บังคับชื่อนี้ที่ root)
 ├── CNAME                         ระบุโดเมน www.dcbc.co.th
-├── robots.txt / sitemap.xml      สำหรับ search engine
+├── robots.txt / sitemap.xml      สำหรับ search engine (sitemap.xml ถูกเขียนทับทุก deploy โดย build-articles.mjs)
 ├── .nojekyll                     ปิดการประมวลผล Jekyll
-└── .github/workflows/deploy.yml  Deploy อัตโนมัติขึ้น GitHub Pages
+└── .github/workflows/deploy.yml  รัน build-articles.mjs แล้ว deploy ขึ้น GitHub Pages อัตโนมัติ ทุก push และทุกชั่วโมง
 ```
 
 > **เพิ่มหน้าใหม่ในอนาคต:** สร้างเป็นโฟลเดอร์ `ชื่อหน้า/index.html` เสมอ ไม่ใช่ `ชื่อหน้า.html`
@@ -47,11 +53,14 @@ python3 -m http.server 8000
 | `reviews` | รีวิวลูกค้า ต้องผ่านการอนุมัติก่อนขึ้นเว็บ (ต้องมีอย่างน้อย 5 รายการ) |
 | `portal_codes` | รหัส 4 หลักสำหรับเข้าหน้า /portal |
 | `app_releases` | เวอร์ชันของโปรแกรมช่วยดาวน์โหลด |
+| `articles` | บทความ — เนื้อหาต้นฉบับ (`scripts/build-articles.mjs` สร้างเป็นหน้า HTML จริงตอน deploy) |
+| `admin_users` / `admin_invites` | บัญชีและสิทธิ์สำหรับเข้า /adminupload |
 
-Storage buckets (ตั้งเป็น Public ทั้งหมด): `documents`, `review-logos`, `app-releases`
+Storage buckets (ตั้งเป็น Public ทั้งหมด): `documents`, `review-logos`, `app-releases`, `article-images`
 
 ฟังก์ชันที่เรียกได้จากภายนอก:
 - `check_portal_code(input_code)` → คืน true/false เท่านั้น ไม่เปิดเผยรายการรหัส
+- `get_portal_documents(input_code)` → คืนรายการเอกสารจริง เฉพาะเมื่อรหัสถูกต้อง (นี่คือสิ่งที่ล็อกหน้า /portal จริงๆ ไม่ใช่แค่หน้าจอกรอกรหัส)
 - `get_latest_app_release()` → คืนเวอร์ชันล่าสุดเป็น JSON (ดู `APP_UPDATE_API.md`)
 
 **การแก้ไขฐานข้อมูล:** แก้ที่ `supabase-migration.sql` แล้วรันทั้งไฟล์ใน Supabase SQL Editor
@@ -65,7 +74,7 @@ Storage buckets (ตั้งเป็น Public ทั้งหมด): `docume
 > **สำคัญ:** ต้องปิด "Allow new users to sign up" ใน Auth settings
 > ไม่อย่างนั้นใครก็สมัครบัญชีเองแล้วเข้าหลังบ้านได้
 
-แท็บในหน้าแอดมิน: เอกสาร · รีวิว · รหัสลูกค้า · โปรแกรม
+แท็บในหน้าแอดมิน: เอกสาร · รีวิว · รหัสลูกค้า · โปรแกรม · บทความ · ผู้ใช้ (แท็บ "ผู้ใช้" เห็นเฉพาะเจ้าของระบบ)
 
 ## ✉️ ฟอร์มติดต่อ
 
@@ -88,4 +97,4 @@ A       @     185.199.111.153
 
 ---
 
-สร้างด้วย HTML/Tailwind CDN/JS — ไม่มี build step แก้ไขและดูแลง่าย
+สร้างด้วย HTML/Tailwind CDN/JS — build step เดียวคือสร้างหน้าบทความตอน deploy แก้ไขและดูแลง่าย
