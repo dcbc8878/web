@@ -7,9 +7,9 @@
 -- (Postgres has no "create policy if not exists"), and the
 -- function uses "create or replace".
 --
--- Prerequisite: create the two storage buckets first via
--- Dashboard -> Storage (documents, review-logos, app-releases) so the
--- bucket_id values referenced below already exist.
+-- Prerequisite: create the four storage buckets first via
+-- Dashboard -> Storage (documents, review-logos, app-releases,
+-- article-images) so the bucket_id values referenced below already exist.
 -- ============================================================
 
 create extension if not exists pgcrypto; -- gen_random_uuid()
@@ -235,10 +235,19 @@ alter table public.documents alter column sort_order set not null;
 
 alter table public.documents enable row level security;
 
+-- Admin dashboard reads the full list directly once logged in. The public
+-- /portal page deliberately does NOT get a policy here — it must go
+-- through get_portal_documents() below instead, which only returns rows
+-- once it has checked a portal code server-side. A direct "anon can select"
+-- policy would mean anyone with the public anon key (already embedded in
+-- supabase-client.js) could read every document over the REST API with no
+-- code check at all — the /portal code screen would still be checked, but
+-- the code would never actually gate access to anything.
 drop policy if exists "documents_public_read" on public.documents;
-create policy "documents_public_read"
+drop policy if exists "documents_admin_read" on public.documents;
+create policy "documents_admin_read"
   on public.documents for select
-  to anon, authenticated
+  to authenticated
   using (true);
 
 drop policy if exists "documents_admin_insert" on public.documents;
@@ -369,6 +378,31 @@ $$;
 
 revoke all on function public.check_portal_code(text) from public;
 grant execute on function public.check_portal_code(text) to anon, authenticated;
+
+-- Callable by anon (and authenticated) from /portal to actually fetch the
+-- document list — the counterpart to check_portal_code() above, which only
+-- ever confirms a code is valid but was never wired to gate document access
+-- itself. SECURITY DEFINER so it can read public.documents despite anon
+-- having no direct select policy on that table; returns zero rows whenever
+-- input_code doesn't match an active portal code, so a revoked or wrong
+-- code can never come back with data.
+create or replace function public.get_portal_documents(input_code text)
+returns setof public.documents
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select d.* from public.documents d
+  where exists (
+    select 1 from public.portal_codes
+    where code = upper(trim(input_code)) and active = true
+  )
+  order by d.sort_order asc;
+$$;
+
+revoke all on function public.get_portal_documents(text) from public;
+grant execute on function public.get_portal_documents(text) to anon, authenticated;
 
 -- Seed the codes that were previously hardcoded in the portal page, so
 -- access doesn't break the moment this migration runs. Safe to
@@ -594,6 +628,15 @@ create policy "review_logos_bucket_public_insert"
   on storage.objects for insert
   to anon, authenticated
   with check (bucket_id = 'review-logos');
+
+-- Hard limits enforced by Storage itself, not just this RLS policy — RLS
+-- only checks bucket_id, so without this an anonymous upload could ship a
+-- huge file or any file type through the same public INSERT above. Max 5
+-- MB, images only.
+update storage.buckets
+set file_size_limit = 5242880,
+    allowed_mime_types = array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+where id = 'review-logos';
 
 drop policy if exists "review_logos_bucket_admin_update" on storage.objects;
 create policy "review_logos_bucket_admin_update"

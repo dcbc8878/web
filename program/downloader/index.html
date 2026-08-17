@@ -19,27 +19,11 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Prompt', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            light: '#FFF2E8',
-                            DEFAULT: '#FFB88C',
-                            dark: '#E5976A',
-                            text: '#4A4A4A',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
+         scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
+         that has to download, run and scan the DOM before the page has any
+         styling, producing a flash of unstyled content on first load. -->
+    <link rel="stylesheet" href="/site.css">
 
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -167,7 +151,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-8 border-t border-gray-800">
+    <footer class="bg-gray-800 text-white py-8 border-t border-gray-700">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p class="text-gray-400 text-sm font-light mb-1">บริษัท เด็กชายบัญชี จำกัด (DEKCHAIBUNCHEE CO.,LTD.)</p>
             <p class="text-xs text-gray-500 font-light">&copy; 2026 All Rights Reserved.</p>
@@ -176,7 +160,7 @@
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/supabase-client.js?v=4"></script>
+    <script src="/supabase-client.js?v=5"></script>
 
     <script>
         async function loadLatestRelease() {
