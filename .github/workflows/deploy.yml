@@ -40,6 +40,11 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Build Tailwind stylesheets
+        run: |
+          npx --yes tailwindcss@3 -c scripts/tailwind.site.js -i scripts/tailwind.site.in.css -o site.css --minify
+          npx --yes tailwindcss@3 -c scripts/tailwind.cards.js -i scripts/tailwind.cards.in.css -o card.css --minify
+
       - name: Build article pages
         run: node scripts/build-articles.mjs
 

@@ -6,3 +6,10 @@ node_modules/
 
 # Article pages are generated at deploy time by scripts/build-articles.mjs
 /articles/
+
+# Compiled Tailwind stylesheets — rebuilt at deploy time (see deploy.yml)
+# from scripts/tailwind.site.js and scripts/tailwind.cards.js, so a stale
+# committed copy can never ship. Run the commands in those two config files
+# locally if you need either file for a local preview.
+/site.css
+/card.css

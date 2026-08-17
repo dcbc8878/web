@@ -18,27 +18,11 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Prompt', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            light: '#FFF2E8',
-                            DEFAULT: '#FFB88C',
-                            dark: '#E5976A',
-                            text: '#4A4A4A',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
+         scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
+         that has to download, run and scan the DOM before the page has any
+         styling, producing a flash of unstyled content on first load. -->
+    <link rel="stylesheet" href="/site.css">
 
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -641,18 +625,17 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-8 border-t border-gray-800 text-center text-xs text-gray-500">
+    <footer class="bg-gray-800 text-white py-8 border-t border-gray-700 text-center text-xs text-gray-500">
         <p>&copy; 2026 บริษัท เด็กชายบัญชี จำกัด. Admin Internal Portal.</p>
     </footer>
 
     <!-- Supabase + QR Code libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/supabase-client.js?v=4"></script>
+    <script src="/supabase-client.js?v=5"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         const REVIEW_LINK_URL = 'https://www.dcbc.co.th/review';
-        const REQUIRED_APPROVED_REVIEWS = 5;
         let currentReviewFilter = 'all';
         let allReviewsCache = [];
 
@@ -868,8 +851,9 @@
             btn.disabled = true;
             btn.querySelector('span').innerText = 'กำลังบันทึก...';
 
+            let filePath = null;
+            let uploadedThisAttempt = false;
             try {
-                let filePath = null;
                 let fileName = null;
                 let fileSize = null;
 
@@ -877,6 +861,7 @@
                     filePath = dcbcStoragePath(file.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, file);
                     if (uploadError) throw uploadError;
+                    uploadedThisAttempt = true;
                     fileName = file.name;
                     fileSize = file.size;
                 }
@@ -908,6 +893,12 @@
                 resetDocForm();
                 loadDocuments();
             } catch (err) {
+                // The file made it to Storage but the DB write that should
+                // point at it failed — remove it instead of leaving an
+                // orphaned file with no document ever listing it.
+                if (uploadedThisAttempt) {
+                    await dcbcSupabase.storage.from('documents').remove([filePath]).catch(() => {});
+                }
                 errorMsg.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');
                 errorMsg.classList.remove('hidden');
             } finally {
@@ -1060,10 +1051,13 @@
                 label.innerText = `กำลังอัปโหลด (${done + failed + 1}/${total})...`;
                 status.className = 'text-xs text-center mt-3 text-gray-500';
                 status.innerText = `กำลังอัปโหลด: ${entry.file.name}`;
+                let filePath = null;
+                let uploadedThisFile = false;
                 try {
-                    const filePath = dcbcStoragePath(entry.file.name);
+                    filePath = dcbcStoragePath(entry.file.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('documents').upload(filePath, entry.file);
                     if (uploadError) throw uploadError;
+                    uploadedThisFile = true;
 
                     const { error: insertError } = await dcbcSupabase.from('documents').insert({
                         title: entry.title || humanizeFilename(entry.file.name),
@@ -1076,6 +1070,9 @@
                     if (insertError) throw insertError;
                     done++;
                 } catch (err) {
+                    if (uploadedThisFile) {
+                        await dcbcSupabase.storage.from('documents').remove([filePath]).catch(() => {});
+                    }
                     failed++;
                     if (!firstError) firstError = err.message || String(err);
                 }
@@ -1176,36 +1173,43 @@
         }
 
         // ---------------- Reviews: link + QR ----------------
-        function showCopyFeedback(success) {
-            const fb = document.getElementById('copy-link-feedback');
-            const err = document.getElementById('copy-link-error');
-            fb.classList.add('hidden');
-            err.classList.add('hidden');
-            const target = success ? fb : err;
-            target.classList.remove('hidden');
-            setTimeout(() => target.classList.add('hidden'), 4000);
-        }
-
-        function fallbackCopyLink() {
-            const input = document.getElementById('review-link-display');
-            input.focus();
-            input.select();
-            try {
-                const ok = document.execCommand('copy');
-                showCopyFeedback(ok);
-            } catch (e) {
-                showCopyFeedback(false);
+        // Shared by every "copy a link" button in this page (reviews link,
+        // download-page link) — copies via the Clipboard API where available,
+        // falling back to a hidden-input select + execCommand('copy') on
+        // older/non-secure contexts, either way flashing a feedback message.
+        function copyLinkToClipboard(url, { feedbackId, errorId, inputId }) {
+            const fb = document.getElementById(feedbackId);
+            const err = document.getElementById(errorId);
+            const show = (ok) => {
+                fb.classList.add('hidden');
+                err.classList.add('hidden');
+                const target = ok ? fb : err;
+                target.classList.remove('hidden');
+                setTimeout(() => target.classList.add('hidden'), 4000);
+            };
+            const fallback = () => {
+                const input = document.getElementById(inputId);
+                input.focus();
+                input.select();
+                try {
+                    show(document.execCommand('copy'));
+                } catch (e) {
+                    show(false);
+                }
+            };
+            if (!navigator.clipboard || !window.isSecureContext) {
+                fallback();
+                return;
             }
+            navigator.clipboard.writeText(url).then(() => show(true)).catch(fallback);
         }
 
         function copyReviewLink() {
-            if (!navigator.clipboard || !window.isSecureContext) {
-                fallbackCopyLink();
-                return;
-            }
-            navigator.clipboard.writeText(REVIEW_LINK_URL)
-                .then(() => showCopyFeedback(true))
-                .catch(() => fallbackCopyLink());
+            copyLinkToClipboard(REVIEW_LINK_URL, {
+                feedbackId: 'copy-link-feedback',
+                errorId: 'copy-link-error',
+                inputId: 'review-link-display'
+            });
         }
 
         function downloadReviewQr() {
@@ -1243,9 +1247,9 @@
 
             const approvedCount = data.filter(r => r.status === 'approved').length;
             const note = document.getElementById('approved-count-note');
-            note.innerText = approvedCount >= REQUIRED_APPROVED_REVIEWS
+            note.innerText = approvedCount >= DCBC_REQUIRED_APPROVED_REVIEWS
                 ? `อนุมัติแล้ว ${approvedCount} รายการ — แสดงบนหน้าเว็บแล้ว`
-                : `อนุมัติแล้ว ${approvedCount} รายการ (ต้องมีอย่างน้อย ${REQUIRED_APPROVED_REVIEWS} รายการ เซคชันรีวิวจึงจะแสดงบนหน้าเว็บ)`;
+                : `อนุมัติแล้ว ${approvedCount} รายการ (ต้องมีอย่างน้อย ${DCBC_REQUIRED_APPROVED_REVIEWS} รายการ เซคชันรีวิวจึงจะแสดงบนหน้าเว็บ)`;
 
             renderReviewList();
         }
@@ -1453,22 +1457,11 @@
         let allReleasesCache = [];
 
         function copyDownloadLink() {
-            const fb = document.getElementById('copy-download-feedback');
-            const err = document.getElementById('copy-download-error');
-            const show = (ok) => {
-                fb.classList.add('hidden');
-                err.classList.add('hidden');
-                const t = ok ? fb : err;
-                t.classList.remove('hidden');
-                setTimeout(() => t.classList.add('hidden'), 4000);
-            };
-            const fallback = () => {
-                const input = document.getElementById('download-link-display');
-                input.focus(); input.select();
-                try { show(document.execCommand('copy')); } catch (e) { show(false); }
-            };
-            if (!navigator.clipboard || !window.isSecureContext) { fallback(); return; }
-            navigator.clipboard.writeText(DOWNLOAD_PAGE_URL).then(() => show(true)).catch(fallback);
+            copyLinkToClipboard(DOWNLOAD_PAGE_URL, {
+                feedbackId: 'copy-download-feedback',
+                errorId: 'copy-download-error',
+                inputId: 'download-link-display'
+            });
         }
 
         function previewReleaseFile(event) {
@@ -1573,12 +1566,15 @@
             btn.disabled = true;
             document.getElementById('release-submit-label').innerText = 'กำลังอัปโหลด...';
 
+            let filePath = null;
+            let uploadedThisAttempt = false;
             try {
-                let filePath = null, fileName = null, fileSize = null;
+                let fileName = null, fileSize = null;
                 if (currentSourceType === 'file' && file) {
                     filePath = dcbcStoragePath(file.name);
                     const { error: uploadError } = await dcbcSupabase.storage.from('app-releases').upload(filePath, file);
                     if (uploadError) throw uploadError;
+                    uploadedThisAttempt = true;
                     fileName = file.name;
                     fileSize = file.size;
                 }
@@ -1616,6 +1612,9 @@
                 resetReleaseForm();
                 loadReleases();
             } catch (err) {
+                if (uploadedThisAttempt) {
+                    await dcbcSupabase.storage.from('app-releases').remove([filePath]).catch(() => {});
+                }
                 errorMsg.textContent = 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');
                 errorMsg.classList.remove('hidden');
             } finally {
@@ -1874,12 +1873,14 @@
             btn.disabled = true;
             document.getElementById('article-submit-label').innerText = 'กำลังบันทึก...';
 
+            let coverPath = null;
+            let uploadedThisAttempt = false;
             try {
-                let coverPath = null;
                 if (coverFile) {
                     coverPath = dcbcStoragePath(coverFile.name);
                     const { error: upErr } = await dcbcSupabase.storage.from('article-images').upload(coverPath, coverFile);
                     if (upErr) throw upErr;
+                    uploadedThisAttempt = true;
                 }
 
                 const existing = allArticlesCache.find(x => x.id === editingId);
@@ -1916,6 +1917,9 @@
                     : 'บันทึกเป็นฉบับร่างแล้ว (ยังไม่แสดงบนเว็บ)';
                 successMsg.classList.remove('hidden');
             } catch (err) {
+                if (uploadedThisAttempt) {
+                    await dcbcSupabase.storage.from('article-images').remove([coverPath]).catch(() => {});
+                }
                 errorMsg.textContent = err.code === '23505'
                     ? 'ลิงก์หน้าบทความ (slug) นี้ถูกใช้ไปแล้ว กรุณาเปลี่ยนเป็นอย่างอื่น'
                     : 'เกิดข้อผิดพลาด: ' + (err.message || 'กรุณาลองใหม่อีกครั้ง');

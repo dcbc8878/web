@@ -18,27 +18,11 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Prompt', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            light: '#FFF2E8',
-                            DEFAULT: '#FFB88C',
-                            dark: '#E5976A',
-                            text: '#4A4A4A',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
+         scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
+         that has to download, run and scan the DOM before the page has any
+         styling, producing a flash of unstyled content on first load. -->
+    <link rel="stylesheet" href="/site.css">
 
     <style>
         ::-webkit-scrollbar { width: 8px; }
@@ -150,14 +134,12 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800">
+    <footer class="bg-gray-800 text-white py-12 border-t border-gray-700">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-700">
                 <div>
                     <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 bg-brand rounded-full flex items-center justify-center text-white text-sm">
-                            <img src="/logo.png" class="w-full h-full object-contain rounded-full">
-                        </div>
+                        <img src="/logo.png" alt="เด็กชายบัญชี" class="w-9 h-9 object-contain">
                         <span class="font-bold text-xl tracking-tight">บริษัท เด็กชายบัญชี จำกัด</span>
                     </div>
                     <p class="text-gray-400 text-sm font-light mb-2">DEKCHAIBUNCHEE CO.,LTD.</p>
@@ -187,7 +169,7 @@
 
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/supabase-client.js?v=4"></script>
+    <script src="/supabase-client.js?v=5"></script>
 
     <!-- Scripts -->
     <script>
@@ -200,9 +182,14 @@
         }, false);
 
         // --- 0. Load real document list from Supabase ---
+        // Goes through get_portal_documents(), which checks the stored code
+        // server-side before returning any rows — the documents table itself
+        // has no public read policy, so this is what actually enforces the
+        // code gate (not just the lock screen in front of it).
         async function loadDocumentList() {
             const listEl = document.getElementById('document-list');
-            const { data, error } = await dcbcSupabase.from('documents').select('*').order('sort_order', { ascending: true });
+            const code = sessionStorage.getItem('dcbc_portal_code');
+            const { data, error } = await dcbcSupabase.rpc('get_portal_documents', { input_code: code });
 
             if (error) {
                 listEl.innerHTML = `<li class="text-center text-red-400 text-sm py-8">โหลดเอกสารไม่สำเร็จ กรุณาลองใหม่ภายหลัง</li>`;
@@ -247,14 +234,15 @@
         const portalLockError = document.getElementById('portal-lock-error');
         const portalLockSubmit = document.getElementById('portal-lock-submit');
 
-        function unlockPortal() {
-            sessionStorage.setItem('dcbc_portal_unlocked', '1');
+        function unlockPortal(code) {
+            sessionStorage.setItem('dcbc_portal_code', code);
             portalLockOverlay.style.display = 'none';
             loadDocumentList();
         }
 
-        if (sessionStorage.getItem('dcbc_portal_unlocked') === '1') {
-            unlockPortal();
+        const storedPortalCode = sessionStorage.getItem('dcbc_portal_code');
+        if (storedPortalCode) {
+            unlockPortal(storedPortalCode);
         }
 
         portalLockForm.addEventListener('submit', async function (e) {
@@ -266,7 +254,7 @@
 
             if (!error && data === true) {
                 portalLockError.classList.add('hidden');
-                unlockPortal();
+                unlockPortal(entered);
             } else {
                 portalLockError.classList.remove('hidden');
                 portalLockCode.value = '';

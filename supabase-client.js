@@ -6,6 +6,12 @@ const DCBC_SUPABASE_ANON_KEY = 'sb_publishable_4U_v9BIrQjKppfchaevA6Q_zWj3zkxE';
 
 window.dcbcSupabase = supabase.createClient(DCBC_SUPABASE_URL, DCBC_SUPABASE_ANON_KEY);
 
+// Reviews section on the homepage stays hidden until this many reviews are
+// approved. Shared here (instead of separately in index.html and
+// adminupload/index.html) so the two can't drift apart and disagree about
+// whether the section is actually live.
+const DCBC_REQUIRED_APPROVED_REVIEWS = 5;
+
 // Escapes user-submitted text before it's placed into innerHTML.
 function escapeHtml(str) {
     const div = document.createElement('div');
