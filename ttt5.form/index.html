@@ -1321,6 +1321,19 @@
     }).join("");
   }
 
+  // Tapping/clicking a suggestion moves focus away from #name-input, which
+  // fires blur -> hides this dropdown via the 150ms timeout below, racing
+  // the click itself (loses that race often enough on real touch devices
+  // that selection silently fails). Preventing default on mousedown stops
+  // that focus shift -- and therefore the blur -- without touching the
+  // click that follows it (mousedown/click are independent events, on both
+  // mouse and synthesized-from-touch interactions). Do NOT do this on
+  // touchstart: preventDefault there tells the browser to skip synthesizing
+  // the click entirely, which would break selection on touch devices.
+  els.nameSuggestions.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".rsvp-suggestion-item")) e.preventDefault();
+  });
+
   els.nameSuggestions.addEventListener("click", (e) => {
     const btn = e.target.closest(".rsvp-suggestion-item");
     if (!btn) return;
