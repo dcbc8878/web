@@ -178,9 +178,9 @@ ${head}
 
 ${body}
 
-    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800 mt-auto">
+    <footer class="bg-gray-800 text-white py-12 border-t border-gray-700 mt-auto">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-700">
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <img src="/logo.png" alt="เด็กชายบัญชี" class="w-9 h-9 object-contain">
