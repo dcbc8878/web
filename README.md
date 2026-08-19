@@ -3,10 +3,11 @@
 เว็บไซต์ static (HTML / Tailwind (compiled) / JavaScript) สำหรับโดเมน **www.dcbc.co.th**
 ใช้ Supabase เป็นฐานข้อมูลและที่เก็บไฟล์
 
-ตอน deploy ทุกครั้ง มี 2 อย่างที่ถูกสร้างขึ้นอัตโนมัติ (ไม่ต้องทำเอง ไม่ commit เข้า repo):
+ตอน deploy ทุกครั้ง มี 2 อย่างที่ถูกสร้าง/อัปเดตอัตโนมัติ (ไม่ต้องทำเอง):
 1. `site.css` / `card.css` — คอมไพล์จาก Tailwind (ดู `scripts/tailwind.site.js` และ
    `scripts/tailwind.cards.js`) แทนที่จะโหลด Tailwind CDN ซึ่งเป็น JavaScript ที่ทำให้
-   หน้าขาวๆ แวบก่อนสไตล์จะขึ้น
+   หน้าขาวๆ แวบก่อนสไตล์จะขึ้น — ไฟล์นี้ commit เข้า repo ไว้ (เพื่อให้ deploy พร้อมใช้แน่นอน)
+   แต่ CI จะ build ทับให้สดใหม่ทุกครั้งอยู่ดี ถ้าลืมอัปเดตหลังแก้ class จะไม่มีผลกับเว็บจริง
 2. `articles/` + `sitemap.xml` — `scripts/build-articles.mjs` ดึงบทความจาก Supabase มา
    สร้างเป็นหน้า HTML จริงไว้ล่วงหน้า (`/articles`, `/articles/<slug>`)
 
@@ -27,7 +28,7 @@ web/
 ├── scripts/build-articles.mjs    สคริปต์ที่สร้างโฟลเดอร์ articles/ กับ sitemap.xml จากตาราง Supabase
 ├── scripts/tailwind.site.js      Tailwind config ของหน้าเว็บหลัก (index/portal/review/adminupload/downloader) → คอมไพล์เป็น site.css
 ├── scripts/tailwind.cards.js     Tailwind config ของหน้านามบัตร → คอมไพล์เป็น card.css
-├── site.css / card.css           **ไม่ commit เข้า repo** สร้างอัตโนมัติตอน deploy จาก config ด้านบน
+├── site.css / card.css           คอมไพล์แล้ว, commit ไว้ + CI build ทับให้สดใหม่ทุก deploy
 ├── supabase-client.js            Supabase client + helper ที่ใช้ร่วมกันทุกหน้า
 ├── supabase-migration.sql        สคริปต์สร้างตาราง/policy (รันใน Supabase SQL Editor)
 ├── APP_UPDATE_API.md             เอกสาร API ตรวจสอบอัปเดตสำหรับตัวโปรแกรม
@@ -46,15 +47,15 @@ web/
 
 ## 🖥️ ดูเว็บบนเครื่อง (Local Preview)
 
-หน้าส่วนใหญ่ (ที่ยังไม่ได้แก้ class ใหม่) ดูได้เลยโดยไม่ต้อง build:
+ดูได้เลยโดยไม่ต้อง build (site.css / card.css commit ไว้ในเครื่องอยู่แล้ว):
 
 ```bash
 python3 -m http.server 8000
 # แล้วเปิด http://localhost:8000
 ```
 
-ถ้าเพิ่ง**แก้ class ของ Tailwind ในหน้าไหน** ต้องสร้าง `site.css` / `card.css` ก่อน
-(ไฟล์นี้ไม่ได้ commit เข้า repo ถูกสร้างอัตโนมัติเฉพาะตอน deploy):
+ถ้าเพิ่ง**แก้ class ของ Tailwind ในหน้าไหน** ต้องสร้าง `site.css` / `card.css` ใหม่แล้ว commit
+ไปด้วย (ไม่งั้นเว็บจะยังโชว์สไตล์เก่าจนกว่า deploy รอบถัดไปจะ build ทับให้):
 
 ```bash
 npx tailwindcss@3 -c scripts/tailwind.site.js -i scripts/tailwind.site.in.css -o site.css --minify
