@@ -139,7 +139,7 @@ function layout({ title, description, canonical, head = '', body }) {
          scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
          that has to download, run and scan the DOM before the page has any
          styling, producing a flash of unstyled content on first load. -->
-    <link rel="stylesheet" href="/site.css">
+    <link rel="stylesheet" href="/site.css?v=1">
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
