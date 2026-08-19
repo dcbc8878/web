@@ -713,6 +713,91 @@
     cursor: pointer;
     white-space: nowrap;
   }
+  .rsvp-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .rsvp-size-chart-link {
+    background: none;
+    border: none;
+    color: var(--gold);
+    font-family: 'Prompt', sans-serif;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    padding: 0;
+    white-space: nowrap;
+  }
+  .rsvp-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(34, 31, 59, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+  }
+  .rsvp-modal-card {
+    background: var(--paper);
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 340px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 30px 70px rgba(40,20,70,0.45);
+  }
+  .rsvp-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-family: 'Kanit', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .rsvp-modal-close {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    flex-shrink: 0;
+  }
+  .rsvp-size-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .rsvp-size-table th, .rsvp-size-table td {
+    padding: 8px 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .rsvp-size-table th {
+    color: var(--wax);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  .rsvp-size-table td:first-child, .rsvp-size-table th:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .rsvp-size-table tbody tr:last-child td {
+    border-bottom: none;
+  }
 </style>
 </head>
 <body>
@@ -753,7 +838,10 @@
       </div>
 
       <div class="rsvp-field">
-        <label class="rsvp-label">ไซส์เสื้อรุ่น</label>
+        <div class="rsvp-label-row">
+          <label class="rsvp-label" style="margin-bottom:0">ไซส์เสื้อรุ่น</label>
+          <button type="button" class="rsvp-size-chart-link" id="size-chart-link">ดูตารางไซส์</button>
+        </div>
         <select class="rsvp-select" id="shirt-size-select">
           <option value="">เลือกไซส์</option>
           <option value="S">S</option>
@@ -969,6 +1057,31 @@
 
       <button class="rsvp-again" style="width:100%" id="done-reset-btn">ลงทะเบียนคนถัดไป</button>
     </section>
+
+    <div class="rsvp-modal-overlay hidden" id="size-chart-overlay">
+      <div class="rsvp-modal-card">
+        <div class="rsvp-modal-header">
+          <span>ตารางไซส์เสื้อ</span>
+          <button type="button" class="rsvp-modal-close" id="size-chart-close" aria-label="ปิด">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <table class="rsvp-size-table">
+          <thead>
+            <tr><th>ไซส์</th><th>รอบอก</th><th>ความยาว</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>S</td><td>32"</td><td>25"</td></tr>
+            <tr><td>M</td><td>36"</td><td>27"</td></tr>
+            <tr><td>L</td><td>40"</td><td>29"</td></tr>
+            <tr><td>XL</td><td>44"</td><td>31"</td></tr>
+            <tr><td>2XL</td><td>48"</td><td>32"</td></tr>
+            <tr><td>3XL</td><td>52"</td><td>33"</td></tr>
+          </tbody>
+        </table>
+        <p class="rsvp-hint" style="margin-top:10px">ไซส์ 4XL ทางโรงพิมพ์ไม่ได้ให้ตารางขนาดมา หากไม่แน่ใจสอบถามแอดมินได้</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1190,6 +1303,9 @@
     nameInput: $("name-input"),
     nameSuggestions: $("name-suggestions"),
     shirtSizeSelect: $("shirt-size-select"),
+    sizeChartLink: $("size-chart-link"),
+    sizeChartOverlay: $("size-chart-overlay"),
+    sizeChartClose: $("size-chart-close"),
     attendYesBtn: $("attend-yes-btn"),
     attendNoBtn: $("attend-no-btn"),
     companionsSection: $("companions-section"),
@@ -1368,6 +1484,12 @@
 
   els.shirtSizeSelect.addEventListener("change", (e) => {
     state.shirtSize = e.target.value;
+  });
+
+  els.sizeChartLink.addEventListener("click", () => els.sizeChartOverlay.classList.remove("hidden"));
+  els.sizeChartClose.addEventListener("click", () => els.sizeChartOverlay.classList.add("hidden"));
+  els.sizeChartOverlay.addEventListener("click", (e) => {
+    if (e.target === els.sizeChartOverlay) els.sizeChartOverlay.classList.add("hidden");
   });
 
   // ---------- attending / companions ----------
