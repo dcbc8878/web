@@ -277,12 +277,12 @@
     font-weight: 600;
   }
   .rsvp-stepper {
-    display: flex; align-items: center; gap: 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
     background: var(--paper-field);
     border: 1px solid var(--line);
     border-radius: 8px;
-    padding: 10px 16px;
-    width: fit-content;
+    padding: 10px 12px;
+    width: 100%;
   }
   .rsvp-step-btn {
     width: 30px; height: 30px; border-radius: 50%;
@@ -301,8 +301,15 @@
     display: flex;
     gap: 12px;
   }
+  /* Below this, two side-by-side stepper boxes don't leave enough room for
+     the +/- buttons without shrinking them past a comfortable tap size --
+     stack instead of squeezing. */
+  @media (max-width: 400px) {
+    .rsvp-companion-counts { flex-direction: column; }
+  }
   .rsvp-count-box {
     flex: 1;
+    min-width: 0;
     border: 1px solid var(--line);
     border-radius: 10px;
     padding: 14px;
