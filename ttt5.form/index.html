@@ -182,7 +182,21 @@
     box-shadow: 0 0 0 3px rgba(18,179,168,0.18);
   }
   .rsvp-select { appearance: none; cursor: pointer; }
+  .rsvp-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+    font-family: 'Prompt', sans-serif;
+  }
+  .rsvp-select-trigger svg { flex-shrink: 0; color: var(--ink-soft); }
+  .rsvp-select-trigger.is-placeholder { color: #8a7550; }
   .rsvp-field.rsvp-combobox { position: relative; z-index: 50; }
+  /* Each combobox wrapper is its own stacking context, so the name field's
+     open dropdown (a child z-index only matters within it) needs a higher
+     context than the shirt-size field below it to actually draw on top. */
+  .rsvp-field.rsvp-combobox.rsvp-name-combobox { z-index: 51; }
   .rsvp-suggestions {
     position: absolute;
     top: 100%; left: 0; right: 0;
@@ -192,7 +206,7 @@
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: 8px;
-    z-index: 30;
+    z-index: 60;
     box-shadow: 0 14px 28px rgba(0,0,0,0.35);
   }
   .rsvp-suggestion-item {
@@ -830,28 +844,23 @@
 
       <div class="rsvp-divider"><span>✦</span></div>
 
-      <div class="rsvp-field rsvp-combobox">
+      <div class="rsvp-field rsvp-combobox rsvp-name-combobox">
         <label class="rsvp-label">ชื่อ-นามสกุล</label>
         <input class="rsvp-input" type="text" id="name-input" placeholder="พิมพ์เพื่อค้นหาชื่อของคุณ" autocomplete="off">
         <div class="rsvp-suggestions hidden" id="name-suggestions"></div>
         <p class="rsvp-hint">พิมพ์เพื่อค้นหา หรือกดที่ช่องเพื่อดูรายชื่อทั้งหมดจากทำเนียบ Train The Trainer รุ่น 5</p>
       </div>
 
-      <div class="rsvp-field">
+      <div class="rsvp-field rsvp-combobox">
         <div class="rsvp-label-row">
           <label class="rsvp-label" style="margin-bottom:0">ไซส์เสื้อรุ่น</label>
           <button type="button" class="rsvp-size-chart-link" id="size-chart-link">ดูตารางไซส์</button>
         </div>
-        <select class="rsvp-select" id="shirt-size-select">
-          <option value="">เลือกไซส์</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="2XL">2XL</option>
-          <option value="3XL">3XL</option>
-          <option value="4XL">4XL</option>
-        </select>
+        <button type="button" class="rsvp-input rsvp-select-trigger is-placeholder" id="shirt-size-trigger">
+          <span id="shirt-size-trigger-label">เลือกไซส์</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="rsvp-suggestions hidden" id="shirt-size-dropdown"></div>
         <p class="rsvp-hint">เลือกไซส์เสื้อรุ่นของคุณ ไม่ว่าจะเข้าร่วมงานหรือไม่ก็ตาม</p>
       </div>
 
@@ -1079,7 +1088,6 @@
             <tr><td>3XL</td><td>52"</td><td>33"</td></tr>
           </tbody>
         </table>
-        <p class="rsvp-hint" style="margin-top:10px">ไซส์ 4XL ทางโรงพิมพ์ไม่ได้ให้ตารางขนาดมา หากไม่แน่ใจสอบถามแอดมินได้</p>
       </div>
     </div>
   </div>
@@ -1091,7 +1099,7 @@
 (function () {
   "use strict";
 
-  const SHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL", "4XL"];
+  const SHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
   const PRICE_PER_PERSON = 1000;
   const MAX_SLIP_WIDTH = 1000;
   const PAYEE_NAME = "ทลปราย วรรณทานะ";
@@ -1276,6 +1284,7 @@
     showSuggestions: false,
     attending: null,
     shirtSize: "",
+    showShirtSizeDropdown: false,
     hasCompanions: null,
     companionAdults: 1,
     companionChildren: 0,
@@ -1302,7 +1311,9 @@
 
     nameInput: $("name-input"),
     nameSuggestions: $("name-suggestions"),
-    shirtSizeSelect: $("shirt-size-select"),
+    shirtSizeTrigger: $("shirt-size-trigger"),
+    shirtSizeTriggerLabel: $("shirt-size-trigger-label"),
+    shirtSizeDropdown: $("shirt-size-dropdown"),
     sizeChartLink: $("size-chart-link"),
     sizeChartOverlay: $("size-chart-overlay"),
     sizeChartClose: $("size-chart-close"),
@@ -1457,10 +1468,7 @@
     if (!t) return;
     state.name = t.name;
     els.nameInput.value = t.name;
-    if (t.size) {
-      state.shirtSize = t.size;
-      els.shirtSizeSelect.value = t.size;
-    }
+    if (t.size && SHIRT_SIZES.includes(t.size)) setShirtSize(t.size);
     state.showSuggestions = false;
     renderSuggestions();
     setInfoError("");
@@ -1482,8 +1490,44 @@
     }, 150);
   });
 
-  els.shirtSizeSelect.addEventListener("change", (e) => {
-    state.shirtSize = e.target.value;
+  function setShirtSize(size) {
+    state.shirtSize = size;
+    els.shirtSizeTriggerLabel.textContent = size || "เลือกไซส์";
+    els.shirtSizeTrigger.classList.toggle("is-placeholder", !size);
+  }
+
+  function renderShirtSizeDropdown() {
+    if (!state.showShirtSizeDropdown) {
+      els.shirtSizeDropdown.classList.add("hidden");
+      return;
+    }
+    els.shirtSizeDropdown.classList.remove("hidden");
+    els.shirtSizeDropdown.innerHTML = SHIRT_SIZES.map((s) =>
+      '<button type="button" class="rsvp-suggestion-item" data-size="' + s + '"><span>' + s + "</span></button>"
+    ).join("");
+  }
+
+  // Same fix as the name suggestions: keep focus on the trigger through the
+  // click, so the blur-driven close below doesn't race the selection.
+  els.shirtSizeDropdown.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".rsvp-suggestion-item")) e.preventDefault();
+  });
+  els.shirtSizeDropdown.addEventListener("click", (e) => {
+    const btn = e.target.closest(".rsvp-suggestion-item");
+    if (!btn) return;
+    setShirtSize(btn.dataset.size);
+    state.showShirtSizeDropdown = false;
+    renderShirtSizeDropdown();
+  });
+  els.shirtSizeTrigger.addEventListener("click", () => {
+    state.showShirtSizeDropdown = !state.showShirtSizeDropdown;
+    renderShirtSizeDropdown();
+  });
+  els.shirtSizeTrigger.addEventListener("blur", () => {
+    setTimeout(() => {
+      state.showShirtSizeDropdown = false;
+      renderShirtSizeDropdown();
+    }, 150);
   });
 
   els.sizeChartLink.addEventListener("click", () => els.sizeChartOverlay.classList.remove("hidden"));
@@ -1840,7 +1884,9 @@
     state.lastEntry = null;
 
     els.nameInput.value = "";
-    els.shirtSizeSelect.value = "";
+    setShirtSize("");
+    state.showShirtSizeDropdown = false;
+    renderShirtSizeDropdown();
     els.slipFileInput.value = "";
     syncAttendingUI();
     syncCompanionsUI();
