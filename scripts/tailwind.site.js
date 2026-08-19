@@ -4,8 +4,12 @@
 // unstyled first — the same problem already fixed for the two business-card
 // pages (see tailwind.cards.js) via a compiled stylesheet instead.
 //
-// Rebuilt automatically on every deploy (see .github/workflows/deploy.yml),
-// so this never drifts from the markup — no manual regenerate step needed.
+// The output (site.css) is committed so it's always present at deploy time,
+// but CI also rebuilds and overwrites it fresh on every deploy (see
+// .github/workflows/deploy.yml) so a forgotten manual rebuild never ships
+// stale. Regenerate it locally after changing Tailwind classes on any of
+// the pages below so local previews and diffs stay accurate:
+//   npx tailwindcss@3 -c scripts/tailwind.site.js -i scripts/tailwind.site.in.css -o site.css --minify
 //
 // The theme below must stay in step with what the pages used to declare
 // inline; nothing else reads it. supabase-client.js and build-articles.mjs
