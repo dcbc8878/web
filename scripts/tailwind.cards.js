@@ -11,12 +11,23 @@
 // previews and diffs stay accurate:
 //   npx tailwindcss@3 -c scripts/tailwind.cards.js -i scripts/tailwind.cards.in.css -o card.css --minify
 //
+// content paths are resolved from THIS FILE's location (via __dirname), not
+// a hardcoded machine-specific path — see tailwind.site.js for why: an
+// absolute path baked in from one developer's checkout matches nothing on
+// any other machine (including every CI runner), so Tailwind silently
+// scans zero files and ships only the base reset. __dirname always points
+// at this file's real location on disk, so it works wherever the repo is
+// checked out.
+//
 // The theme below must stay in step with what the pages used to declare
 // inline; nothing else reads it.
+const path = require('node:path');
+const root = (...segments) => path.join(__dirname, '..', ...segments);
+
 module.exports = {
   content: [
-    '/home/user/web/businesscard/index.html',
-    '/home/user/web/businesscard.ttt/index.html',
+    root('businesscard/index.html'),
+    root('businesscard.ttt/index.html'),
   ],
   theme: {
     extend: {
