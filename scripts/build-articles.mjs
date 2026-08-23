@@ -9,13 +9,17 @@
 // Nothing is committed back to the repo — files are written into the
 // working tree and picked up by the upload-pages-artifact step.
 
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const SUPABASE_URL = 'https://dqegkyobclqqichhnxfm.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4U_v9BIrQjKppfchaevA6Q_zWj3zkxE';
 const SITE_URL = 'https://www.dcbc.co.th';
 const OUT_ROOT = process.cwd();
+
+// Inlined directly into every generated page's <head> instead of linked as
+// /site.css — see scripts/inline-css.mjs for why. Loaded once in main().
+let SITE_CSS = '';
 
 const escapeHtml = (s) =>
     String(s ?? '')
@@ -136,10 +140,11 @@ function layout({ title, description, canonical, head = '', body }) {
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
-         scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
-         that has to download, run and scan the DOM before the page has any
-         styling, producing a flash of unstyled content on first load. -->
-    <link rel="stylesheet" href="/site.css">
+         scripts/tailwind.site.js), inlined rather than linked as /site.css
+         — see scripts/inline-css.mjs for why. -->
+    <style>
+${SITE_CSS}
+    </style>
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
@@ -371,6 +376,8 @@ async function fetchArticles() {
 }
 
 async function main() {
+    SITE_CSS = await readFile(join(OUT_ROOT, 'site.css'), 'utf8');
+
     let articles = [];
     try {
         articles = await fetchArticles();
