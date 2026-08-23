@@ -217,6 +217,13 @@
     color: var(--ink);
   }
   .rsvp-event-detail-row svg { flex-shrink: 0; color: var(--wax); }
+  .rsvp-event-detail-link {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--line);
+    text-underline-offset: 2px;
+  }
+  .rsvp-event-detail-link:hover { color: var(--wax); text-decoration-color: var(--wax); }
   .rsvp-suggestions {
     position: absolute;
     top: 100%; left: 0; right: 0;
@@ -880,7 +887,7 @@
         </div>
         <div class="rsvp-event-detail-row">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>ทดสอบก่อนครับยังไม่ได้สถานที่จริง</span>
+          <a href="https://maps.app.goo.gl/5f9FPLJS5AiDX5oS7" target="_blank" rel="noopener" class="rsvp-event-detail-link">โรงแรม เอส 31 สุขุมวิท (S31)</a>
         </div>
       </div>
 
