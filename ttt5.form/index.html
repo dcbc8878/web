@@ -1632,10 +1632,13 @@
     return idx === -1 ? null : idx + 1;
   }
 
+  function collapseSpaces(s) {
+    return (s || "").replace(/\s+/g, " ").trim();
+  }
   function getFilteredTrainees(query) {
-    const q = (query || "").trim();
+    const q = collapseSpaces(query);
     if (!q) return TRAINEES;
-    return TRAINEES.filter((t) => t.name.includes(q) || (t.nickname && t.nickname.includes(q)));
+    return TRAINEES.filter((t) => collapseSpaces(t.name).includes(q) || (t.nickname && collapseSpaces(t.nickname).includes(q)));
   }
 
   function slipPublicUrl(path) {
@@ -2354,7 +2357,15 @@
       entry.attending ? (entry.slip_path ? "ใช่" : "ไม่") : "",
       entry.created_at ? new Date(entry.created_at).toLocaleString("th-TH") : "",
     ]);
-    const escapeCell = (v) => '"' + String(v).replace(/"/g, '""') + '"';
+    // Guards against CSV/formula injection: name and dietary_notes are
+    // free text a guest types themselves, and a value starting with one of
+    // these characters would run as a live formula (e.g. a HYPERLINK that
+    // exfiltrates data) the moment the admin opens this file in Excel/Sheets.
+    const escapeCell = (v) => {
+      let s = String(v);
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
     const csv = [headers].concat(rows).map((r) => r.map(escapeCell).join(",")).join("\r\n");
     try {
       const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
