@@ -28,8 +28,14 @@ create table if not exists public.ttt5_registrations (
   total_amount      integer not null default 0,
   slip_path         text,      -- storage key inside 'ttt5-slips' bucket, null when not attending
   slip_file_name    text,      -- original filename, for the admin download button
+  dietary_notes     text,      -- free text composed client-side from checkbox picks, e.g. "อิสลาม, แพ้อาหารทะเล: กุ้ง"; null when not attending
   created_at        timestamptz not null default now()
 );
+
+-- Added after the table already existed live -- kept here (in addition to
+-- the column above) so this file stays accurate for both a fresh deploy
+-- and re-running against the already-deployed table.
+alter table public.ttt5_registrations add column if not exists dietary_notes text;
 
 alter table public.ttt5_registrations enable row level security;
 
