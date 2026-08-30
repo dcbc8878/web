@@ -966,6 +966,13 @@
 
       <div class="rsvp-divider"><span>✦</span></div>
 
+      <div class="hidden" id="registration-closed-notice">
+        <div class="rsvp-check"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/><circle cx="12" cy="12" r="10"/></svg></div>
+        <h2 class="rsvp-subtitle" style="text-align:center;font-size:16px;color:inherit;margin-top:12px">ปิดรับลงทะเบียนแล้ว</h2>
+        <p class="rsvp-footnote">ขอบคุณทุกท่านที่ลงทะเบียนเข้าร่วมงาน ขณะนี้ปิดรับลงทะเบียนเพิ่มเติมแล้ว<br>หากมีข้อสงสัยเกี่ยวกับการลงทะเบียนของท่าน กรุณาติดต่อผู้จัดงานโดยตรง</p>
+      </div>
+
+      <div id="registration-form-fields">
       <div class="rsvp-field rsvp-combobox rsvp-name-combobox">
         <label class="rsvp-label">ชื่อ-นามสกุล</label>
         <input class="rsvp-input" type="text" id="name-input" placeholder="พิมพ์เพื่อค้นหาชื่อของคุณ" autocomplete="off">
@@ -1048,6 +1055,7 @@
         ข้อมูลการลงทะเบียนของคุณจะถูกบันทึกไว้ให้ผู้จัดงานเห็น<br>
         คนที่ลงชื่อแล้วจะลงซ้ำไม่ได้ — ต้องให้แอดมินลบข้อมูลเดิมก่อนจึงจะแก้ไขได้
       </p>
+      </div>
 
       <button type="button" class="rsvp-admin-link" id="admin-link-btn">สำหรับแอดมิน</button>
     </section>
@@ -1266,6 +1274,7 @@
 (function () {
   "use strict";
 
+  const REGISTRATION_CLOSED = true;
   const SHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
   const PRICE_PER_PERSON = 1000;
   const MAX_SLIP_WIDTH = 1000;
@@ -2396,6 +2405,10 @@
   });
 
   // ---------- init ----------
+  if (REGISTRATION_CLOSED) {
+    $("registration-form-fields").classList.add("hidden");
+    $("registration-closed-notice").classList.remove("hidden");
+  }
   syncAttendingUI();
   syncCompanionsUI();
   renderCompanionCounts();
