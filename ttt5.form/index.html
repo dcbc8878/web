@@ -1113,8 +1113,8 @@
     <!-- ===== STEP: shirtInfo (default view now that registration is closed) ===== -->
     <section id="step-shirtInfo">
       <div class="rsvp-emblem"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 1.5l2.47 6.62L21 10l-6.53 1.88L12 18.5l-2.47-6.62L3 10l6.53-1.88L12 1.5z"/></svg></div>
-      <h1 class="rsvp-title">สั่งเสื้อที่ระลึก</h1>
-      <p class="rsvp-subtitle">งานเลี้ยง Train The Trainer รุ่น 5</p>
+      <h1 class="rsvp-title">เสื้อรุ่น Train The Trainer 5</h1>
+      <p class="rsvp-subtitle">สั่งเสื้อที่ระลึกงานเลี้ยง</p>
 
       <div class="rsvp-divider"><span>✦</span></div>
 
@@ -1127,13 +1127,23 @@
       <div id="shirt-order-form-fields">
         <img src="shirt-preview.jpg" alt="ตัวอย่างเสื้อที่ระลึก Train The Trainer 5" class="shirt-preview-img">
 
-        <div class="rsvp-field">
+        <div class="rsvp-field rsvp-combobox rsvp-name-combobox">
           <label class="rsvp-label">ชื่อ-นามสกุล</label>
-          <input class="rsvp-input" type="text" id="shirt-name-input" placeholder="ชื่อ-นามสกุลผู้สั่ง" autocomplete="off">
+          <input class="rsvp-input" type="text" id="shirt-name-input" placeholder="พิมพ์เพื่อค้นหาชื่อของคุณ" autocomplete="off">
+          <div class="rsvp-suggestions hidden" id="shirt-name-suggestions"></div>
+          <p class="rsvp-hint">เลือกชื่อจากรายชื่อทำเนียบ Train The Trainer รุ่น 5 เท่านั้น</p>
         </div>
 
         <div class="rsvp-field">
-          <label class="rsvp-label">ไซส์เสื้อ + จำนวน</label>
+          <label class="rsvp-label">เบอร์โทรศัพท์</label>
+          <input class="rsvp-input" type="tel" id="shirt-phone-input" placeholder="เบอร์โทรศัพท์ที่ติดต่อได้" autocomplete="off">
+        </div>
+
+        <div class="rsvp-field">
+          <div class="rsvp-label-row">
+            <label class="rsvp-label" style="margin-bottom:0">ไซส์เสื้อ + จำนวน</label>
+            <button type="button" class="rsvp-size-chart-link" id="shirt-size-chart-link">ดูตารางไซส์</button>
+          </div>
           <div id="shirt-items-list"></div>
           <button type="button" class="rsvp-again" id="shirt-add-item-btn" style="margin-top:10px;width:100%">+ เพิ่มไซส์อื่น</button>
         </div>
@@ -1148,7 +1158,7 @@
 
         <div class="rsvp-field hidden" id="shirt-delivery-address-field">
           <label class="rsvp-label">ที่อยู่จัดส่ง</label>
-          <textarea class="rsvp-input" id="shirt-delivery-address-input" rows="3" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์ และเบอร์โทรติดต่อ"></textarea>
+          <textarea class="rsvp-input" id="shirt-delivery-address-input" rows="3" placeholder="บ้านเลขที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด รหัสไปรษณีย์"></textarea>
         </div>
 
         <div class="rsvp-error hidden" id="shirt-info-error"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="shirt-info-error-text"></span></div>
@@ -1723,6 +1733,8 @@
     deletingKey: null,
     expandedSlipKey: null,
     shirtName: "",
+    shirtShowNameSuggestions: false,
+    shirtPhone: "",
     shirtItems: [{ size: "", qty: 1 }],
     shirtDelivery: null,
     shirtDeliveryAddress: "",
@@ -1852,6 +1864,9 @@
     shirtOrderClosedNotice: $("shirt-order-closed-notice"),
     shirtOrderFormFields: $("shirt-order-form-fields"),
     shirtNameInput: $("shirt-name-input"),
+    shirtNameSuggestions: $("shirt-name-suggestions"),
+    shirtPhoneInput: $("shirt-phone-input"),
+    shirtSizeChartLink: $("shirt-size-chart-link"),
     shirtItemsList: $("shirt-items-list"),
     shirtAddItemBtn: $("shirt-add-item-btn"),
     shirtPickupBtn: $("shirt-pickup-btn"),
@@ -2807,6 +2822,7 @@
       const itemsLabel = (entry.items || []).map((it) => it.size + " x" + it.qty).join(", ");
       const metaParts = [itemsLabel || "-", (entry.shirt_count || 0) + " ตัว", (entry.total_amount || 0).toLocaleString("th-TH") + " ฿"];
       metaParts.push(entry.delivery ? "จัดส่ง" : "รับที่หน้างาน");
+      if (entry.phone) metaParts.push("โทร " + entry.phone);
       const isConfirming = state.shirtConfirmDeleteKey === entry.id;
       const isDeleting = state.shirtDeletingKey === entry.id;
 
@@ -2902,9 +2918,10 @@
   });
 
   els.shirtAdminExportCsvBtn.addEventListener("click", () => {
-    const headers = ["ชื่อ", "รายการไซส์", "จำนวนรวม (ตัว)", "รับเสื้อ", "ที่อยู่จัดส่ง", "เก็บค่าจัดส่งแล้ว", "ยอดชำระ (บาท)", "แนบสลิปแล้ว", "วันที่สั่ง"];
+    const headers = ["ชื่อ", "เบอร์โทรศัพท์", "รายการไซส์", "จำนวนรวม (ตัว)", "รับเสื้อ", "ที่อยู่จัดส่ง", "เก็บค่าจัดส่งแล้ว", "ยอดชำระ (บาท)", "แนบสลิปแล้ว", "วันที่สั่ง"];
     const rows = state.shirtAdminEntries.map((entry) => [
       entry.name || "",
+      entry.phone || "",
       (entry.items || []).map((it) => it.size + " x" + it.qty).join(", "),
       entry.shirt_count || 0,
       entry.delivery ? "จัดส่ง" : "รับที่หน้างาน",
@@ -2990,7 +3007,59 @@
   els.shirtPickupBtn.addEventListener("click", () => { state.shirtDelivery = false; syncShirtDeliveryUI(); });
   els.shirtDeliveryBtn.addEventListener("click", () => { state.shirtDelivery = true; syncShirtDeliveryUI(); });
   els.shirtDeliveryAddressInput.addEventListener("input", () => { state.shirtDeliveryAddress = els.shirtDeliveryAddressInput.value; });
-  els.shirtNameInput.addEventListener("input", () => { state.shirtName = els.shirtNameInput.value; });
+  els.shirtPhoneInput.addEventListener("input", () => { state.shirtPhone = els.shirtPhoneInput.value; });
+
+  // ---------- shirt order: name combobox (roster only, no free entry) ----------
+  function renderShirtNameSuggestions() {
+    if (!state.shirtShowNameSuggestions) {
+      els.shirtNameSuggestions.classList.add("hidden");
+      return;
+    }
+    els.shirtNameSuggestions.classList.remove("hidden");
+    const list = getFilteredTrainees(state.shirtName).slice(0, 8);
+    if (list.length === 0) {
+      els.shirtNameSuggestions.innerHTML = '<div class="rsvp-suggestion-empty">ไม่พบชื่อนี้ในทำเนียบ กรุณาตรวจสอบการสะกดอีกครั้ง</div>';
+      return;
+    }
+    els.shirtNameSuggestions.innerHTML = list.map((t) => {
+      const idx = TRAINEES.indexOf(t);
+      return '<button type="button" class="rsvp-suggestion-item" data-idx="' + idx + '">'
+        + "<span>" + escapeHtml(t.name) + "</span>"
+        + (t.nickname ? '<span class="rsvp-suggestion-nick">(' + escapeHtml(t.nickname) + ")</span>" : "")
+        + "</button>";
+    }).join("");
+  }
+  els.shirtNameSuggestions.addEventListener("mousedown", (e) => {
+    if (e.target.closest(".rsvp-suggestion-item")) e.preventDefault();
+  });
+  els.shirtNameSuggestions.addEventListener("click", (e) => {
+    const btn = e.target.closest(".rsvp-suggestion-item");
+    if (!btn) return;
+    const t = TRAINEES[Number(btn.dataset.idx)];
+    if (!t) return;
+    state.shirtName = t.name;
+    els.shirtNameInput.value = t.name;
+    state.shirtShowNameSuggestions = false;
+    renderShirtNameSuggestions();
+    setShirtInfoError("");
+  });
+  els.shirtNameInput.addEventListener("input", () => {
+    state.shirtName = els.shirtNameInput.value;
+    state.shirtShowNameSuggestions = true;
+    renderShirtNameSuggestions();
+  });
+  els.shirtNameInput.addEventListener("focus", () => {
+    state.shirtShowNameSuggestions = true;
+    renderShirtNameSuggestions();
+  });
+  els.shirtNameInput.addEventListener("blur", () => {
+    setTimeout(() => {
+      state.shirtShowNameSuggestions = false;
+      renderShirtNameSuggestions();
+    }, 150);
+  });
+
+  els.shirtSizeChartLink.addEventListener("click", () => els.sizeChartOverlay.classList.remove("hidden"));
 
   function setShirtInfoError(msg) {
     if (msg) { els.shirtInfoErrorText.textContent = msg; els.shirtInfoError.classList.remove("hidden"); }
@@ -2999,6 +3068,8 @@
 
   function validateShirtInfo() {
     if (!state.shirtName.trim()) return "กรุณากรอกชื่อ-นามสกุล";
+    if (!TRAINEES.some((t) => t.name === state.shirtName.trim())) return "กรุณาเลือกชื่อจากรายชื่อทำเนียบเท่านั้น";
+    if (state.shirtPhone.replace(/\D/g, "").length < 9) return "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง";
     if (!state.shirtItems.some((it) => it.size && it.qty > 0)) return "กรุณาเลือกไซส์เสื้ออย่างน้อย 1 รายการ";
     if (state.shirtDelivery === null) return "กรุณาเลือกรับที่หน้างานหรือจัดส่ง";
     if (state.shirtDelivery && !state.shirtDeliveryAddress.trim()) return "กรุณากรอกที่อยู่จัดส่ง";
@@ -3147,7 +3218,7 @@
       const { error: uploadError } = await dcbcSupabase.storage.from(SLIPS_BUCKET).upload(path, state.shirtSlipBlob, { contentType: "image/jpeg" });
       if (uploadError) throw uploadError;
       const row = {
-        name: state.shirtName.trim(), items: items, shirt_count: t.shirtCount,
+        name: state.shirtName.trim(), phone: state.shirtPhone.trim(), items: items, shirt_count: t.shirtCount,
         delivery: !!state.shirtDelivery, delivery_address: state.shirtDelivery ? state.shirtDeliveryAddress.trim() : null,
         delivery_fee_charged: deliveryFeeCharged, total_amount: t.totalAmount,
         slip_path: path, slip_file_name: state.shirtSlipFileName,
@@ -3183,6 +3254,8 @@
 
   els.shirtDoneOrderMoreBtn.addEventListener("click", () => {
     state.shirtName = "";
+    state.shirtShowNameSuggestions = false;
+    state.shirtPhone = "";
     state.shirtItems = [{ size: "", qty: 1 }];
     state.shirtDelivery = null;
     state.shirtDeliveryAddress = "";
@@ -3193,8 +3266,10 @@
     state.shirtSlipFileName = "";
     els.shirtSlipFileInput.value = "";
     els.shirtNameInput.value = "";
+    els.shirtPhoneInput.value = "";
     els.shirtDeliveryAddressInput.value = "";
     renderShirtItems();
+    renderShirtNameSuggestions();
     syncShirtDeliveryUI();
     syncShirtUploadBoxUI();
     setShirtInfoError("");
@@ -3216,6 +3291,7 @@
   renderCompanionCounts();
   syncSubmitButton();
   renderShirtItems();
+  renderShirtNameSuggestions();
   syncShirtDeliveryUI();
   syncShirtUploadBoxUI();
 })();
