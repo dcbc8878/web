@@ -1135,7 +1135,7 @@
         </div>
 
         <div class="rsvp-field">
-          <label class="rsvp-label">เบอร์โทรศัพท์</label>
+          <label class="rsvp-label">เบอร์โทรศัพท์ (จำเป็นถ้าเลือกจัดส่ง)</label>
           <input class="rsvp-input" type="tel" id="shirt-phone-input" placeholder="เบอร์โทรศัพท์ที่ติดต่อได้" autocomplete="off">
         </div>
 
@@ -3069,10 +3069,12 @@
   function validateShirtInfo() {
     if (!state.shirtName.trim()) return "กรุณากรอกชื่อ-นามสกุล";
     if (!TRAINEES.some((t) => t.name === state.shirtName.trim())) return "กรุณาเลือกชื่อจากรายชื่อทำเนียบเท่านั้น";
-    if (state.shirtPhone.replace(/\D/g, "").length < 9) return "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง";
     if (!state.shirtItems.some((it) => it.size && it.qty > 0)) return "กรุณาเลือกไซส์เสื้ออย่างน้อย 1 รายการ";
     if (state.shirtDelivery === null) return "กรุณาเลือกรับที่หน้างานหรือจัดส่ง";
-    if (state.shirtDelivery && !state.shirtDeliveryAddress.trim()) return "กรุณากรอกที่อยู่จัดส่ง";
+    if (state.shirtDelivery) {
+      if (!state.shirtDeliveryAddress.trim()) return "กรุณากรอกที่อยู่จัดส่ง";
+      if (state.shirtPhone.replace(/\D/g, "").length < 9) return "กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (จำเป็นสำหรับการจัดส่ง)";
+    }
     return "";
   }
 
