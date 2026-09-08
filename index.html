@@ -288,6 +288,24 @@
                         <img id="hero-mascot" src="/mascots/wai.png" alt="น้องบัญชีต้อนรับ" class="max-h-56 sm:max-h-64 lg:max-h-72 max-w-56 sm:max-w-64 lg:max-w-72 w-auto h-auto object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-300">
                     </div>
                 </div>
+                <script>
+                    // A different pose every time the homepage loads, same idea as
+                    // the business card (see businesscard/index.html) -- picked here,
+                    // inline and right after the element, so the browser starts
+                    // fetching the image during parse instead of waiting for the
+                    // scripts at the end of the document. Own sessionStorage key so
+                    // it doesn't interact with the card's own pose history.
+                    (function () {
+                        var POSES = ['wai', 'salute', 'megaphone', 'desk', 'envelope',
+                                     'tablet', 'present', 'bicycle', 'documents', 'running'];
+                        var last = null;
+                        try { last = sessionStorage.getItem('dcbc_hero_pose'); } catch (e) {}
+                        var pose = POSES[Math.floor(Math.random() * POSES.length)];
+                        if (pose === last) pose = POSES[Math.floor(Math.random() * POSES.length)];
+                        try { sessionStorage.setItem('dcbc_hero_pose', pose); } catch (e) {}
+                        document.getElementById('hero-mascot').src = '/mascots/' + pose + '.png';
+                    })();
+                </script>
 
             </div>
         </div>
@@ -297,7 +315,6 @@
     <section id="services" class="py-20 bg-brand-light">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16 reveal">
-                <img id="services-mascot" src="/mascots/desk.png" alt="" class="max-h-20 max-w-20 w-auto h-auto object-contain mx-auto mb-4">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900">บริการของเรา</h2>
                 <p class="mt-4 text-lg text-gray-500">ครบจบในที่เดียว เพื่อให้คุณโฟกัสกับการบริหารธุรกิจได้อย่างเต็มที่</p>
             </div>
@@ -552,7 +569,6 @@
     <section id="contact" class="py-20 bg-brand-light">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
             <div class="text-center mb-12">
-                <img id="contact-mascot" src="/mascots/tablet.png" alt="" class="max-h-20 max-w-20 w-auto h-auto object-contain mx-auto mb-4">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900">ติดต่อเรา</h2>
                 <p class="mt-4 text-lg text-gray-500">สอบถามบริการ ขอคำปรึกษา หรือนัดหมายพูดคุย</p>
             </div>
@@ -807,20 +823,6 @@
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
             mobileMenuBtn.setAttribute('aria-label', 'เปิดเมนู');
         }
-
-        // 0. น้องบัญชี — สุ่มท่าไม่ซ้ำกันให้กับมาสคอตทุกจุดในหน้านี้ทุกครั้งที่โหลด
-        (function () {
-            var POSES = ['wai', 'salute', 'megaphone', 'desk', 'envelope',
-                         'tablet', 'present', 'bicycle', 'documents', 'running'];
-            for (var i = POSES.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var tmp = POSES[i]; POSES[i] = POSES[j]; POSES[j] = tmp;
-            }
-            ['hero-mascot', 'services-mascot', 'contact-mascot'].forEach(function (id, i) {
-                var el = document.getElementById(id);
-                if (el) el.src = '/mascots/' + POSES[i] + '.png';
-            });
-        })();
 
         // 1. ระบบจัดการเมนู (Scroll Effect)
         let lastScrollTop = 0;
