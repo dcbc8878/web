@@ -54,6 +54,9 @@ jobs:
       - name: Inline compiled CSS into static pages
         run: node scripts/inline-css.mjs
 
+      - name: Verify build output isn't broken
+        run: node scripts/verify-build.mjs
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
