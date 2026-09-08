@@ -296,7 +296,7 @@ function listingPage(articles) {
               const cover = a.cover_path ? publicUrl('article-images', a.cover_path) : null;
               return `                <a href="/articles/${escapeAttr(a.slug)}" class="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col group">
 ${cover
-                      ? `                    <img src="${escapeAttr(cover)}" alt="${escapeAttr(a.title)}" class="w-full h-44 object-cover">`
+                      ? `                    <img src="${escapeAttr(cover)}" alt="${escapeAttr(a.title)}" loading="lazy" class="w-full h-44 object-cover">`
                       : `                    <div class="w-full h-44 bg-brand-light flex items-center justify-center text-brand text-4xl"><i class="fa-regular fa-newspaper"></i></div>`}
                     <div class="p-6 flex flex-col flex-grow">
                         <h2 class="font-bold text-gray-900 text-base leading-snug mb-2 group-hover:text-brand transition-colors">${escapeHtml(a.title)}</h2>
@@ -342,6 +342,7 @@ function sitemapXml(articles) {
         { loc: `${SITE_URL}/articles`, priority: '0.8' },
         { loc: `${SITE_URL}/portal`, priority: '0.6' },
         { loc: `${SITE_URL}/review`, priority: '0.5' },
+        { loc: `${SITE_URL}/businesscard`, priority: '0.4' },
         ...articles.map((a) => ({
             loc: `${SITE_URL}/articles/${a.slug}`,
             priority: '0.7',

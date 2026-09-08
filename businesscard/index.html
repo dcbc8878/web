@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
     <link rel="shortcut icon" href="/favicon.ico">
 
-    <meta property="og:type" content="profile">
+    <meta property="og:type" content="website">
     <meta property="og:title" content="บริษัท เด็กชายบัญชี จำกัด">
     <meta property="og:description" content="รับทำบัญชี วางแผนภาษี จดทะเบียนบริษัท">
     <meta property="og:url" content="https://www.dcbc.co.th/businesscard">
@@ -646,9 +646,9 @@
                          switcher tucks into space the layout already had and
                          costs the card no extra height. -->
                     <div class="lang-switch" role="group" aria-label="Language">
-                        <button type="button" data-lang="th" onclick="setLang('th')">ไทย</button>
-                        <button type="button" data-lang="en" onclick="setLang('en')">EN</button>
-                        <button type="button" data-lang="zh" onclick="setLang('zh')">中文</button>
+                        <button type="button" data-lang="th" onclick="setLang('th')" aria-pressed="true">ไทย</button>
+                        <button type="button" data-lang="en" onclick="setLang('en')" aria-pressed="false">EN</button>
+                        <button type="button" data-lang="zh" onclick="setLang('zh')" aria-pressed="false">中文</button>
                     </div>
                     <p data-i18n-html="copyright" class="text-[10px] text-gray-400 font-light leading-relaxed">
                         &copy; 2026 บริษัท เด็กชายบัญชี จำกัด<br>All Rights Reserved.
@@ -753,7 +753,9 @@
             });
 
             document.querySelectorAll('.lang-switch button').forEach(b => {
-                b.classList.toggle('active', b.dataset.lang === lang);
+                const isActive = b.dataset.lang === lang;
+                b.classList.toggle('active', isActive);
+                b.setAttribute('aria-pressed', String(isActive));
             });
 
             // Thai speakers want the Thai-script contact card; everyone else

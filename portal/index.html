@@ -3,20 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ระบบเอกสารลูกค้า - บริษัท เด็กชายบัญชี จำกัด">
+    <meta name="description" content="ระบบเอกสารลูกค้าออนไลน์ของบริษัท เด็กชายบัญชี จำกัด ค้นหาและดาวน์โหลดแบบฟอร์ม เอกสารบัญชี และไฟล์ที่เกี่ยวข้องได้ด้วยรหัสที่บริษัทมอบให้">
     <title>ระบบเอกสารลูกค้า | เด็กชายบัญชี</title>
+    <link rel="canonical" href="https://www.dcbc.co.th/portal">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
     <link rel="shortcut icon" href="/favicon.ico">
 
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="ระบบเอกสารลูกค้า | เด็กชายบัญชี">
+    <meta property="og:description" content="ค้นหาและดาวน์โหลดแบบฟอร์ม เอกสารบัญชี และไฟล์ที่เกี่ยวข้อง">
+    <meta property="og:url" content="https://www.dcbc.co.th/portal">
+    <meta property="og:image" content="https://www.dcbc.co.th/logo.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="ระบบเอกสารลูกค้า | เด็กชายบัญชี">
+    <meta name="twitter:image" content="https://www.dcbc.co.th/logo.png">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- FontAwesome: loaded without blocking first paint -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
     <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
          scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
@@ -44,17 +57,17 @@
 <body class="text-brand-text bg-white antialiased flex flex-col min-h-screen">
 
     <!-- Portal Lock Overlay -->
-    <div id="portal-lock-overlay" class="fixed inset-0 z-[9999] bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="portal-lock-overlay" role="dialog" aria-modal="true" aria-labelledby="portal-lock-title" class="fixed inset-0 z-[9999] bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-sm w-full text-center">
             <div class="w-16 h-16 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">
                 <i class="fa-solid fa-lock"></i>
             </div>
-            <h1 class="text-xl font-bold text-gray-900 mb-1">ระบบเอกสารลูกค้า</h1>
-            <p class="text-xs text-gray-400 font-light mb-6">กรุณากรอกรหัส 4 หลักที่ได้รับจากบริษัท</p>
+            <h2 id="portal-lock-title" class="text-xl font-bold text-gray-900 mb-1">ระบบเอกสารลูกค้า</h2>
+            <p id="portal-lock-desc" class="text-xs text-gray-400 font-light mb-6">กรุณากรอกรหัส 4 หลักที่ได้รับจากบริษัท</p>
             <form id="portal-lock-form" class="space-y-3 text-left">
-                <input type="text" id="portal-lock-code" required maxlength="4" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-center text-2xl font-bold tracking-[0.4em] uppercase" placeholder="XXXX">
+                <input type="text" id="portal-lock-code" aria-label="รหัส 4 หลัก" aria-describedby="portal-lock-desc" required maxlength="4" autocomplete="off" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-center text-2xl font-bold tracking-[0.4em] uppercase" placeholder="XXXX">
                 <button type="submit" id="portal-lock-submit" class="w-full py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-60">เข้าสู่ระบบ</button>
-                <p id="portal-lock-error" class="hidden text-red-500 text-xs text-center">รหัสไม่ถูกต้อง กรุณาลองใหม่</p>
+                <p id="portal-lock-error" role="alert" class="hidden text-red-500 text-xs text-center">รหัสไม่ถูกต้อง กรุณาลองใหม่</p>
             </form>
         </div>
     </div>
@@ -66,7 +79,7 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <a href="/" class="flex items-center gap-2">
-                    <img src="/logo.png" class="h-12 w-12 object-contain">
+                    <img src="/logo.png" alt="" class="h-12 w-12 object-contain">
                     <span class="font-bold text-2xl tracking-tight text-gray-800">เด็กชายบัญชี</span>
                 </a>
                 <a href="/" class="text-brand font-medium hover:underline flex items-center gap-2 text-sm">
@@ -94,8 +107,8 @@
                     <div class="pl-4 text-gray-400 text-lg">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </div>
-                    <input type="text" id="document-search" onkeyup="filterDocuments()" class="w-full py-3 px-2 text-sm text-gray-700 bg-transparent outline-none placeholder-gray-400" placeholder="พิมพ์เพื่อค้นหาชื่อเอกสาร รายละเอียด หรือคำสำคัญที่เกี่ยวข้อง...">
-                    <button onclick="clearSearch()" id="clear-search-btn" class="hidden text-gray-400 hover:text-gray-600 px-3 text-sm">
+                    <input type="text" id="document-search" aria-label="ค้นหาเอกสาร" onkeyup="filterDocuments()" class="w-full py-3 px-2 text-sm text-gray-700 bg-transparent outline-none placeholder-gray-400" placeholder="พิมพ์เพื่อค้นหาชื่อเอกสาร รายละเอียด หรือคำสำคัญที่เกี่ยวข้อง...">
+                    <button type="button" onclick="clearSearch()" id="clear-search-btn" aria-label="ล้างคำค้นหา" class="hidden text-gray-400 hover:text-gray-600 px-3 text-sm">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -168,7 +181,7 @@
     </footer>
 
     <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
     <script src="/supabase-client.js?v=5"></script>
 
     <!-- Scripts -->
@@ -243,6 +256,8 @@
         const storedPortalCode = sessionStorage.getItem('dcbc_portal_code');
         if (storedPortalCode) {
             unlockPortal(storedPortalCode);
+        } else {
+            portalLockCode.focus();
         }
 
         portalLockForm.addEventListener('submit', async function (e) {
