@@ -4,20 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="บริษัท เด็กชายบัญชี จำกัด (DEKCHAIBUNCHEE CO.,LTD.) ให้บริการรับทำบัญชีครบวงจร วางระบบบัญชี จดทะเบียนบริษัท ที่ปรึกษาภาษีอากร พร้อมสอนผู้ประกอบการให้เข้าใจระบบบัญชี">
-    <meta name="keywords" content="เด็กชายบัญชี, รับทำบัญชี, ที่ปรึกษาธุรกิจ, วางแผนภาษี, สำนักงานบัญชี, จดทะเบียนบริษัท, dcbc">
-    <title>เด็กชายบัญชี | เติบโตไปพร้อมกับคุณ</title>
+    <title>รับทำบัญชี จดทะเบียนบริษัท | เด็กชายบัญชี</title>
+    <link rel="canonical" href="https://www.dcbc.co.th/">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
     <link rel="shortcut icon" href="/favicon.ico">
 
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="บริษัท เด็กชายบัญชี จำกัด">
+    <meta property="og:description" content="รับทำบัญชีครบวงจร วางระบบบัญชี จดทะเบียนบริษัท ที่ปรึกษาภาษีอากร">
+    <meta property="og:url" content="https://www.dcbc.co.th/">
+    <meta property="og:image" content="https://www.dcbc.co.th/logo.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="บริษัท เด็กชายบัญชี จำกัด">
+    <meta name="twitter:description" content="รับทำบัญชีครบวงจร วางระบบบัญชี จดทะเบียนบริษัท ที่ปรึกษาภาษีอากร">
+    <meta name="twitter:image" content="https://www.dcbc.co.th/logo.png">
+
     <!-- Google Fonts: Prompt -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- FontAwesome: loaded without blocking first paint (see businesscard/index.html for the same pattern) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
     <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
          scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
@@ -33,6 +46,7 @@
       "name": "บริษัท เด็กชายบัญชี จำกัด (DEKCHAIBUNCHEE CO.,LTD.)",
       "description": "เราตั้งใจจะให้ทำให้ทุกคนเติบโต และเข้าใจในการทำธุรกิจ เด็กชายบัญชีก็เปรียบเสมือนเด็กที่อยู่ในวัยเติบโตเพื่อที่จะได้เติบโตไปพร้อมๆกับลูกค้าทุกคน",
       "url": "https://www.dcbc.co.th",
+      "logo": "https://www.dcbc.co.th/logo.png",
       "email": "contact@dcbc.co.th",
       "telephone": "+66888788648",
       "sameAs": [
@@ -203,10 +217,10 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <!-- Logo -->
-                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
-                    <img src="/logo.png" alt="เด็กชายบัญชี" class="h-12 w-12 object-contain transform transition-transform hover:scale-105 hover:rotate-6 animate-pop-in">
+                <button type="button" class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <img src="/logo.png" alt="" class="h-12 w-12 object-contain transform transition-transform hover:scale-105 hover:rotate-6 animate-pop-in">
                     <span class="font-bold text-2xl tracking-tight text-gray-800">เด็กชายบัญชี</span>
-                </div>
+                </button>
                 
                 <div class="hidden md:flex space-x-8 items-center">
                     <a href="#services" class="hover:text-brand transition-colors font-medium">บริการของเรา</a>
@@ -271,7 +285,7 @@
                 <div class="lg:w-2/5 flex justify-center reveal delay-100">
                     <div class="relative w-64 sm:w-72 lg:w-80 h-64 sm:h-72 lg:h-80 flex items-center justify-center">
                         <div class="w-64 sm:w-72 lg:w-80 h-64 sm:h-72 lg:h-80 bg-white/60 rounded-full blur-2xl absolute inset-0 m-auto -z-10"></div>
-                        <img src="/logo.png" alt="เด็กชายบัญชี" class="w-56 sm:w-64 lg:w-72 h-auto object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-300">
+                        <img src="/logo.png" alt="เด็กชายบัญชี" width="288" height="288" class="w-56 sm:w-64 lg:w-72 aspect-square object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-300">
                     </div>
                 </div>
 
@@ -552,7 +566,7 @@
                             <i class="fa-solid fa-phone text-lg"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-gray-900 text-sm">โทรศัพท์</h4>
+                            <h3 class="font-bold text-gray-900 text-sm">โทรศัพท์</h3>
                             <p class="text-gray-600 font-light text-sm mt-0.5"><a href="tel:0888788648" class="hover:text-brand font-medium">088-878-8648</a></p>
                         </div>
                     </div>
@@ -563,34 +577,34 @@
                             <i class="fa-regular fa-envelope text-lg"></i>
                         </div>
                         <div class="min-w-0">
-                            <h4 class="font-bold text-gray-900 text-sm">อีเมล</h4>
+                            <h3 class="font-bold text-gray-900 text-sm">อีเมล</h3>
                             <p class="text-gray-600 font-light text-sm mt-0.5"><a href="mailto:contact@dcbc.co.th" class="hover:text-brand font-medium break-all">contact@dcbc.co.th</a></p>
                         </div>
                     </div>
 
                     <!-- LINE Official -->
-                    <div class="bg-white p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group" onclick="window.open('https://line.me/R/ti/p/@dcbc', '_blank')">
+                    <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" class="bg-white p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
                         <div class="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                             <i class="fa-brands fa-line text-2xl"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-gray-900 text-sm">LINE Official</h4>
+                            <h3 class="font-bold text-gray-900 text-sm">LINE Official</h3>
                             <p class="text-gray-600 font-light text-sm mt-0.5">@dcbc</p>
                             <span class="text-green-600 text-xs font-semibold mt-1 block group-hover:underline">คลิกเพื่อเพิ่มเพื่อน <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Facebook -->
-                    <div class="bg-white p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group" onclick="window.open('https://www.facebook.com/profile.php?id=61576885766816', '_blank')">
+                    <a href="https://www.facebook.com/profile.php?id=61576885766816" target="_blank" rel="noopener" class="bg-white p-6 rounded-3xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
                         <div class="w-12 h-12 bg-[#1877F2] rounded-2xl flex items-center justify-center text-white flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform">
                             <i class="fa-brands fa-facebook-f text-xl"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-gray-900 text-sm">Facebook</h4>
+                            <h3 class="font-bold text-gray-900 text-sm">Facebook</h3>
                             <p class="text-gray-600 font-light text-sm mt-0.5">เด็กชายบัญชี</p>
                             <span class="text-[#1877F2] text-xs font-semibold mt-1 block group-hover:underline">คลิกเพื่อเข้าชมเพจ <i class="fa-solid fa-arrow-right text-[10px]"></i></span>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- ที่อยู่ -->
                     <div class="bg-white p-6 rounded-3xl flex items-start gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-all">
@@ -598,7 +612,7 @@
                             <i class="fa-solid fa-location-dot text-lg"></i>
                         </div>
                         <div>
-                            <h4 class="font-bold text-gray-900 text-sm">ที่ตั้งสำนักงาน</h4>
+                            <h3 class="font-bold text-gray-900 text-sm">ที่ตั้งสำนักงาน</h3>
                             <p class="text-gray-600 font-light text-xs mt-1 leading-relaxed">เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>แขวงดอกไม้ เขตประเวศ กรุงเทพมหานคร 10250</p>
                         </div>
                     </div>
@@ -618,13 +632,13 @@
 
                             <!-- ชื่อผู้ติดต่อ -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ติดต่อ <span class="text-red-500">*</span></label>
-                                <input type="text" name="ชื่อผู้ติดต่อ" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="กรอกชื่อของคุณ">
+                                <label for="contact-name" class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ติดต่อ <span class="text-red-500">*</span></label>
+                                <input id="contact-name" type="text" name="ชื่อผู้ติดต่อ" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="กรอกชื่อของคุณ">
                             </div>
 
                             <!-- สถานะบริษัท -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">จดทะเบียนบริษัทแล้วหรือยัง?</label>
+                            <fieldset class="border-0 p-0 m-0 min-w-0">
+                                <legend class="block text-sm font-medium text-gray-700 mb-2 p-0">จดทะเบียนบริษัทแล้วหรือยัง?</legend>
                                 <div class="flex gap-6">
                                     <label class="flex items-center gap-2 cursor-pointer group">
                                         <input type="radio" name="สถานะบริษัท" value="จดทะเบียนแล้ว" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 focus:ring-brand" checked>
@@ -635,11 +649,11 @@
                                         <span class="text-sm text-gray-600 group-hover:text-gray-900">ยังไม่จดทะเบียน</span>
                                     </label>
                                 </div>
-                            </div>
+                            </fieldset>
 
                             <!-- สถานะภาษีมูลค่าเพิ่ม -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">การจดทะเบียนภาษีมูลค่าเพิ่ม (VAT)</label>
+                            <fieldset class="border-0 p-0 m-0 min-w-0">
+                                <legend class="block text-sm font-medium text-gray-700 mb-2 p-0">การจดทะเบียนภาษีมูลค่าเพิ่ม (VAT)</legend>
                                 <div class="flex flex-wrap gap-x-6 gap-y-2">
                                     <label class="flex items-center gap-2 cursor-pointer group">
                                         <input type="radio" name="สถานะภาษีมูลค่าเพิ่ม" value="จดทะเบียนแล้ว" class="w-4 h-4 text-brand bg-gray-100 border-gray-300 focus:ring-brand">
@@ -650,7 +664,7 @@
                                         <span class="text-sm text-gray-600 group-hover:text-gray-900">ยังไม่ได้จดทะเบียน</span>
                                     </label>
                                 </div>
-                            </div>
+                            </fieldset>
 
                             <!-- ประเภทธุรกิจ (พิมพ์เองได้ หรือเลือกจากรายการ) -->
                             <div>
@@ -679,13 +693,13 @@
 
                             <!-- ช่องทางการติดต่อ -->
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">ช่องทางการติดต่อกลับ <span class="text-red-500">*</span></label>
-                                <input type="text" name="ช่องทางติดต่อกลับ" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เบอร์โทรศัพท์ หรือ LINE ID">
+                                <label for="contact-channel" class="block text-sm font-medium text-gray-700 mb-1">ช่องทางการติดต่อกลับ <span class="text-red-500">*</span></label>
+                                <input id="contact-channel" type="text" name="ช่องทางติดต่อกลับ" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เบอร์โทรศัพท์ หรือ LINE ID">
                             </div>
 
                             <!-- ช่วงเวลา -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-3">ช่วงเวลาที่สะดวกในการติดต่อ</label>
+                            <fieldset class="border-0 p-0 m-0 min-w-0">
+                                <legend class="block text-sm font-medium text-gray-700 mb-3 p-0">ช่วงเวลาที่สะดวกในการติดต่อ</legend>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                                     <label class="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-brand-light/30 transition-colors">
                                         <input type="radio" name="ช่วงเวลาที่สะดวก" value="08.00-12.00 น." class="w-4 h-4 text-brand focus:ring-brand" checked>
@@ -704,16 +718,16 @@
                                         <span class="ml-2 text-xs font-medium text-gray-700">18.00 - 22.00 น.</span>
                                     </label>
                                 </div>
-                            </div>
+                            </fieldset>
 
                             <button type="submit" id="contact-submit-btn" class="btn-shine w-full mt-2 py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] transform hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none">
                                 ส่งข้อมูล
                             </button>
-                            <p id="contact-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อทางโทรศัพท์ 088-878-8648</p>
+                            <p id="contact-form-error" role="alert" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง หรือติดต่อทางโทรศัพท์ 088-878-8648</p>
                         </form>
 
                         <!-- Success Box (Hidden by Default) -->
-                        <div id="contact-success-box" class="hidden text-center py-8">
+                        <div id="contact-success-box" role="status" aria-live="polite" class="hidden text-center py-8">
                             <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-4">
                                 <i class="fa-solid fa-circle-check"></i>
                             </div>
@@ -740,7 +754,7 @@
                 </div>
 
                 <div class="md:text-right">
-                    <h5 class="text-white font-semibold mb-3">ที่อยู่สำนักงาน</h5>
+                    <h4 class="text-white font-semibold mb-3">ที่อยู่สำนักงาน</h4>
                     <p class="text-gray-400 text-sm font-light leading-relaxed">
                         เลขที่ 2 ซอยทุ่งเศรษฐี แยก 21<br>
                         แขวงดอกไม้ เขตประเวศ กรุงเทพมหานคร 10250
@@ -752,8 +766,8 @@
                 <p>&copy; 2026 บริษัท เด็กชายบัญชี จำกัด. All Rights Reserved.</p>
                 <div class="flex gap-4">
                     <a href="mailto:contact@dcbc.co.th" aria-label="อีเมล" class="hover:text-brand transition-colors"><i class="fa-regular fa-envelope text-base"></i></a>
-                    <a href="https://www.dcbc.co.th" target="_blank" class="hover:text-brand transition-colors"><i class="fa-solid fa-globe text-base"></i></a>
-                    <a href="https://line.me/R/ti/p/@dcbc" target="_blank" class="hover:text-brand transition-colors"><i class="fa-brands fa-line text-base"></i></a>
+                    <a href="https://www.dcbc.co.th" target="_blank" aria-label="เว็บไซต์" class="hover:text-brand transition-colors"><i class="fa-solid fa-globe text-base"></i></a>
+                    <a href="https://line.me/R/ti/p/@dcbc" target="_blank" rel="noopener" aria-label="LINE" class="hover:text-brand transition-colors"><i class="fa-brands fa-line text-base"></i></a>
                     <a href="https://www.facebook.com/profile.php?id=61576885766816" target="_blank" rel="noopener" aria-label="Facebook" class="hover:text-brand transition-colors"><i class="fa-brands fa-facebook text-base"></i></a>
                 </div>
             </div>
@@ -761,7 +775,7 @@
     </footer>
 
     <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
     <script src="/supabase-client.js?v=5"></script>
 
     <!-- Scripts -->
@@ -781,6 +795,7 @@
             mobileMenuIcon.classList.remove('fa-bars');
             mobileMenuIcon.classList.add('fa-xmark');
             mobileMenuBtn.setAttribute('aria-expanded', 'true');
+            mobileMenuBtn.setAttribute('aria-label', 'ปิดเมนู');
         }
 
         function closeMobileMenu() {
@@ -788,6 +803,7 @@
             mobileMenuIcon.classList.remove('fa-xmark');
             mobileMenuIcon.classList.add('fa-bars');
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            mobileMenuBtn.setAttribute('aria-label', 'เปิดเมนู');
         }
 
         // 1. ระบบจัดการเมนู (Scroll Effect)
@@ -874,7 +890,7 @@
         function reviewAvatarHtml(r) {
             if (r.logo_path) {
                 const url = dcbcSupabase.storage.from('review-logos').getPublicUrl(r.logo_path).data.publicUrl;
-                return `<img src="${url}" class="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-brand/20">`;
+                return `<img src="${url}" alt="" loading="lazy" width="40" height="40" class="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-brand/20">`;
             }
             const initial = escapeHtml((r.display_name || '?').charAt(0));
             return `<div class="w-10 h-10 bg-brand-light rounded-full flex items-center justify-center font-bold text-brand text-sm border border-brand/20 flex-shrink-0">${initial}</div>`;

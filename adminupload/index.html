@@ -13,10 +13,13 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FontAwesome: loaded without blocking first paint -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
     <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
          scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
@@ -38,24 +41,24 @@
 <body class="text-brand-text bg-gray-50 antialiased flex flex-col min-h-screen">
 
     <!-- Login Overlay -->
-    <div id="admin-lock-overlay" class="fixed inset-0 z-[9999] bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="admin-lock-overlay" role="dialog" aria-modal="true" aria-labelledby="admin-lock-title" class="fixed inset-0 z-[9999] bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl p-8 md:p-10 max-w-sm w-full text-center">
             <div class="w-16 h-16 bg-brand-light text-brand rounded-2xl flex items-center justify-center text-3xl mx-auto mb-5">
                 <i class="fa-solid fa-lock"></i>
             </div>
-            <h1 class="text-xl font-bold text-gray-900 mb-1">ระบบจัดการหลังบ้าน</h1>
+            <h1 id="admin-lock-title" class="text-xl font-bold text-gray-900 mb-1">ระบบจัดการหลังบ้าน</h1>
             <p class="text-xs text-gray-400 font-light mb-6">เข้าสู่ระบบด้วยบัญชีแอดมิน</p>
             <form id="admin-lock-form" class="space-y-3 text-left">
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">อีเมล</label>
+                    <label for="admin-lock-email" class="block text-xs font-medium text-gray-600 mb-1">อีเมล</label>
                     <input type="email" id="admin-lock-email" required autocomplete="username" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="you@dcbc.co.th">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-gray-600 mb-1">รหัสผ่าน</label>
+                    <label for="admin-lock-password" class="block text-xs font-medium text-gray-600 mb-1">รหัสผ่าน</label>
                     <input type="password" id="admin-lock-password" required autocomplete="current-password" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="รหัสผ่าน">
                 </div>
                 <button type="submit" id="admin-lock-submit" class="w-full py-3 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-60">เข้าสู่ระบบ</button>
-                <p id="admin-lock-error" class="hidden text-red-500 text-xs text-center">อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่</p>
+                <p id="admin-lock-error" role="alert" class="hidden text-red-500 text-xs text-center">อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่</p>
             </form>
         </div>
     </div>
@@ -130,7 +133,7 @@
                             <i class="fa-solid fa-file-arrow-up"></i>
                         </div>
                         <div>
-                            <h1 id="doc-form-title" class="text-2xl font-bold text-gray-900">เพิ่มเอกสารใหม่</h1>
+                            <h2 id="doc-form-title" class="text-2xl font-bold text-gray-900">เพิ่มเอกสารใหม่</h2>
                             <p class="text-xs text-gray-400 font-light mt-1">เอกสารที่เพิ่มจะแสดงในหน้า "ระบบเอกสารลูกค้า" ทันที</p>
                         </div>
                     </div>
@@ -139,12 +142,12 @@
                         <input type="hidden" id="editing-doc-id" value="">
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. ชื่องาน <span class="text-red-500">*</span></label>
+                            <label for="job-title" class="block text-sm font-medium text-gray-700 mb-1.5">1. ชื่องาน <span class="text-red-500">*</span></label>
                             <input type="text" id="job-title" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="ระบุชื่องาน หรือชื่อเอกสาร เช่น สรุปงบการเงินประจำปี 2026">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. คำอธิบาย <span class="text-red-500">*</span></label>
+                            <label for="job-description" class="block text-sm font-medium text-gray-700 mb-1.5">2. คำอธิบาย <span class="text-red-500">*</span></label>
                             <textarea id="job-description" required rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="ระบุรายละเอียด หรือคำอธิบายเพิ่มเติมเกี่ยวกับงานหรือเอกสารนี้..."></textarea>
                         </div>
 
@@ -154,7 +157,7 @@
                                 <span id="file-optional-note" class="hidden text-xs text-gray-400 font-light">(เว้นว่างได้ถ้าไม่ต้องการเปลี่ยนไฟล์เดิม)</span>
                             </label>
 
-                            <div id="drop-zone" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('admin-file').click()">
+                            <div id="drop-zone" role="button" tabindex="0" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('admin-file').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('admin-file').click();}">
                                 <input type="file" id="admin-file" class="hidden" onchange="previewAdminFile(event)">
 
                                 <div id="admin-upload-idle">
@@ -184,7 +187,7 @@
                                 ยกเลิก
                             </button>
                         </div>
-                        <p id="admin-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
+                        <p id="admin-form-error" role="alert" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
                     </form>
                 </div>
 
@@ -195,12 +198,12 @@
                             <i class="fa-solid fa-layer-group"></i>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-900">เพิ่มเอกสารหลายไฟล์พร้อมกัน</h1>
+                            <h2 class="text-2xl font-bold text-gray-900">เพิ่มเอกสารหลายไฟล์พร้อมกัน</h2>
                             <p class="text-xs text-gray-400 font-light mt-1">เลือกได้หลายไฟล์ในครั้งเดียว ระบบจะช่วยตั้งชื่อ/คำอธิบายให้อัตโนมัติ แก้ไขได้ก่อนอัปโหลด</p>
                         </div>
                     </div>
 
-                    <div id="bulk-drop-zone" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('bulk-file-input').click()">
+                    <div id="bulk-drop-zone" role="button" tabindex="0" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('bulk-file-input').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('bulk-file-input').click();}">
                         <input type="file" id="bulk-file-input" multiple class="hidden" onchange="handleBulkFileSelect(event)">
                         <i class="fa-solid fa-layer-group text-3xl text-brand mb-2"></i>
                         <p class="text-gray-700 text-sm font-medium">คลิกเพื่อเลือกหลายไฟล์</p>
@@ -249,7 +252,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 mt-3">
-                        <input type="text" id="review-link-display" readonly value="https://www.dcbc.co.th/review" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
+                        <input type="text" id="review-link-display" aria-label="ลิงก์หน้ารีวิว" readonly value="https://www.dcbc.co.th/review" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
                     </div>
                     <p class="text-[11px] text-gray-400 mt-1.5">ถ้ากดปุ่ม "คัดลอกลิงก์" แล้วไม่ได้ผล ให้กดที่ช่องลิงก์ด้านบนเพื่อเลือกข้อความทั้งหมด แล้วกด Ctrl+C (หรือกดค้างแล้วเลือก "คัดลอก" บนมือถือ)</p>
                     <p id="copy-link-feedback" class="hidden text-green-600 text-xs font-medium mt-2">คัดลอกลิงก์แล้ว ✓</p>
@@ -284,7 +287,7 @@
                             <i class="fa-solid fa-key"></i>
                         </div>
                         <div>
-                            <h1 id="code-form-title" class="text-2xl font-bold text-gray-900">เพิ่มรหัสลูกค้าใหม่</h1>
+                            <h2 id="code-form-title" class="text-2xl font-bold text-gray-900">เพิ่มรหัสลูกค้าใหม่</h2>
                             <p class="text-xs text-gray-400 font-light mt-1">รหัสนี้ใช้ล็อกอินเข้าหน้า "ระบบเอกสารลูกค้า" (/portal)</p>
                         </div>
                     </div>
@@ -293,12 +296,12 @@
                         <input type="hidden" id="editing-code-id" value="">
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. รหัส 4 หลัก <span class="text-red-500">*</span></label>
+                            <label for="code-value" class="block text-sm font-medium text-gray-700 mb-1.5">1. รหัส 4 หลัก <span class="text-red-500">*</span></label>
                             <input type="text" id="code-value" required maxlength="4" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm uppercase tracking-widest font-bold" placeholder="เช่น DCBC">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. ชื่อลูกค้า (สำหรับจดจำ)</label>
+                            <label for="code-client-name" class="block text-sm font-medium text-gray-700 mb-1.5">2. ชื่อลูกค้า (สำหรับจดจำ)</label>
                             <input type="text" id="code-client-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น บริษัท เอบีซี จำกัด (ไม่บังคับ)">
                         </div>
 
@@ -310,7 +313,7 @@
                                 ยกเลิก
                             </button>
                         </div>
-                        <p id="code-form-error" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
+                        <p id="code-form-error" role="alert" class="hidden text-red-500 text-xs text-center">เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง</p>
                     </form>
                 </div>
 
@@ -334,7 +337,7 @@
                     </h2>
                     <p class="text-[11px] text-gray-400 font-light mb-3">หน้านี้ไม่มีลิงก์จากหน้าใดในเว็บไซต์ ต้องส่งลิงก์นี้ให้ลูกค้าโดยตรงเท่านั้น</p>
                     <div class="flex items-center gap-2">
-                        <input type="text" id="download-link-display" readonly value="https://www.dcbc.co.th/program/downloader" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
+                        <input type="text" id="download-link-display" aria-label="ลิงก์หน้าดาวน์โหลด" readonly value="https://www.dcbc.co.th/program/downloader" onclick="this.select()" class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 font-mono">
                         <button onclick="copyDownloadLink()" class="px-4 py-2.5 bg-gray-100 hover:bg-brand-light hover:text-brand text-gray-700 text-xs font-medium rounded-xl transition-colors border border-gray-200 flex items-center gap-2 flex-shrink-0">
                             <i class="fa-regular fa-copy"></i> คัดลอก
                         </button>
@@ -350,7 +353,7 @@
                             <i class="fa-solid fa-cloud-arrow-up"></i>
                         </div>
                         <div>
-                            <h1 id="release-form-title" class="text-2xl font-bold text-gray-900">อัปโหลดเวอร์ชันใหม่</h1>
+                            <h2 id="release-form-title" class="text-2xl font-bold text-gray-900">อัปโหลดเวอร์ชันใหม่</h2>
                             <p class="text-xs text-gray-400 font-light mt-1">เวอร์ชันที่เผยแพร่ล่าสุดจะแสดงบนหน้าดาวน์โหลด และโปรแกรมจะเห็นว่ามีอัปเดต</p>
                         </div>
                     </div>
@@ -359,12 +362,12 @@
                         <input type="hidden" id="editing-release-id" value="">
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. เลขเวอร์ชัน <span class="text-red-500">*</span></label>
+                            <label for="release-version-input" class="block text-sm font-medium text-gray-700 mb-1.5">1. เลขเวอร์ชัน <span class="text-red-500">*</span></label>
                             <input type="text" id="release-version-input" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น 1.0.0">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. รายละเอียดเวอร์ชันนี้ <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
+                            <label for="release-notes-input" class="block text-sm font-medium text-gray-700 mb-1.5">2. รายละเอียดเวอร์ชันนี้ <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
                             <textarea id="release-notes-input" rows="3" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="เช่น แก้ไขปัญหาดาวน์โหลดค้าง / เพิ่มการรองรับไฟล์ Excel"></textarea>
                         </div>
 
@@ -379,7 +382,7 @@
                                     <span id="release-file-required-star" class="text-red-500">*</span>
                                     <span id="release-file-optional-note" class="hidden text-gray-400 font-light">(เว้นว่างได้ถ้าไม่ต้องการเปลี่ยนไฟล์เดิม)</span>
                                 </div>
-                                <div class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('release-file').click()">
+                                <div role="button" tabindex="0" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('release-file').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('release-file').click();}">
                                     <input type="file" id="release-file" class="hidden" onchange="previewReleaseFile(event)">
                                     <div id="release-upload-idle">
                                         <i class="fa-solid fa-file-zipper text-3xl text-brand mb-2"></i>
@@ -415,7 +418,7 @@
                             </button>
                             <button type="button" id="cancel-edit-release-btn" onclick="cancelEditRelease()" class="hidden px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">ยกเลิก</button>
                         </div>
-                        <p id="release-form-error" class="hidden text-red-500 text-xs text-center"></p>
+                        <p id="release-form-error" role="alert" class="hidden text-red-500 text-xs text-center"></p>
                     </form>
                 </div>
 
@@ -439,7 +442,7 @@
                             <i class="fa-regular fa-newspaper"></i>
                         </div>
                         <div>
-                            <h1 id="article-form-title" class="text-2xl font-bold text-gray-900">เขียนบทความใหม่</h1>
+                            <h2 id="article-form-title" class="text-2xl font-bold text-gray-900">เขียนบทความใหม่</h2>
                             <p class="text-xs text-gray-400 font-light mt-1">บทความที่เผยแพร่จะขึ้นเว็บภายใน 1 ชั่วโมง (ระบบสร้างหน้าใหม่อัตโนมัติ)</p>
                         </div>
                     </div>
@@ -448,13 +451,13 @@
                         <input type="hidden" id="editing-article-id" value="">
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">1. หัวข้อบทความ <span class="text-red-500">*</span></label>
+                            <label for="article-title" class="block text-sm font-medium text-gray-700 mb-1.5">1. หัวข้อบทความ <span class="text-red-500">*</span></label>
                             <input type="text" id="article-title" required oninput="maybeAutoSlug()" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น รายได้เท่าไหร่ต้องจดทะเบียน VAT? สรุปเกณฑ์ปี 2569">
                             <p class="text-[11px] text-gray-400 mt-1.5 font-light">ตั้งหัวข้อให้ตรงกับที่คนพิมพ์ค้นหาจริง จะถูกเจอง่ายกว่าหัวข้อกวนๆ แบบโพสต์ Facebook</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">2. ลิงก์หน้าบทความ (slug) <span class="text-red-500">*</span></label>
+                            <label for="article-slug" class="block text-sm font-medium text-gray-700 mb-1.5">2. ลิงก์หน้าบทความ (slug) <span class="text-red-500">*</span></label>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-gray-400 font-mono flex-shrink-0">/articles/</span>
                                 <input type="text" id="article-slug" required pattern="[a-z0-9\-]+" class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm font-mono" placeholder="vat-threshold-2569">
@@ -463,12 +466,12 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">3. คำโปรย <span class="text-gray-400 font-light text-xs">(สรุปสั้นๆ 1-2 บรรทัด แสดงในหน้ารวมและผลค้นหา Google)</span></label>
+                            <label for="article-excerpt" class="block text-sm font-medium text-gray-700 mb-1.5">3. คำโปรย <span class="text-gray-400 font-light text-xs">(สรุปสั้นๆ 1-2 บรรทัด แสดงในหน้ารวมและผลค้นหา Google)</span></label>
                             <textarea id="article-excerpt" rows="2" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-none" placeholder="สรุปเกณฑ์รายได้ที่ต้องจด VAT พร้อมสิ่งที่ต้องเตรียม"></textarea>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">4. เนื้อหา <span class="text-red-500">*</span></label>
+                            <label for="article-content" class="block text-sm font-medium text-gray-700 mb-1.5">4. เนื้อหา <span class="text-red-500">*</span></label>
                             <textarea id="article-content" required rows="14" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm resize-y font-light leading-relaxed" placeholder="วางข้อความจากโพสต์ Facebook แล้วเกลาได้เลย&#10;&#10;## หัวข้อย่อย&#10;&#10;- รายการที่ 1&#10;- รายการที่ 2&#10;&#10;ใช้ **ตัวหนา** ได้ ลิงก์วางทั้ง URL ระบบจะทำให้กดได้เอง"></textarea>
                             <p class="text-[11px] text-gray-400 mt-1.5 font-light">
                                 จัดรูปแบบได้: <code class="bg-gray-100 px-1 rounded">## หัวข้อ</code> ·
@@ -497,7 +500,7 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">5. ลิงก์โพสต์ Facebook ต้นฉบับ <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
+                            <label for="article-source" class="block text-sm font-medium text-gray-700 mb-1.5">5. ลิงก์โพสต์ Facebook ต้นฉบับ <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
                             <input type="url" id="article-source" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="https://www.facebook.com/...">
                         </div>
 
@@ -505,7 +508,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">
                                 6. รูปหน้าปก <span id="article-cover-note" class="text-gray-400 font-light text-xs">(ไม่บังคับ แต่ช่วยให้น่าคลิกกว่ามาก)</span>
                             </label>
-                            <div class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('article-cover').click()">
+                            <div role="button" tabindex="0" class="border-2 border-dashed border-gray-300 hover:border-brand rounded-2xl p-6 text-center bg-gray-50 transition-colors cursor-pointer" onclick="document.getElementById('article-cover').click()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('article-cover').click();}">
                                 <input type="file" id="article-cover" accept="image/*" class="hidden" onchange="previewArticleCover(event)">
                                 <div id="article-cover-idle">
                                     <i class="fa-regular fa-image text-3xl text-brand mb-2"></i>
@@ -530,7 +533,7 @@
                             </button>
                             <button type="button" id="cancel-edit-article-btn" onclick="cancelEditArticle()" class="hidden px-6 py-4 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">ยกเลิก</button>
                         </div>
-                        <p id="article-form-error" class="hidden text-red-500 text-xs text-center"></p>
+                        <p id="article-form-error" role="alert" class="hidden text-red-500 text-xs text-center"></p>
                         <p id="article-form-success" class="hidden text-green-600 text-xs text-center font-medium"></p>
                     </form>
                 </div>
@@ -555,19 +558,19 @@
                             <i class="fa-solid fa-user-plus"></i>
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold text-gray-900">เชิญผู้ใช้ใหม่</h1>
+                            <h2 class="text-2xl font-bold text-gray-900">เชิญผู้ใช้ใหม่</h2>
                             <p class="text-xs text-gray-400 font-light mt-1">กำหนดสิทธิ์ล่วงหน้า แล้วส่งคำเชิญทางอีเมล — ผู้ถูกเชิญตั้งรหัสผ่านเอง</p>
                         </div>
                     </div>
 
                     <form id="admin-invite-form" class="space-y-5">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">อีเมล <span class="text-red-500">*</span></label>
+                            <label for="invite-email" class="block text-sm font-medium text-gray-700 mb-1.5">อีเมล <span class="text-red-500">*</span></label>
                             <input type="email" id="invite-email" required class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="ชื่อ@dcbc.co.th">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">ชื่อที่แสดง <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
+                            <label for="invite-name" class="block text-sm font-medium text-gray-700 mb-1.5">ชื่อที่แสดง <span class="text-gray-400 font-light text-xs">(ไม่บังคับ)</span></label>
                             <input type="text" id="invite-name" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-light focus:border-brand outline-none transition-all text-sm" placeholder="เช่น คุณสมชาย (ฝ่ายบัญชี)">
                         </div>
 
@@ -579,7 +582,7 @@
                         <button type="submit" id="invite-submit-btn" class="w-full py-4 bg-brand text-white rounded-xl font-bold hover:bg-brand-dark transition-all shadow-[0_4px_15px_rgb(255,184,140,0.4)] flex items-center justify-center gap-2 disabled:opacity-60">
                             <i class="fa-solid fa-paper-plane"></i> <span id="invite-submit-label">บันทึกคำเชิญ</span>
                         </button>
-                        <p id="invite-error" class="hidden text-red-500 text-xs text-center"></p>
+                        <p id="invite-error" role="alert" class="hidden text-red-500 text-xs text-center"></p>
                         <p id="invite-success" class="hidden text-green-600 text-xs text-center font-medium"></p>
                     </form>
 
@@ -629,10 +632,11 @@
         <p>&copy; 2026 บริษัท เด็กชายบัญชี จำกัด. Admin Internal Portal.</p>
     </footer>
 
-    <!-- Supabase + QR Code libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase. The QR Code library (qrcodejs) is loaded on demand from
+         downloadReviewQr() instead of here, since it's only ever used if an
+         admin opens the Reviews tab and clicks "ดาวน์โหลด QR Code". -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
     <script src="/supabase-client.js?v=5"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
         const REVIEW_LINK_URL = 'https://www.dcbc.co.th/review';
@@ -654,6 +658,7 @@
         const lockPassword = document.getElementById('admin-lock-password');
         const lockError = document.getElementById('admin-lock-error');
         const lockSubmitBtn = document.getElementById('admin-lock-submit');
+        lockEmail.focus();
 
         // Which permission each tab needs. The gating below only decides what
         // is worth *showing* — the database refuses the actual reads and writes
@@ -1027,7 +1032,7 @@
                         <p class="text-xs text-gray-400 font-light truncate flex-1">
                             <i class="fa-solid fa-file-lines mr-1"></i> ${escapeHtml(entry.file.name)} · ${dcbcFormatBytes(entry.file.size)}
                         </p>
-                        <button type="button" onclick="removeBulkFile(${i})" class="text-red-400 hover:text-red-600 text-xs flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
+                        <button type="button" onclick="removeBulkFile(${i})" aria-label="ลบไฟล์นี้ออก" class="text-red-400 hover:text-red-600 text-xs flex-shrink-0"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                     <input type="text" value="${escapeHtml(entry.title)}" oninput="updateBulkField(${i}, 'title', this.value)" placeholder="ชื่องาน" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-light focus:border-brand outline-none">
                     <textarea rows="2" oninput="updateBulkField(${i}, 'description', this.value)" placeholder="คำอธิบาย" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-brand-light focus:border-brand outline-none">${escapeHtml(entry.description)}</textarea>
@@ -1118,8 +1123,8 @@
                 <li class="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 gap-3">
                     <div class="flex items-start gap-3 min-w-0">
                         <div class="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
-                            <button onclick="moveDocument('${doc.id}', 'up')" ${idx === 0 ? 'disabled' : ''} class="w-6 h-5 flex items-center justify-center text-gray-400 hover:text-brand disabled:opacity-25 disabled:hover:text-gray-400 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-up text-xs"></i></button>
-                            <button onclick="moveDocument('${doc.id}', 'down')" ${idx === data.length - 1 ? 'disabled' : ''} class="w-6 h-5 flex items-center justify-center text-gray-400 hover:text-brand disabled:opacity-25 disabled:hover:text-gray-400 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-down text-xs"></i></button>
+                            <button onclick="moveDocument('${doc.id}', 'up')" ${idx === 0 ? 'disabled' : ''} aria-label="เลื่อนขึ้น" class="w-6 h-5 flex items-center justify-center text-gray-400 hover:text-brand disabled:opacity-25 disabled:hover:text-gray-400 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-up text-xs"></i></button>
+                            <button onclick="moveDocument('${doc.id}', 'down')" ${idx === data.length - 1 ? 'disabled' : ''} aria-label="เลื่อนลง" class="w-6 h-5 flex items-center justify-center text-gray-400 hover:text-brand disabled:opacity-25 disabled:hover:text-gray-400 disabled:cursor-not-allowed"><i class="fa-solid fa-chevron-down text-xs"></i></button>
                         </div>
                         <div class="w-10 h-10 rounded-xl ${bg} ${text} flex items-center justify-center flex-shrink-0 mt-0.5">
                             <i class="${icon} text-xl"></i>
@@ -1212,7 +1217,25 @@
             });
         }
 
-        function downloadReviewQr() {
+        // Loaded on first use rather than unconditionally on page load, since
+        // most admin sessions never touch this button.
+        let qrCodeJsPromise = null;
+        function loadQrCodeJs() {
+            if (window.QRCode) return Promise.resolve();
+            if (!qrCodeJsPromise) {
+                qrCodeJsPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+            return qrCodeJsPromise;
+        }
+
+        async function downloadReviewQr() {
+            await loadQrCodeJs();
             const target = document.getElementById('qr-render-target');
             target.innerHTML = '';
             new QRCode(target, { text: REVIEW_LINK_URL, width: 320, height: 320 });
@@ -2125,7 +2148,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-xs font-medium text-gray-600 mb-1.5">ชื่อที่แสดง</label>
+                        <label for="uname-${u.id}" class="block text-xs font-medium text-gray-600 mb-1.5">ชื่อที่แสดง</label>
                         <input type="text" id="uname-${u.id}" value="${escapeHtml(u.display_name || '')}" placeholder="เช่น คุณสมชาย (ฝ่ายบัญชี)" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-light focus:border-brand outline-none">
                     </div>
 

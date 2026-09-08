@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- หน้านี้ไม่ถูกลิงก์จากหน้าใดในเว็บไซต์ และไม่ให้ search engine เก็บ -->
     <meta name="robots" content="noindex, nofollow">
-    <title>ดาวน์โหลดโปรแกรมช่วยดาวน์โหลด | เด็กชายบัญชี</title>
+    <meta name="description" content="ดาวน์โหลดโปรแกรมเสริมสำหรับลูกค้าของบริษัท เด็กชายบัญชี จำกัด">
+    <title>ดาวน์โหลดโปรแกรมเสริม | เด็กชายบัญชี</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
@@ -14,10 +15,13 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FontAwesome: loaded without blocking first paint -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
 
     <!-- Compiled Tailwind stylesheet, rebuilt fresh on every deploy (see
          scripts/tailwind.site.js) — not the Play CDN, which is JavaScript
@@ -159,7 +163,7 @@
     </footer>
 
     <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
     <script src="/supabase-client.js?v=5"></script>
 
     <script>
