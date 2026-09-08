@@ -45,6 +45,9 @@ jobs:
           npx --yes tailwindcss@3 -c scripts/tailwind.site.js -i scripts/tailwind.site.in.css -o site.css --minify
           npx --yes tailwindcss@3 -c scripts/tailwind.cards.js -i scripts/tailwind.cards.in.css -o card.css --minify
 
+      - name: Verify compiled CSS isn't broken
+        run: node scripts/verify-css.mjs
+
       - name: Build article pages
         run: node scripts/build-articles.mjs
 
