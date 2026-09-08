@@ -285,27 +285,9 @@
                 <div class="lg:w-2/5 flex justify-center reveal delay-100">
                     <div class="relative w-64 sm:w-72 lg:w-80 h-64 sm:h-72 lg:h-80 flex items-center justify-center">
                         <div class="w-64 sm:w-72 lg:w-80 h-64 sm:h-72 lg:h-80 bg-white/60 rounded-full blur-2xl absolute inset-0 m-auto -z-10"></div>
-                        <img id="hero-mascot" src="/mascots/wai.png" alt="น้องบัญชีต้อนรับ" class="max-h-56 sm:max-h-64 lg:max-h-72 max-w-56 sm:max-w-64 lg:max-w-72 w-auto h-auto object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-300">
+                        <img src="/mascots/wai.png" alt="น้องบัญชี ยกมือไหว้ต้อนรับ" class="h-56 sm:h-64 lg:h-72 w-auto object-contain drop-shadow-xl transform hover:scale-105 transition-transform duration-300">
                     </div>
                 </div>
-                <script>
-                    // A different pose every time the homepage loads, same idea as
-                    // the business card (see businesscard/index.html) -- picked here,
-                    // inline and right after the element, so the browser starts
-                    // fetching the image during parse instead of waiting for the
-                    // scripts at the end of the document. Own sessionStorage key so
-                    // it doesn't interact with the card's own pose history.
-                    (function () {
-                        var POSES = ['wai', 'salute', 'megaphone', 'desk', 'envelope',
-                                     'tablet', 'present', 'bicycle', 'documents', 'running'];
-                        var last = null;
-                        try { last = sessionStorage.getItem('dcbc_hero_pose'); } catch (e) {}
-                        var pose = POSES[Math.floor(Math.random() * POSES.length)];
-                        if (pose === last) pose = POSES[Math.floor(Math.random() * POSES.length)];
-                        try { sessionStorage.setItem('dcbc_hero_pose', pose); } catch (e) {}
-                        document.getElementById('hero-mascot').src = '/mascots/' + pose + '.png';
-                    })();
-                </script>
 
             </div>
         </div>
