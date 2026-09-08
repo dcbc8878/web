@@ -57,6 +57,24 @@ jobs:
       - name: Verify build output isn't broken
         run: node scripts/verify-build.mjs
 
+      # Needs a real browser, so it's skipped on the hourly article-refresh
+      # cron (see the schedule trigger above) -- that run never touches page
+      # code, so installing a fresh Chromium 24 times a day for it would be
+      # pure waste. verify-css.mjs and verify-build.mjs above still run
+      # every time and need no browser.
+      - name: Install Playwright
+        if: github.event_name != 'schedule'
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Smoke test key pages
+        if: github.event_name != 'schedule'
+        run: |
+          python3 -m http.server 8080 &
+          sleep 2
+          node scripts/smoke-test.mjs
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
