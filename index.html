@@ -181,6 +181,14 @@
         .animate-blob { animation: blob-float 8s ease-in-out infinite; }
         .animate-blob.delay-1 { animation-delay: 1.5s; }
 
+        /* Gentle up-down drift for the mascots scattered around the page,
+           outside the main content flow rather than pinned to a heading. */
+        @keyframes mascot-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+        .animate-mascot-float { animation: mascot-float 4s ease-in-out infinite; }
+
         /* Logo pop-in on page load */
         @keyframes pop-in {
             0% { transform: scale(0); opacity: 0; }
@@ -204,7 +212,7 @@
         @media (prefers-reduced-motion: reduce) {
             html { scroll-behavior: auto; }
             .reveal, .stagger > * { transition: none !important; animation: none !important; opacity: 1 !important; transform: none !important; }
-            .animate-marquee, .animate-blob, .animate-pop-in, .btn-shine::after { animation: none !important; transition: none !important; }
+            .animate-marquee, .animate-blob, .animate-mascot-float, .animate-pop-in, .btn-shine::after { animation: none !important; transition: none !important; }
         }
     </style>
 </head>
@@ -294,10 +302,10 @@
     </section>
 
     <!-- Services Section -->
-    <section id="services" class="py-20 bg-brand-light">
+    <section id="services" class="py-20 bg-brand-light relative overflow-hidden">
+        <img id="services-mascot" src="/mascots/desk.png" alt="" aria-hidden="true" class="absolute top-6 right-2 sm:right-6 lg:right-12 max-h-14 sm:max-h-16 lg:max-h-20 max-w-14 sm:max-w-16 lg:max-w-20 w-auto h-auto object-contain opacity-90 drop-shadow-lg animate-mascot-float">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16 reveal">
-                <img id="services-mascot" src="/mascots/desk.png" alt="" class="max-h-20 max-w-20 w-auto h-auto object-contain mx-auto mb-4">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900">บริการของเรา</h2>
                 <p class="mt-4 text-lg text-gray-500">ครบจบในที่เดียว เพื่อให้คุณโฟกัสกับการบริหารธุรกิจได้อย่างเต็มที่</p>
             </div>
@@ -549,10 +557,10 @@
     </section>
 
     <!-- Contact & Form Section (แบ่งสัดส่วน 30:70 ซ้าย/ขวา) -->
-    <section id="contact" class="py-20 bg-brand-light">
+    <section id="contact" class="py-20 bg-brand-light relative overflow-hidden">
+        <img id="contact-mascot" src="/mascots/tablet.png" alt="" aria-hidden="true" class="absolute top-6 left-2 sm:left-6 lg:left-12 max-h-14 sm:max-h-16 lg:max-h-20 max-w-14 sm:max-w-16 lg:max-w-20 w-auto h-auto object-contain opacity-90 drop-shadow-lg animate-mascot-float">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
             <div class="text-center mb-12">
-                <img id="contact-mascot" src="/mascots/tablet.png" alt="" class="max-h-20 max-w-20 w-auto h-auto object-contain mx-auto mb-4">
                 <h2 class="text-3xl md:text-4xl font-bold text-gray-900">ติดต่อเรา</h2>
                 <p class="mt-4 text-lg text-gray-500">สอบถามบริการ ขอคำปรึกษา หรือนัดหมายพูดคุย</p>
             </div>
